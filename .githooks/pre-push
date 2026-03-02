@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+echo "Running tests before push..."
+python3 -m pytest tests/ -q --tb=short
+echo "All tests passed — pushing."
