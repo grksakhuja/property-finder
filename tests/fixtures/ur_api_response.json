@@ -1,0 +1,46 @@
+[
+  {
+    "shisya": "40",
+    "danchi": "001",
+    "shikibetu": "0",
+    "danchiNm": "コンフォール川口",
+    "place": "埼玉県川口市芝中田1丁目",
+    "traffic": "<ul><li>JR京浜東北線 川口駅 徒歩12分</li></ul>",
+    "shikikin": "2ヶ月",
+    "room": [
+      {
+        "id": "R001",
+        "roomNmMain": "A棟",
+        "roomNmSub": "301号室",
+        "type": "2LDK",
+        "floor": "3階",
+        "floorspace": "55&#13217;",
+        "rent": "101,800円",
+        "commonfee": "4,200円",
+        "roomLinkPc": "/chintai/kanto/saitama/40_0010.html#room_R001"
+      },
+      {
+        "id": "R002",
+        "roomNmMain": "B棟",
+        "roomNmSub": "502号室",
+        "type": "3LDK",
+        "floor": "5階",
+        "floorspace": "70&#13217;",
+        "rent": "125,600円",
+        "commonfee": "5,100円",
+        "roomLinkPc": "/chintai/kanto/saitama/40_0010.html#room_R002"
+      },
+      {
+        "id": "R003",
+        "roomNmMain": "C棟",
+        "roomNmSub": "103号室",
+        "type": "1LDK",
+        "floor": "1階",
+        "floorspace": "40&#13217;",
+        "rent": "72,000円",
+        "commonfee": "3,500円",
+        "roomLinkPc": "/chintai/kanto/saitama/40_0010.html#room_R003"
+      }
+    ]
+  }
+]
