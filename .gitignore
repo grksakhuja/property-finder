@@ -4,3 +4,17 @@ __pycache__/
 !scoring_config.json
 !tests/fixtures/*.json
 .claude/
+
+# Personal documents — never commit
+brief.md
+
+# Build/test artifacts
+test-output.xml
+*.xml
+*.png
+*.jpg
+*.jpeg
+
+# Tool state
+.playwright-mcp/
+.backup/
