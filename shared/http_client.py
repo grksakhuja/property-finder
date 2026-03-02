@@ -41,7 +41,6 @@ def create_session(
         pool_maxsize=pool_size,
     )
     session.mount("https://", adapter)
-    session.mount("http://", adapter)
 
     headers = {"User-Agent": DEFAULT_USER_AGENT}
     if extra_headers:
