@@ -21,6 +21,33 @@ Edit the top of `ur_rental_search.py`:
 - **`AREAS`** — List of area dicts to search. Each needs: `name`, `block`, `tdfk`, `tdfk_name`, `skcs`.
 - **`REQUEST_DELAY`** — Seconds between API calls (default: 2). Be respectful.
 
+## Scoring Configuration
+
+The viewer scores and ranks rooms based on criteria defined in `scoring_config.json`. This file is loaded on startup and deep-merged over the hardcoded defaults — if the file is missing or fails to load, the built-in defaults are used.
+
+You can override everything or just the parts you care about. For example, to only change budget weight and hard max:
+
+```json
+{
+  "budget": { "hardMax": 300000 },
+  "weights": { "budget": 40 }
+}
+```
+
+### Config sections
+
+| Key | What it controls |
+|---|---|
+| `commute.known` | Per-area commute times, transfer counts, and line names |
+| `commute.prefectureDefault` | Fallback commute estimates by prefecture |
+| `budget` | Ideal rent range, hard max rent, and move-in cost cap |
+| `size` | Ideal and acceptable floor area ranges (m²) |
+| `walk` | Walk-time thresholds (minutes to station) |
+| `roomType` | Score multipliers per layout type (1.0 = best) |
+| `prefScores` | Base desirability score per prefecture |
+| `buildingAge` | Age thresholds in years (ideal / ok / old) |
+| `weights` | How much each factor contributes to the total score |
+
 ## Areas Covered
 
 Currently searches 36 areas across 4 prefectures:
