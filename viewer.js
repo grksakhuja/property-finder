@@ -151,6 +151,17 @@ const BRIEF = {
   weights: { area: 25, budget: 25, size: 15, roomType: 10, walkTime: 10, moveIn: 8, buildAge: 7 },
 };
 
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function safeUrl(url) {
+  if (!url) return '';
+  try { const u = new URL(url); return (u.protocol === 'https:' || u.protocol === 'http:') ? url : ''; }
+  catch { return ''; }
+}
+
 function deepMerge(target, source) {
   for (const key of Object.keys(source)) {
     if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
@@ -587,7 +598,7 @@ function populateAreaDropdown() {
   const sorted = [...areas].sort();
   let html = '<option value="">All Areas</option>';
   for (const a of sorted) {
-    html += `<option value="${a}">${a}</option>`;
+    html += `<option value="${escHtml(a)}">${escHtml(a)}</option>`;
   }
   areaSelect.innerHTML = html;
 
@@ -777,10 +788,11 @@ function render() {
     const sizeDisplay = r.floorspace || r.size || '';
     const isFav = favourites.has(r._favKey);
 
-    const rentDisplay = r.rent_value > 0 ? `<span class="money">${r.rent}</span>` : '<span class="rent-tbd">Inquiry</span>';
+    const rentDisplay = r.rent_value > 0 ? `<span class="money">${escHtml(r.rent)}</span>` : '<span class="rent-tbd">Inquiry</span>';
     const totalDisplay = r.total_value > 0 ? `<span class="money">&yen;${r.total_value.toLocaleString()}</span>` : '<span class="rent-tbd">TBD</span>';
     const yenDisplay = yenPerSqm ? `<span class="money">&yen;${yenPerSqm.toLocaleString()}</span>` : '-';
-    const linkDisplay = r.url ? `<a class="view-link" href="${r.url}" target="_blank" rel="noopener">View</a>` : '-';
+    const validUrl = safeUrl(r.url);
+    const linkDisplay = validUrl ? `<a class="view-link" href="${escHtml(validUrl)}" target="_blank" rel="noopener noreferrer">View</a>` : '-';
 
     let moveInDisplay = '-';
     if (r.source !== 'ur' && r.move_in_cost > 0) {
@@ -794,25 +806,22 @@ function render() {
       ageDisplay = r.building_age;
     }
 
-    // Use pre-computed values
-    const favKey = r._favKey.replace(/'/g, "\\'");
-
     return `<tr class="${isFav ? 'fav-row' : ''}">
-      <td><span class="fav-star ${isFav ? 'starred' : ''}" onclick="toggleFavourite('${favKey}')">${isFav ? '\u2605' : '\u2606'}</span></td>
-      <td class="score-cell" onclick="showBreakdown(${allRooms.indexOf(r)})" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${grade.label}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
-      <td><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || r.source}</span></td>
-      <td><span class="area-tag ${prefClass}">${r.area}</span></td>
-      <td><div class="prop-name">${r.property}</div><div class="prop-access" title="${r.access || ''}">${r._accessEn}</div></td>
-      <td>${roomType}</td>
-      <td class="size-cell">${sizeDisplay}</td>
-      <td>${r._floorEn}</td>
+      <td><span class="fav-star ${isFav ? 'starred' : ''}" data-favkey="${escHtml(r._favKey)}">${isFav ? '\u2605' : '\u2606'}</span></td>
+      <td class="score-cell" data-room-idx="${allRooms.indexOf(r)}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
+      <td><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || escHtml(r.source)}</span></td>
+      <td><span class="area-tag ${prefClass}">${escHtml(r.area)}</span></td>
+      <td><div class="prop-name">${escHtml(r.property)}</div><div class="prop-access" title="${escHtml(r.access || '')}">${escHtml(r._accessEn)}</div></td>
+      <td>${escHtml(roomType)}</td>
+      <td class="size-cell">${escHtml(sizeDisplay)}</td>
+      <td>${escHtml(r._floorEn)}</td>
       <td class="walk-cell ${r._walkMin > 0 ? (r._walkMin <= 5 ? 'walk-great' : r._walkMin <= 10 ? 'walk-good' : r._walkMin <= 15 ? 'walk-ok' : 'walk-far') : ''}">${r._walkMin > 0 ? r._walkMin + ' min' : '-'}</td>
       <td>${rentDisplay}</td>
       <td>${totalDisplay}</td>
       <td>${yenDisplay}</td>
       <td>${moveInDisplay}</td>
       <td>${ageDisplay}</td>
-      <td><div>${r._depositDisplay}</div></td>
+      <td><div>${escHtml(r._depositDisplay)}</div></td>
       <td>${linkDisplay}</td>
     </tr>`;
   }).join('');
@@ -887,7 +896,10 @@ function restoreHashState() {
   if (params.has('maxWalk')) document.getElementById('filterMaxWalk').value = params.get('maxWalk');
   if (params.has('minGrade')) document.getElementById('filterMinGrade').value = params.get('minGrade');
   if (params.has('search')) document.getElementById('filterSearch').value = params.get('search');
-  if (params.has('sort')) sortCol = params.get('sort');
+  if (params.has('sort')) {
+    const sortVal = params.get('sort');
+    if (COLUMNS.some(c => c.key === sortVal)) sortCol = sortVal;
+  }
   if (params.has('asc')) sortAsc = params.get('asc') === '1';
   if (params.has('p')) currentPage = parseInt(params.get('p')) || 0;
   if (params.has('fav')) {
@@ -931,15 +943,15 @@ function showBreakdown(idx) {
       <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct}%;background:${barColor(dim.score, dim.max)}"></div></div>
       <div class="breakdown-score">${dim.score}/${dim.max}</div>
     </div>
-    <div class="breakdown-detail">${d.detail}</div>`;
+    <div class="breakdown-detail">${escHtml(d.detail)}</div>`;
   }).join('');
 
   const overlay = document.createElement('div');
   overlay.className = 'score-popup-overlay';
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
   overlay.innerHTML = `<div class="score-popup">
-    <h3>${r.property}</h3>
-    <div class="popup-subtitle">${r.area} · ${r.room_type || r.layout || ''} · ${r.floorspace || r.size || ''}</div>
+    <h3>${escHtml(r.property)}</h3>
+    <div class="popup-subtitle">${escHtml(r.area)} · ${escHtml(r.room_type || r.layout || '')} · ${escHtml(r.floorspace || r.size || '')}</div>
     <div class="popup-total">
       <span class="grade-badge ${grade.cls}">${grade.letter}</span>
       <div><div class="popup-total-num">${r.score}<span style="font-size:0.8rem;color:var(--text-dim)">/100</span></div><div class="popup-total-label">${grade.label}</div></div>
@@ -970,6 +982,20 @@ const debouncedRender = debounce(() => {
 // =====================================================================
 // Event bindings
 // =====================================================================
+
+// Table body — event delegation for favourites and score breakdowns
+document.getElementById('tableBody').addEventListener('click', (e) => {
+  const star = e.target.closest('.fav-star');
+  if (star) { toggleFavourite(star.dataset.favkey); return; }
+  const scoreCell = e.target.closest('.score-cell');
+  if (scoreCell) { showBreakdown(parseInt(scoreCell.dataset.roomIdx)); return; }
+});
+
+// Map popup & area card clicks — event delegation for filterToArea
+document.addEventListener('click', (e) => {
+  const filterLink = e.target.closest('[data-filter-area]');
+  if (filterLink) { filterToArea(filterLink.dataset.filterArea); return; }
+});
 
 // Stat card clicks — event delegation on static container (avoids re-binding inside render())
 document.getElementById('stats').addEventListener('click', (e) => {
@@ -1176,12 +1202,12 @@ function buildAreaPopup(areaName, areaInfo, pref, stats) {
   let statsHtml = '';
   if (stats) {
     statsHtml = `<div class="map-popup-stats">
-      Commute: ${commData.min} min, ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''}${commData.line ? ' (' + commData.line + ')' : ''}<br>
+      Commute: ${commData.min} min, ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''}${commData.line ? ' (' + escHtml(commData.line) + ')' : ''}<br>
       ${stats.count} rooms &middot; Avg score: ${stats.avgScore} (${stats.grade.letter}) &middot; Avg &yen;${stats.avgRent.toLocaleString()} &middot; ${stats.avgSize}&#13217;
     </div>`;
   } else {
     statsHtml = `<div class="map-popup-stats">
-      Commute: ${commData.min} min, ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''}${commData.line ? ' (' + commData.line + ')' : ''}<br>
+      Commute: ${commData.min} min, ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''}${commData.line ? ' (' + escHtml(commData.line) + ')' : ''}<br>
       No listings match current filters
     </div>`;
   }
@@ -1190,8 +1216,8 @@ function buildAreaPopup(areaName, areaInfo, pref, stats) {
   if (areaInfo.stations && areaInfo.stations.length > 0) {
     stationsHtml = '<div class="map-popup-stations"><strong>Stations:</strong>';
     for (const s of areaInfo.stations.slice(0, 5)) {
-      const lines = s.lines && s.lines.length ? ' \u2014 ' + s.lines.join(', ') : '';
-      stationsHtml += `<div>${POI_ICONS.station} ${s.name}${lines}</div>`;
+      const lines = s.lines && s.lines.length ? ' \u2014 ' + escHtml(s.lines.join(', ')) : '';
+      stationsHtml += `<div>${POI_ICONS.station} ${escHtml(s.name)}${lines}</div>`;
     }
     stationsHtml += '</div>';
   }
@@ -1201,16 +1227,16 @@ function buildAreaPopup(areaName, areaInfo, pref, stats) {
     poisHtml = '<div class="map-popup-pois"><strong>Highlights:</strong>';
     for (const p of areaInfo.pois.slice(0, 5)) {
       const icon = POI_ICONS[p.cat] || '\u{1F4CD}';
-      const note = p.note ? ` <span style="color:var(--text-dim);font-size:0.72rem">(${p.note})</span>` : '';
-      poisHtml += `<div>${icon} ${p.name}${note}</div>`;
+      const note = p.note ? ` <span style="color:var(--text-dim);font-size:0.72rem">(${escHtml(p.note)})</span>` : '';
+      poisHtml += `<div>${icon} ${escHtml(p.name)}${note}</div>`;
     }
     poisHtml += '</div>';
   }
 
-  return `<div class="map-popup-title">${areaName}</div>
-    <div class="map-popup-pref">${prefLabel}</div>
+  return `<div class="map-popup-title">${escHtml(areaName)}</div>
+    <div class="map-popup-pref">${escHtml(prefLabel)}</div>
     ${statsHtml}${stationsHtml}${poisHtml}
-    <a class="map-popup-filter" onclick="filterToArea('${areaName.replace(/'/g, "\\'")}')">Filter to this area &rarr;</a>`;
+    <a class="map-popup-filter" data-filter-area="${escHtml(areaName)}">Filter to this area &rarr;</a>`;
 }
 
 function filterToArea(areaName) {
@@ -1280,22 +1306,22 @@ function renderAreaCards() {
     let stationsHtml = '';
     if (info && info.stations) {
       for (const st of info.stations.slice(0, 4)) {
-        const lines = st.lines && st.lines.length ? ' (' + st.lines.join(', ') + ')' : '';
-        stationsHtml += `<div class="area-card-poi">${POI_ICONS.station} ${st.name}${lines}</div>`;
+        const lines = st.lines && st.lines.length ? ' (' + escHtml(st.lines.join(', ')) + ')' : '';
+        stationsHtml += `<div class="area-card-poi">${POI_ICONS.station} ${escHtml(st.name)}${lines}</div>`;
       }
     }
     let poisHtml = '';
     if (info && info.pois) {
       for (const p of info.pois.slice(0, 4)) {
         const icon = POI_ICONS[p.cat] || '\u{1F4CD}';
-        poisHtml += `<div class="area-card-poi">${icon} ${p.name}</div>`;
+        poisHtml += `<div class="area-card-poi">${icon} ${escHtml(p.name)}</div>`;
       }
     }
 
     container.innerHTML = `<div class="area-cards"><div class="area-card active-card" style="max-width:480px">
-      <div class="area-card-title">${norm}</div>
-      <div class="area-card-pref">${prefLabel}</div>
-      <div class="area-card-commute">${commData.min} min to Yotsuya &middot; ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''} &middot; ${commData.line || ''}</div>
+      <div class="area-card-title">${escHtml(norm)}</div>
+      <div class="area-card-pref">${escHtml(prefLabel)}</div>
+      <div class="area-card-commute">${commData.min} min to Yotsuya &middot; ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''} &middot; ${escHtml(commData.line || '')}</div>
       ${stationsHtml}${poisHtml}
       <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; ${s.grade.letter} avg</div>
     </div></div>`;
@@ -1320,12 +1346,12 @@ function renderAreaCards() {
       if (info && info.pois && info.pois.length > 0) {
         const p = info.pois[0];
         const icon = POI_ICONS[p.cat] || '\u{1F4CD}';
-        highlight = `<div class="area-card-poi">${icon} ${p.name}</div>`;
+        highlight = `<div class="area-card-poi">${icon} ${escHtml(p.name)}</div>`;
       }
 
-      html += `<div class="area-card" onclick="filterToArea('${areaName.replace(/'/g, "\\'")}')">
-        <div class="area-card-title" style="color:${color}">${norm}</div>
-        <div class="area-card-pref">${prefLabel} &middot; ${commData.min} min, ${commData.transfers}x</div>
+      html += `<div class="area-card" data-filter-area="${escHtml(areaName)}">
+        <div class="area-card-title" style="color:${color}">${escHtml(norm)}</div>
+        <div class="area-card-pref">${escHtml(prefLabel)} &middot; ${commData.min} min, ${commData.transfers}x</div>
         ${highlight}
         <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; <span class="grade-badge ${s.grade.cls}" style="width:18px;height:18px;line-height:18px;font-size:0.65rem">${s.grade.letter}</span></div>
       </div>`;

@@ -36,7 +36,6 @@ def create_session(
     )
     adapter = HTTPAdapter(max_retries=retry)
     session.mount("https://", adapter)
-    session.mount("http://", adapter)
 
     headers = {"User-Agent": DEFAULT_USER_AGENT}
     if extra_headers:

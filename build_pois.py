@@ -11,6 +11,7 @@ Usage:
     python3 build_pois.py
 """
 
+import html as html_mod
 import json
 import math
 import time
@@ -109,13 +110,17 @@ def categorize_element(el):
     if not display_name:
         return None
 
+    # Sanitise OSM user-contributed names to prevent stored XSS in viewer
+    display_name = html_mod.escape(display_name)
+    name = html_mod.escape(name)
+
     result = {"name": display_name, "name_jp": name, "lat": round(lat, 4), "lng": round(lng, 4)}
 
     if tags.get("railway") == "station":
         lines = []
         for key in ["railway:line", "line", "operator"]:
             if key in tags:
-                lines.append(tags[key])
+                lines.append(html_mod.escape(tags[key]))
         result["cat"] = "station"
         result["lines"] = lines
         return result
