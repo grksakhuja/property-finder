@@ -766,6 +766,20 @@ const BRIEF = {
   weights: { area: 25, budget: 25, size: 15, roomType: 10, walkTime: 10, moveIn: 8, buildAge: 7 },
 };
 
+function deepMerge(target, source) {
+  for (const key of Object.keys(source)) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])
+        && target[key] && typeof target[key] === 'object' && !Array.isArray(target[key])) {
+      deepMerge(target[key], source[key]);
+    } else {
+      target[key] = (source[key] && typeof source[key] === 'object')
+        ? JSON.parse(JSON.stringify(source[key]))
+        : source[key];
+    }
+  }
+  return target;
+}
+
 function getPrefecture(areaName) {
   const saitama = ['Kawaguchi','Wako','Urawa','Omiya','Kawagoe','Toda','Warabi','Asaka','Niiza','Saitama Minami','Saitama Chuo'];
   const chiba = ['Ichikawa','Funabashi','Urayasu','Matsudo'];
@@ -1224,6 +1238,22 @@ async function loadData() {
     document.getElementById('subtitle').textContent =
       'No data found. Run the scrapers first: python3 ur_rental_search.py / suumo_search.py / realestate_jp_search.py';
     return;
+  }
+
+  // Load scoring config (external file overrides hardcoded defaults)
+  try {
+    const cfgResp = await fetch('scoring_config.json');
+    if (cfgResp.ok) {
+      const cfg = await cfgResp.json();
+      deepMerge(BRIEF, cfg);
+      console.log('Scoring config loaded from scoring_config.json');
+    }
+  } catch (e) {
+    if (e instanceof SyntaxError) {
+      console.warn('scoring_config.json is malformed — using defaults. Error:', e.message);
+    } else {
+      console.log('Using default scoring config (scoring_config.json not found)');
+    }
   }
 
   precomputeTranslations();
