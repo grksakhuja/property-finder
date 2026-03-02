@@ -1,27 +1,63 @@
-# UR Housing Rental Search Tool
+# Tokyo Rental Property Finder
 
-Queries the UR (Urban Renaissance Agency / 都市再生機構) public API to find available rental properties with prices across target areas in the greater Tokyo region.
-
-**Why UR?** No key money (礼金), no agent fees (仲介手数料), no guarantor needed, foreigner-friendly. Significantly lower upfront costs vs private rentals.
+Multi-source scraper and interactive viewer for rental properties in the greater Tokyo region. Aggregates listings from three Japanese property sources and displays them in a browser-based viewer with maps, scoring, and filtering.
 
 ## Quick Start
 
 ```bash
 pip install -r requirements.txt
+
+# Run scrapers (each produces a JSON results file)
 python ur_rental_search.py
+python suumo_search.py
+python realestate_jp_search.py
+
+# Serve the viewer
+python -m http.server 8000
+# Open http://localhost:8000/viewer.html
 ```
 
-Output: formatted console table + `results.json` file.
+## Data Sources
+
+| Scraper | Source | Notes |
+|---|---|---|
+| `ur_rental_search.py` | [UR公団](https://www.ur-net.go.jp/chintai/) | Public housing API. No key money, no agent fees, no guarantor needed. |
+| `suumo_search.py` | [SUUMO](https://suumo.jp/) | HTML scraper for Japan's largest property listing site. |
+| `realestate_jp_search.py` | [RealEstate.co.jp](https://realestate.co.jp/) | English-language listings for the Tokyo area. |
+
+Each scraper writes a JSON file (`results.json`, `results_suumo.json`, `results_realestate_jp.json`) that the viewer loads.
+
+## Viewer
+
+`viewer.html` is a standalone browser-based interface that loads all scraper results. Features:
+
+- **Map** — Leaflet.js map with area markers and office/hub location markers
+- **Scoring** — 7-dimension scoring system (budget, commute, size, walk time, room type, building age, prefecture) with A/B/C/D grades
+- **Filtering** — 9 filter dimensions + text search
+- **Favourites** — Save listings to localStorage
+- **Bookmarking** — URL hash state for sharing filter configurations
+- **Area cards** — Expandable cards with POI highlights per area
 
 ## Configuration
 
-Edit the top of `ur_rental_search.py`:
+### CLI Arguments
 
-- **`ROOM_TYPE_FILTER`** — List of room types to include, e.g. `["2LDK", "3LDK"]`. Set to `None` for all types.
-- **`AREAS`** — List of area dicts to search. Each needs: `name`, `block`, `tdfk`, `tdfk_name`, `skcs`.
-- **`REQUEST_DELAY`** — Seconds between API calls (default: 2). Be respectful.
+All three scrapers share a common CLI interface:
 
-## Scoring Configuration
+```
+--areas NAME [NAME ...]   Filter to specific area names (partial match)
+--max-pages N             Override max pages per area
+--delay SECONDS           Override request delay
+--output FILE             Override output JSON filename
+-v, --verbose             Enable debug logging
+--dry-run                 Show URLs without fetching
+```
+
+### Area Definitions
+
+Areas are defined in `shared/config.py`. Each area includes coordinates, prefecture, and source-specific codes (UR, SUUMO, REJ) so a single area list drives all three scrapers.
+
+### Scoring Configuration
 
 The viewer scores and ranks rooms based on criteria defined in `scoring_config.json`. This file is loaded on startup and deep-merged over the hardcoded defaults — if the file is missing or fails to load, the built-in defaults are used.
 
@@ -34,7 +70,7 @@ You can override everything or just the parts you care about. For example, to on
 }
 ```
 
-### Config sections
+#### Config sections
 
 | Key | What it controls |
 |---|---|
@@ -50,14 +86,39 @@ You can override everything or just the parts you care about. For example, to on
 
 ## Areas Covered
 
-Currently searches 36 areas across 4 prefectures:
+Currently searches 40 areas across 4 prefectures:
 
 | Prefecture | Areas |
 |---|---|
 | **Saitama** (11) | Kawaguchi, Wako, Urawa, Omiya, Kawagoe, Toda, Warabi, Minami-ku, Chuo-ku, Asaka, Niiza |
-| **Chiba** (12) | Ichikawa, Funabashi, Urayasu, Matsudo |
-| **Kanagawa** (14) | Kawasaki (4 wards), Yokohama (9 wards), Kamakura, Fujisawa, Chigasaki |
-| **Tokyo** (13) | Kita-ku, Itabashi-ku, Nerima-ku, Adachi-ku, Edogawa-ku |
+| **Chiba** (4) | Ichikawa, Funabashi, Urayasu, Matsudo |
+| **Kanagawa** (20) | Kawasaki (4 wards), Yokohama (11 wards), Kamakura, Fujisawa, Chigasaki, + 2 city-level REJ entries |
+| **Tokyo** (5) | Kita-ku, Itabashi-ku, Nerima-ku, Adachi-ku, Edogawa-ku |
+
+## Project Structure
+
+```
+├── ur_rental_search.py          # UR scraper
+├── suumo_search.py              # SUUMO scraper
+├── realestate_jp_search.py      # RealEstate.co.jp scraper
+├── build_pois.py                # POI builder for map marker data
+├── viewer.html                  # Interactive browser-based viewer
+├── scoring_config.json          # Scoring overrides
+├── shared/                      # Shared modules package
+│   ├── config.py                #   Area definitions (single source of truth)
+│   ├── cli.py                   #   Common CLI argument parser
+│   ├── http_client.py           #   HTTP client with retries and delays
+│   ├── parsers.py               #   Shared parsing utilities
+│   └── logging_setup.py         #   Logging configuration
+├── tests/                       # Test suite
+│   ├── test_ur_parser.py
+│   ├── test_suumo_parser.py
+│   ├── test_realestate_parser.py
+│   ├── test_parsers.py
+│   └── test_http_client.py
+├── requirements.txt
+└── .github/workflows/ci.yml    # CI pipeline
+```
 
 ---
 
@@ -233,6 +294,9 @@ GitHub Actions runs the test suite on every push to master and on all PRs target
 
 - `requests` — HTTP client
 - `tabulate` — Console table formatting
+- `beautifulsoup4` — HTML parsing (SUUMO and RealEstate.co.jp scrapers)
+- `pytest` — Test runner (dev)
+- `responses` — HTTP mocking for tests (dev)
 
 ## Related Resources
 
