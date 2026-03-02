@@ -12,13 +12,17 @@ Endpoint: bukken/result/bukken_result/ (POST, form data)
 import html
 import json
 import re
-import sys
 import time
 from dataclasses import dataclass, field, asdict
-from typing import Optional
 
 import requests
 from tabulate import tabulate
+
+from shared.parsers import parse_yen
+from shared.http_client import create_session, fetch_page
+from shared.logging_setup import setup_logging
+from shared.config import Area, get_areas_for_source
+from shared.cli import build_arg_parser, filter_areas
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -34,68 +38,9 @@ REQUEST_DELAY = 2  # seconds between API calls — be respectful
 # Room type filter — set to None to show all, or e.g. ["2LDK", "3LDK"]
 ROOM_TYPE_FILTER = ["2LDK", "2SLDK", "3LDK", "3DK"]
 
-AREAS = [
-    # --- SAITAMA (tdfk=11) ---
-    {"name": "Kawaguchi (川口市)",           "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "203"},
-    {"name": "Wako (和光市)",               "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "229"},
-    {"name": "Urawa (浦和区)",              "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "107"},
-    {"name": "Omiya (大宮区)",              "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "103"},
-    {"name": "Kawagoe (川越市)",            "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "201"},
-    {"name": "Toda (戸田市)",               "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "224"},
-    {"name": "Warabi (蕨市)",               "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "223"},
-    {"name": "Saitama Minami-ku (南区)",    "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "108"},
-    {"name": "Saitama Chuo-ku (中央区)",    "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "105"},
-    {"name": "Asaka (朝霞市)",              "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "227"},
-    {"name": "Niiza (新座市)",              "block": "kanto", "tdfk": "11", "tdfk_name": "saitama",  "skcs": "230"},
+AREAS = get_areas_for_source("ur")
 
-    # --- CHIBA (tdfk=12) ---
-    {"name": "Ichikawa (市川市)",           "block": "kanto", "tdfk": "12", "tdfk_name": "chiba",    "skcs": "203"},
-    {"name": "Funabashi (船橋市)",          "block": "kanto", "tdfk": "12", "tdfk_name": "chiba",    "skcs": "204"},
-    {"name": "Urayasu (浦安市)",            "block": "kanto", "tdfk": "12", "tdfk_name": "chiba",    "skcs": "227"},
-    {"name": "Matsudo (松戸市)",            "block": "kanto", "tdfk": "12", "tdfk_name": "chiba",    "skcs": "207"},
-
-    # --- KANAGAWA (tdfk=14) — Kawasaki ---
-    {"name": "Kawasaki-ku (川崎区)",        "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "131"},
-    {"name": "Saiwai-ku (幸区)",            "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "132"},
-    {"name": "Nakahara-ku (中原区)",        "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "133"},
-    {"name": "Takatsu-ku (高津区)",         "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "134"},
-
-    # --- KANAGAWA — Yokohama ---
-    {"name": "Yokohama Nishi-ku (西区)",    "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "103"},
-    {"name": "Yokohama Naka-ku (中区)",     "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "104"},
-    {"name": "Yokohama Kanagawa-ku (神奈川区)", "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "102"},
-    {"name": "Yokohama Kohoku-ku (港北区)", "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "109"},
-    {"name": "Yokohama Tsuzuki-ku (都筑区)","block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "118"},
-    {"name": "Yokohama Aoba-ku (青葉区)",   "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "117"},
-    {"name": "Yokohama Minami-ku (南区)",   "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "105"},
-    {"name": "Yokohama Hodogaya-ku (保土ケ谷区)", "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "106"},
-    {"name": "Yokohama Isogo-ku (磯子区)",  "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "107"},
-
-    # --- KANAGAWA — Shonan / Other ---
-    {"name": "Kamakura (鎌倉市)",           "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "204"},
-    {"name": "Fujisawa (藤沢市)",           "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "205"},
-    {"name": "Chigasaki (茅ヶ崎市)",        "block": "kanto", "tdfk": "14", "tdfk_name": "kanagawa", "skcs": "207"},
-
-    # --- TOKYO border areas (tdfk=13) ---
-    {"name": "Kita-ku (北区)",              "block": "kanto", "tdfk": "13", "tdfk_name": "tokyo",    "skcs": "117"},
-    {"name": "Itabashi-ku (板橋区)",        "block": "kanto", "tdfk": "13", "tdfk_name": "tokyo",    "skcs": "119"},
-    {"name": "Nerima-ku (練馬区)",          "block": "kanto", "tdfk": "13", "tdfk_name": "tokyo",    "skcs": "120"},
-    {"name": "Adachi-ku (足立区)",          "block": "kanto", "tdfk": "13", "tdfk_name": "tokyo",    "skcs": "121"},
-    {"name": "Edogawa-ku (江戸川区)",       "block": "kanto", "tdfk": "13", "tdfk_name": "tokyo",    "skcs": "123"},
-]
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "Accept-Language": "ja,en;q=0.9",
-    "Referer": f"{SITE_URL}/chintai/kanto/",
-    "Origin": SITE_URL,
-    "X-Requested-With": "XMLHttpRequest",
-}
-
-SESSION = requests.Session()
-SESSION.headers.update(HEADERS)
+logger = setup_logging(name="ur-search")
 
 
 # ---------------------------------------------------------------------------
@@ -135,14 +80,6 @@ class Property:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def parse_yen(text: str) -> int:
-    """Parse a yen string like '101,800円' or '¥101,800' to integer."""
-    if not text:
-        return 0
-    digits = re.sub(r"[^\d]", "", text)
-    return int(digits) if digits else 0
-
-
 def clean_traffic(text: str) -> str:
     """Extract station access lines from HTML like '<li>JR...駅 徒歩12分</li>'."""
     if not text:
@@ -167,7 +104,7 @@ def clean_floorspace(text: str) -> str:
 # API
 # ---------------------------------------------------------------------------
 
-def search_area(area: dict) -> list[Property]:
+def search_area(area: "Area", session: requests.Session) -> list[Property]:
     """
     Query the bukken_result API for an area.
     Returns a list of Property objects with their vacant rooms.
@@ -175,9 +112,9 @@ def search_area(area: dict) -> list[Property]:
     url = f"{API_URL}/bukken/result/bukken_result/"
     data = {
         "mode": "area",
-        "skcs": area["skcs"],
-        "block": area["block"],
-        "tdfk": area["tdfk"],
+        "skcs": area.ur_skcs,
+        "block": area.ur_block,
+        "tdfk": area.ur_tdfk,
         "orderByField": "0",
         "pageSize": "100",
         "pageIndex": "0",
@@ -189,14 +126,13 @@ def search_area(area: dict) -> list[Property]:
     }
 
     try:
-        resp = SESSION.post(url, data=data, timeout=30)
-        resp.raise_for_status()
+        resp = fetch_page(session, url, method="POST", data=data)
         result = resp.json()
     except requests.RequestException as e:
-        print(f"  [ERROR] API request failed: {e}", file=sys.stderr)
+        logger.error("API request failed: %s", e)
         return []
     except json.JSONDecodeError:
-        print(f"  [ERROR] Invalid JSON response", file=sys.stderr)
+        logger.error("Invalid JSON response")
         return []
 
     if not result or not isinstance(result, list):
@@ -256,8 +192,8 @@ def search_area(area: dict) -> list[Property]:
             name=item.get("danchiNm", ""),
             address=item.get("place", ""),
             traffic=clean_traffic(item.get("traffic", "")),
-            area_name=area["name"],
-            tdfk_name=area["tdfk_name"],
+            area_name=area.name,
+            tdfk_name=area.prefecture,
             rooms=rooms,
         )
         properties.append(prop)
@@ -358,35 +294,61 @@ def save_results(all_properties: list[Property], filename: str = "results.json")
 # ---------------------------------------------------------------------------
 
 def main():
-    print("UR Housing Rental Price Search")
-    print("=" * 40)
+    global REQUEST_DELAY
+    parser = build_arg_parser("ur-search", "Search UR Housing rental listings")
+    args = parser.parse_args()
+
+    if args.verbose:
+        logger.setLevel("DEBUG")
+        for h in logger.handlers:
+            h.setLevel("DEBUG")
+
+    areas = filter_areas(AREAS, args.areas)
+    if args.delay is not None:
+        REQUEST_DELAY = args.delay
+    output_file = args.output or "results.json"
+
+    logger.info("UR Housing Rental Price Search")
     if ROOM_TYPE_FILTER:
-        print(f"Filtering for: {', '.join(ROOM_TYPE_FILTER)}")
-    print(f"Searching {len(AREAS)} areas...")
-    print()
+        logger.info("Filtering for: %s", ", ".join(ROOM_TYPE_FILTER))
+    logger.info("Searching %d areas...", len(areas))
+
+    if args.dry_run:
+        url = f"{API_URL}/bukken/result/bukken_result/"
+        for area in areas:
+            logger.info("[DRY RUN] POST %s  skcs=%s tdfk=%s", url, area.ur_skcs, area.ur_tdfk)
+        return
+
+    session = create_session(extra_headers={
+        "Accept": "application/json, text/javascript, */*; q=0.01",
+        "Accept-Language": "ja,en;q=0.9",
+        "Referer": f"{SITE_URL}/chintai/kanto/",
+        "Origin": SITE_URL,
+        "X-Requested-With": "XMLHttpRequest",
+    })
 
     all_properties: list[Property] = []
 
-    for i, area in enumerate(AREAS):
-        print(f"\n[{area['name']}] Searching...")
+    for i, area in enumerate(areas):
+        logger.info("[%s] Searching...", area.name)
 
-        props = search_area(area)
+        props = search_area(area, session)
 
         if props:
             room_count = sum(len(p.rooms) for p in props)
-            print(f"  Found {len(props)} properties with {room_count} vacant rooms")
+            logger.info("  Found %d properties with %d vacant rooms", len(props), room_count)
             for p in props:
-                print(f"    - {p.name}: {len(p.rooms)} room(s)")
+                logger.info("    - %s: %d room(s)", p.name, len(p.rooms))
             all_properties.extend(props)
         else:
-            print(f"  No vacancies")
+            logger.info("  No vacancies")
 
         # Rate limiting between requests (skip delay after last)
-        if i < len(AREAS) - 1:
+        if i < len(areas) - 1:
             time.sleep(REQUEST_DELAY)
 
     print_results(all_properties)
-    save_results(all_properties)
+    save_results(all_properties, output_file)
 
 
 if __name__ == "__main__":

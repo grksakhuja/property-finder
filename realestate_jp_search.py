@@ -9,15 +9,21 @@ URL pattern:
   https://realestate.co.jp/en/rent/listing?prefecture={iso}&city={code}&rooms=30&...&page={n}
 """
 
+import datetime
 import json
 import re
-import sys
 import time
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate
+
+from shared.parsers import parse_yen
+from shared.http_client import create_session, fetch_page
+from shared.logging_setup import setup_logging
+from shared.config import Area, get_areas_for_source
+from shared.cli import build_arg_parser, filter_areas
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -36,43 +42,9 @@ DEFAULT_PARAMS = {
     "order": "total_monthly_cost_ranking-asc",
 }
 
-AREAS = [
-    # --- SAITAMA (JP-11) ---
-    {"name": "Kawaguchi (川口市)",           "prefecture": "JP-11", "city": "11203"},
-    {"name": "Kawagoe (川越市)",            "prefecture": "JP-11", "city": "11201"},
-    {"name": "Urawa (浦和区)",              "prefecture": "JP-11", "city": "11107"},
-    {"name": "Omiya (大宮区)",              "prefecture": "JP-11", "city": "11103"},
-    {"name": "Saitama Minami-ku (南区)",    "prefecture": "JP-11", "city": "11108"},
+AREAS = get_areas_for_source("rej")
 
-    # --- CHIBA (JP-12) ---
-    {"name": "Ichikawa (市川市)",           "prefecture": "JP-12", "city": "12203"},
-    {"name": "Funabashi (船橋市)",          "prefecture": "JP-12", "city": "12204"},
-    {"name": "Urayasu (浦安市)",            "prefecture": "JP-12", "city": "12227"},
-    {"name": "Matsudo (松戸市)",            "prefecture": "JP-12", "city": "12207"},
-
-    # --- KANAGAWA (JP-14) ---
-    {"name": "Kawasaki (川崎市)",           "prefecture": "JP-14", "city": "14130"},
-    {"name": "Yokohama (横浜市)",           "prefecture": "JP-14", "city": "14100"},
-    {"name": "Kamakura (鎌倉市)",           "prefecture": "JP-14", "city": "14204"},
-    {"name": "Fujisawa (藤沢市)",           "prefecture": "JP-14", "city": "14205"},
-
-    # --- TOKYO border (JP-13) ---
-    {"name": "Kita-ku (北区)",              "prefecture": "JP-13", "city": "13117"},
-    {"name": "Itabashi-ku (板橋区)",        "prefecture": "JP-13", "city": "13119"},
-    {"name": "Nerima-ku (練馬区)",          "prefecture": "JP-13", "city": "13120"},
-    {"name": "Adachi-ku (足立区)",          "prefecture": "JP-13", "city": "13121"},
-    {"name": "Edogawa-ku (江戸川区)",       "prefecture": "JP-13", "city": "13123"},
-]
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-}
-
-SESSION = requests.Session()
-SESSION.headers.update(HEADERS)
+logger = setup_logging(name="rej-search")
 
 
 # ---------------------------------------------------------------------------
@@ -110,14 +82,6 @@ class Property:
 # Parsers
 # ---------------------------------------------------------------------------
 
-def parse_yen(text: str) -> int:
-    """Parse '¥115,000' or '115,000' → 115000, '¥0' → 0."""
-    if not text:
-        return 0
-    digits = re.sub(r"[^\d]", "", text)
-    return int(digits) if digits else 0
-
-
 def parse_year_built(text: str) -> int:
     """Parse '2008' → 2008."""
     if not text:
@@ -126,26 +90,15 @@ def parse_year_built(text: str) -> int:
     return int(m.group(1)) if m else -1
 
 
-def get_pref_name(iso_code: str) -> str:
-    """Convert JP-11 → saitama etc."""
-    mapping = {
-        "JP-11": "saitama",
-        "JP-12": "chiba",
-        "JP-13": "tokyo",
-        "JP-14": "kanagawa",
-    }
-    return mapping.get(iso_code, "unknown")
-
-
 # ---------------------------------------------------------------------------
 # Scraping
 # ---------------------------------------------------------------------------
 
-def build_url(area: dict, page: int = 1) -> str:
+def build_url(area, page: int = 1) -> str:
     """Build Real Estate Japan search URL."""
     params = dict(DEFAULT_PARAMS)
-    params["prefecture"] = area["prefecture"]
-    params["city"] = area["city"]
+    params["prefecture"] = area.rej_prefecture
+    params["city"] = area.rej_city
     if page > 1:
         params["page"] = str(page)
     query = "&".join(f"{k}={v}" for k, v in params.items())
@@ -178,7 +131,7 @@ def extract_field_text(listing, label: str) -> str:
     return ""
 
 
-def parse_page(html_content: str, area: dict) -> list[Room]:
+def parse_page(html_content: str) -> list[Room]:
     """Parse a single Real Estate Japan results page into Room objects."""
     soup = BeautifulSoup(html_content, "html.parser")
     rooms = []
@@ -259,7 +212,7 @@ def parse_page(html_content: str, area: dict) -> list[Room]:
     return rooms
 
 
-def search_area(area: dict) -> list[Room]:
+def search_area(area: "Area", session: requests.Session) -> list[Room]:
     """Scrape all pages for an area (up to MAX_PAGES_PER_AREA)."""
     all_rooms = []
 
@@ -267,20 +220,19 @@ def search_area(area: dict) -> list[Room]:
         url = build_url(area, page_num)
 
         try:
-            resp = SESSION.get(url, timeout=30, allow_redirects=True)
-            resp.raise_for_status()
+            resp = fetch_page(session, url, allow_redirects=True)
         except requests.RequestException as e:
-            print(f"  [ERROR] Request failed (page {page_num}): {e}", file=sys.stderr)
+            logger.error("Request failed (page %d): %s", page_num, e)
             break
 
-        rooms = parse_page(resp.text, area)
+        rooms = parse_page(resp.text)
         if not rooms:
             if page_num == 1:
-                print(f"  No listings found")
+                logger.info("  No listings found")
             break
 
         all_rooms.extend(rooms)
-        print(f"  Page {page_num}: {len(rooms)} listings")
+        logger.info("  Page %d: %d listings", page_num, len(rooms))
 
         # If fewer than 15 results, no more pages
         if len(rooms) < 15:
@@ -357,8 +309,8 @@ def save_results(all_areas: dict[str, list[Room]], area_lookup: dict,
     for area_name, rooms in all_areas.items():
         if not rooms:
             continue
-        area_info = area_lookup.get(area_name, {})
-        pref = get_pref_name(area_info.get("prefecture", ""))
+        area_info = area_lookup.get(area_name)
+        pref = area_info.prefecture if area_info else "unknown"
 
         listings = []
         for room in rooms:
@@ -367,7 +319,7 @@ def save_results(all_areas: dict[str, list[Room]], area_lookup: dict,
                 "address": room.neighborhood,
                 "access": room.station,
                 "building_age": room.year_built,
-                "building_age_years": (2026 - room.year_built_int) if room.year_built_int > 0 else -1,
+                "building_age_years": (datetime.datetime.now().year - room.year_built_int) if room.year_built_int > 0 else -1,
                 "rooms": [{
                     "floor": room.floor,
                     "rent": room.monthly_cost,
@@ -399,33 +351,56 @@ def save_results(all_areas: dict[str, list[Room]], area_lookup: dict,
 # ---------------------------------------------------------------------------
 
 def main():
-    print("Real Estate Japan Rental Search")
-    print("=" * 40)
-    print(f"Searching {len(AREAS)} areas (max {MAX_PAGES_PER_AREA} pages each)...")
-    print(f"Filter: 2LDK+, ¥60,000-¥200,000, Mansion/Apartment")
-    print()
+    global REQUEST_DELAY, MAX_PAGES_PER_AREA
+    parser = build_arg_parser("rej-search", "Search Real Estate Japan rental listings")
+    args = parser.parse_args()
+
+    if args.verbose:
+        logger.setLevel("DEBUG")
+        for h in logger.handlers:
+            h.setLevel("DEBUG")
+
+    areas = filter_areas(AREAS, args.areas)
+    if args.max_pages is not None:
+        MAX_PAGES_PER_AREA = args.max_pages
+    if args.delay is not None:
+        REQUEST_DELAY = args.delay
+    output_file = args.output or "results_realestate_jp.json"
+
+    logger.info("Real Estate Japan Rental Search")
+    logger.info("Searching %d areas (max %d pages each)...", len(areas), MAX_PAGES_PER_AREA)
+    logger.info("Filter: 2LDK+, ¥60,000-¥200,000, Mansion/Apartment")
+
+    if args.dry_run:
+        for area in areas:
+            logger.info("[DRY RUN] %s", build_url(area))
+        return
+
+    session = create_session(extra_headers={
+        "Accept-Language": "en-US,en;q=0.9",
+    })
 
     all_areas: dict[str, list[Room]] = {}
     area_lookup: dict[str, dict] = {}
 
-    for i, area in enumerate(AREAS):
-        print(f"\n[{area['name']}] Searching...")
-        area_lookup[area["name"]] = area
+    for i, area in enumerate(areas):
+        logger.info("[%s] Searching...", area.name)
+        area_lookup[area.name] = area
 
-        rooms = search_area(area)
-        all_areas[area["name"]] = rooms
+        rooms = search_area(area, session)
+        all_areas[area.name] = rooms
 
         if rooms:
-            print(f"  Total: {len(rooms)} listings")
+            logger.info("  Total: %d listings", len(rooms))
         else:
-            print(f"  No listings")
+            logger.info("  No listings")
 
         # Rate limiting between areas
-        if i < len(AREAS) - 1:
+        if i < len(areas) - 1:
             time.sleep(REQUEST_DELAY)
 
     print_results(all_areas)
-    save_results(all_areas, area_lookup)
+    save_results(all_areas, area_lookup, output_file)
 
 
 if __name__ == "__main__":
