@@ -20,7 +20,7 @@ def parse_yen(text: Optional[str]) -> int:
     # 万円 format: X.Y万円 (万 = 10,000)
     m = re.search(r"([\d.]+)万円", text)
     if m:
-        return int(float(m.group(1)) * 10000)
+        return round(float(m.group(1)) * 10000)
     # Plain yen with optional currency symbol: ¥NNN or NNN円
     digits = re.sub(r"[^\d]", "", text)
     return int(digits) if digits else 0
