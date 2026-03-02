@@ -13,6 +13,7 @@ import html
 import json
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field, asdict
 
 import requests
@@ -30,7 +31,8 @@ from shared.cli import build_arg_parser, filter_areas
 
 API_URL = "https://chintai.r6.ur-net.go.jp/chintai/api"
 SITE_URL = "https://www.ur-net.go.jp"
-REQUEST_DELAY = 2  # seconds between API calls — be respectful
+REQUEST_DELAY = 0  # seconds between API calls (JSON API, very fast)
+DEFAULT_WORKERS = 5  # parallel workers for area scraping
 
 # Prefecture code mapping (tdfk uses JIS prefecture codes):
 # 11 = Saitama, 12 = Chiba, 13 = Tokyo, 14 = Kanagawa
@@ -328,24 +330,24 @@ def main():
     })
 
     all_properties: list[Property] = []
+    max_workers = args.workers if args.workers is not None else DEFAULT_WORKERS
 
-    for i, area in enumerate(areas):
+    def _search_one(area):
         logger.info("[%s] Searching...", area.name)
+        return area, search_area(area, session)
 
-        props = search_area(area, session)
-
-        if props:
-            room_count = sum(len(p.rooms) for p in props)
-            logger.info("  Found %d properties with %d vacant rooms", len(props), room_count)
-            for p in props:
-                logger.info("    - %s: %d room(s)", p.name, len(p.rooms))
-            all_properties.extend(props)
-        else:
-            logger.info("  No vacancies")
-
-        # Rate limiting between requests (skip delay after last)
-        if i < len(areas) - 1:
-            time.sleep(REQUEST_DELAY)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_search_one, area): area for area in areas}
+        for future in as_completed(futures):
+            area, props = future.result()
+            if props:
+                room_count = sum(len(p.rooms) for p in props)
+                logger.info("[%s] Found %d properties with %d vacant rooms", area.name, len(props), room_count)
+                for p in props:
+                    logger.info("    - %s: %d room(s)", p.name, len(p.rooms))
+                all_properties.extend(props)
+            else:
+                logger.info("[%s] No vacancies", area.name)
 
     print_results(all_properties)
     save_results(all_properties, output_file)

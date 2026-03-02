@@ -13,6 +13,7 @@ import datetime
 import json
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 
 import requests
@@ -30,8 +31,9 @@ from shared.cli import build_arg_parser, filter_areas
 # ---------------------------------------------------------------------------
 
 BASE_URL = "https://realestate.co.jp/en/rent/listing"
-REQUEST_DELAY = 3  # seconds between page fetches — be respectful (robots.txt)
+REQUEST_DELAY = 1  # seconds between page fetches
 MAX_PAGES_PER_AREA = 5  # cap at 75 listings per area (15/page)
+DEFAULT_WORKERS = 3  # parallel workers for area scraping
 
 # rooms=30 means 2LDK minimum (includes 2LDK, 3K, 3DK, 3LDK, etc.)
 DEFAULT_PARAMS = {
@@ -382,22 +384,25 @@ def main():
 
     all_areas: dict[str, list[Room]] = {}
     area_lookup: dict[str, dict] = {}
+    max_workers = args.workers if args.workers is not None else DEFAULT_WORKERS
 
-    for i, area in enumerate(areas):
-        logger.info("[%s] Searching...", area.name)
+    # Pre-populate area_lookup (read-only during threads)
+    for area in areas:
         area_lookup[area.name] = area
 
-        rooms = search_area(area, session)
-        all_areas[area.name] = rooms
+    def _search_one(area):
+        logger.info("[%s] Searching...", area.name)
+        return area, search_area(area, session)
 
-        if rooms:
-            logger.info("  Total: %d listings", len(rooms))
-        else:
-            logger.info("  No listings")
-
-        # Rate limiting between areas
-        if i < len(areas) - 1:
-            time.sleep(REQUEST_DELAY)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_search_one, area): area for area in areas}
+        for future in as_completed(futures):
+            area, rooms = future.result()
+            all_areas[area.name] = rooms
+            if rooms:
+                logger.info("[%s] Total: %d listings", area.name, len(rooms))
+            else:
+                logger.info("[%s] No listings", area.name)
 
     print_results(all_areas)
     save_results(all_areas, area_lookup, output_file)
