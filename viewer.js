@@ -153,6 +153,7 @@ const BRIEF = {
 
 function deepMerge(target, source) {
   for (const key of Object.keys(source)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') continue;
     if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])
         && target[key] && typeof target[key] === 'object' && !Array.isArray(target[key])) {
       deepMerge(target[key], source[key]);
@@ -639,7 +640,7 @@ async function loadData() {
     if (e instanceof SyntaxError) {
       console.warn('scoring_config.json is malformed — using defaults. Error:', e.message);
     } else {
-      console.log('Using default scoring config (scoring_config.json not found)');
+      console.log('Could not load scoring_config.json — using defaults:', e.message);
     }
   }
 

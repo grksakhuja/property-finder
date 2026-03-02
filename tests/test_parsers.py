@@ -9,6 +9,9 @@ class TestParseYen:
     def test_man_yen_format(self):
         assert parse_yen("8.2万円") == 82000
 
+    def test_man_yen_two_decimals(self):
+        assert parse_yen("8.29万円") == 82900
+
     def test_man_yen_integer(self):
         assert parse_yen("10万円") == 100000
 
