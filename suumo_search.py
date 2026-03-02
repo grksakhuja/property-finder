@@ -11,6 +11,7 @@ URL pattern: https://suumo.jp/chintai/{prefecture}/sc_{city}/?md=07&pc=50&page={
 import json
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field, asdict
 
 import requests
@@ -28,8 +29,9 @@ from shared.cli import build_arg_parser, filter_areas
 # ---------------------------------------------------------------------------
 
 BASE_URL = "https://suumo.jp/chintai"
-REQUEST_DELAY = 2  # seconds between page fetches
+REQUEST_DELAY = 0.5  # seconds between page fetches
 MAX_PAGES_PER_AREA = 5  # cap at 250 listings per area (50/page)
+DEFAULT_WORKERS = 3  # parallel workers for area scraping
 
 # Room type codes for SUUMO md parameter
 # md=07 → 2LDK, md=08 → 3K, md=09 → 3DK, md=10 → 3LDK
@@ -368,22 +370,22 @@ def main():
     })
 
     all_properties: list[Property] = []
+    max_workers = args.workers if args.workers is not None else DEFAULT_WORKERS
 
-    for i, area in enumerate(areas):
+    def _search_one(area):
         logger.info("[%s] Searching...", area.name)
+        return area, search_area(area, session)
 
-        props = search_area(area, session)
-
-        if props:
-            room_count = sum(len(p.rooms) for p in props)
-            logger.info("  Total: %d buildings with %d units", len(props), room_count)
-            all_properties.extend(props)
-        else:
-            logger.info("  No listings")
-
-        # Rate limiting between areas
-        if i < len(areas) - 1:
-            time.sleep(REQUEST_DELAY)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_search_one, area): area for area in areas}
+        for future in as_completed(futures):
+            area, props = future.result()
+            if props:
+                room_count = sum(len(p.rooms) for p in props)
+                logger.info("[%s] Total: %d buildings with %d units", area.name, len(props), room_count)
+                all_properties.extend(props)
+            else:
+                logger.info("[%s] No listings", area.name)
 
     print_results(all_properties)
     save_results(all_properties, output_file)

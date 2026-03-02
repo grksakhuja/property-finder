@@ -32,6 +32,9 @@ def build_arg_parser(prog: str, description: str) -> argparse.ArgumentParser:
     parser.add_argument(
         "--dry-run", action="store_true",
         help="Show URLs without fetching")
+    parser.add_argument(
+        "--workers", type=int, default=None,
+        help="Number of parallel workers for area scraping (default: scraper-specific)")
     return parser
 
 
