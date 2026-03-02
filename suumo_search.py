@@ -10,13 +10,18 @@ URL pattern: https://suumo.jp/chintai/{prefecture}/sc_{city}/?md=07&pc=50&page={
 
 import json
 import re
-import sys
 import time
 from dataclasses import dataclass, field, asdict
 
 import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate
+
+from shared.parsers import parse_yen, parse_building_age, parse_size_sqm
+from shared.http_client import create_session, fetch_page
+from shared.logging_setup import setup_logging
+from shared.config import Area, get_areas_for_source
+from shared.cli import build_arg_parser, filter_areas
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -31,65 +36,9 @@ MAX_PAGES_PER_AREA = 5  # cap at 250 listings per area (50/page)
 ROOM_TYPE_CODES = ["07", "08", "09", "10"]
 ROOM_TYPE_FILTER = ["2LDK", "2SLDK", "3LDK", "3DK", "3K"]
 
-AREAS = [
-    # --- SAITAMA ---
-    {"name": "Kawaguchi (川口市)",           "prefecture": "saitama", "code": "sc_kawaguchi"},
-    {"name": "Wako (和光市)",               "prefecture": "saitama", "code": "sc_wako"},
-    {"name": "Urawa (浦和区)",              "prefecture": "saitama", "code": "sc_saitamashiurawa"},
-    {"name": "Omiya (大宮区)",              "prefecture": "saitama", "code": "sc_saitamashiomiya"},
-    {"name": "Kawagoe (川越市)",            "prefecture": "saitama", "code": "sc_kawagoe"},
-    {"name": "Toda (戸田市)",               "prefecture": "saitama", "code": "sc_toda"},
-    {"name": "Warabi (蕨市)",               "prefecture": "saitama", "code": "sc_warabi"},
-    {"name": "Saitama Minami-ku (南区)",    "prefecture": "saitama", "code": "sc_saitamashiminami"},
-    {"name": "Saitama Chuo-ku (中央区)",    "prefecture": "saitama", "code": "sc_saitamashichuo"},
-    {"name": "Asaka (朝霞市)",              "prefecture": "saitama", "code": "sc_asaka"},
-    {"name": "Niiza (新座市)",              "prefecture": "saitama", "code": "sc_niiza"},
+AREAS = get_areas_for_source("suumo")
 
-    # --- CHIBA ---
-    {"name": "Ichikawa (市川市)",           "prefecture": "chiba", "code": "sc_ichikawa"},
-    {"name": "Funabashi (船橋市)",          "prefecture": "chiba", "code": "sc_funabashi"},
-    {"name": "Urayasu (浦安市)",            "prefecture": "chiba", "code": "sc_urayasu"},
-    {"name": "Matsudo (松戸市)",            "prefecture": "chiba", "code": "sc_matsudo"},
-
-    # --- KANAGAWA — Kawasaki ---
-    {"name": "Kawasaki-ku (川崎区)",        "prefecture": "kanagawa", "code": "sc_kawasakishikawasaki"},
-    {"name": "Saiwai-ku (幸区)",            "prefecture": "kanagawa", "code": "sc_kawasakishisaiwai"},
-    {"name": "Nakahara-ku (中原区)",        "prefecture": "kanagawa", "code": "sc_kawasakishinakahara"},
-    {"name": "Takatsu-ku (高津区)",         "prefecture": "kanagawa", "code": "sc_kawasakishitakatsu"},
-
-    # --- KANAGAWA — Yokohama ---
-    {"name": "Yokohama Tsurumi-ku (鶴見区)",  "prefecture": "kanagawa", "code": "sc_yokohamashitsurumi"},
-    {"name": "Yokohama Kanagawa-ku (神奈川区)","prefecture": "kanagawa", "code": "sc_yokohamashikanagawa"},
-    {"name": "Yokohama Nishi-ku (西区)",      "prefecture": "kanagawa", "code": "sc_yokohamashinishi"},
-    {"name": "Yokohama Naka-ku (中区)",       "prefecture": "kanagawa", "code": "sc_yokohamashinaka"},
-    {"name": "Yokohama Minami-ku (南区)",     "prefecture": "kanagawa", "code": "sc_yokohamashiminami"},
-    {"name": "Yokohama Hodogaya-ku (保土ケ谷区)","prefecture": "kanagawa", "code": "sc_yokohamashihodogaya"},
-    {"name": "Yokohama Kohoku-ku (港北区)",   "prefecture": "kanagawa", "code": "sc_yokohamashikohoku"},
-    {"name": "Yokohama Konan-ku (港南区)",    "prefecture": "kanagawa", "code": "sc_yokohamashikonan"},
-    {"name": "Yokohama Aoba-ku (青葉区)",     "prefecture": "kanagawa", "code": "sc_yokohamashiaoba"},
-
-    # --- KANAGAWA — Shonan ---
-    {"name": "Kamakura (鎌倉市)",           "prefecture": "kanagawa", "code": "sc_kamakura"},
-    {"name": "Fujisawa (藤沢市)",           "prefecture": "kanagawa", "code": "sc_fujisawa"},
-    {"name": "Chigasaki (茅ヶ崎市)",        "prefecture": "kanagawa", "code": "sc_chigasaki"},
-
-    # --- TOKYO border ---
-    {"name": "Kita-ku (北区)",              "prefecture": "tokyo", "code": "sc_kita"},
-    {"name": "Itabashi-ku (板橋区)",        "prefecture": "tokyo", "code": "sc_itabashi"},
-    {"name": "Nerima-ku (練馬区)",          "prefecture": "tokyo", "code": "sc_nerima"},
-    {"name": "Adachi-ku (足立区)",          "prefecture": "tokyo", "code": "sc_adachi"},
-    {"name": "Edogawa-ku (江戸川区)",       "prefecture": "tokyo", "code": "sc_edogawa"},
-]
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "ja,en;q=0.9",
-}
-
-SESSION = requests.Session()
-SESSION.headers.update(HEADERS)
+logger = setup_logging(name="suumo-search")
 
 
 # ---------------------------------------------------------------------------
@@ -127,52 +76,13 @@ class Property:
 
 
 # ---------------------------------------------------------------------------
-# Parsers
-# ---------------------------------------------------------------------------
-
-def parse_man_yen(text: str) -> int:
-    """Parse '8.2万円' → 82000, '5000円' → 5000, '-' → 0."""
-    if not text or text.strip() == "-":
-        return 0
-    text = text.strip().replace(",", "")
-    # Format: X.Y万円 (万 = 10,000)
-    m = re.search(r"([\d.]+)万円", text)
-    if m:
-        return int(float(m.group(1)) * 10000)
-    # Format: plain yen like 5000円
-    m = re.search(r"([\d]+)円", text)
-    if m:
-        return int(m.group(1))
-    return 0
-
-
-def parse_building_age(text: str) -> int:
-    """Parse '築20年' → 20, '新築' → 0."""
-    if not text:
-        return -1
-    text = text.strip()
-    if "新築" in text:
-        return 0
-    m = re.search(r"築(\d+)年", text)
-    return int(m.group(1)) if m else -1
-
-
-def parse_size_sqm(text: str) -> float:
-    """Parse '50.28m²' or '50.28m2' → 50.28."""
-    if not text:
-        return 0.0
-    m = re.search(r"([\d.]+)", text)
-    return float(m.group(1)) if m else 0.0
-
-
-# ---------------------------------------------------------------------------
 # Scraping
 # ---------------------------------------------------------------------------
 
-def build_url(area: dict, page: int = 1) -> str:
+def build_url(area, page: int = 1) -> str:
     """Build SUUMO search URL for an area + page."""
-    prefecture = area["prefecture"]
-    code = area["code"]
+    prefecture = area.prefecture
+    code = area.suumo_code
     md_params = "&".join(f"md={c}" for c in ROOM_TYPE_CODES)
     url = f"{BASE_URL}/{prefecture}/{code}/?{md_params}&pc=50"
     if page > 1:
@@ -191,7 +101,7 @@ def get_total_count(soup: BeautifulSoup) -> int:
     return 0
 
 
-def parse_page(html_content: str, area: dict) -> list[Property]:
+def parse_page(html_content: str, area: "Area") -> list[Property]:
     """Parse a single SUUMO results page into Property objects."""
     soup = BeautifulSoup(html_content, "html.parser")
     properties = []
@@ -224,19 +134,19 @@ def parse_page(html_content: str, area: dict) -> list[Property]:
 
             rent_el = row.select_one(".cassetteitem_price--rent .cassetteitem_other-emphasis")
             rent_text = rent_el.get_text(strip=True) if rent_el else ""
-            rent_value = parse_man_yen(rent_text)
+            rent_value = parse_yen(rent_text)
 
             admin_el = row.select_one(".cassetteitem_price--administration")
             admin_text = admin_el.get_text(strip=True) if admin_el else ""
-            admin_value = parse_man_yen(admin_text)
+            admin_value = parse_yen(admin_text)
 
             deposit_el = row.select_one(".cassetteitem_price--deposit")
             deposit_text = deposit_el.get_text(strip=True) if deposit_el else ""
-            deposit_value = parse_man_yen(deposit_text)
+            deposit_value = parse_yen(deposit_text)
 
             key_el = row.select_one(".cassetteitem_price--gratuity")
             key_text = key_el.get_text(strip=True) if key_el else ""
-            key_value = parse_man_yen(key_text)
+            key_value = parse_yen(key_text)
 
             layout_el = row.select_one(".cassetteitem_madori")
             layout_text = layout_el.get_text(strip=True) if layout_el else ""
@@ -285,15 +195,15 @@ def parse_page(html_content: str, area: dict) -> list[Property]:
                 building_age=building_age_text,
                 building_age_years=building_age_years,
                 total_floors=total_floors_text,
-                area_name=area["name"],
-                prefecture=area["prefecture"],
+                area_name=area.name,
+                prefecture=area.prefecture,
                 rooms=rooms,
             ))
 
     return properties
 
 
-def search_area(area: dict) -> list[Property]:
+def search_area(area: "Area", session: requests.Session) -> list[Property]:
     """Scrape all pages for an area (up to MAX_PAGES_PER_AREA)."""
     all_properties = []
 
@@ -301,21 +211,20 @@ def search_area(area: dict) -> list[Property]:
         url = build_url(area, page_num)
 
         try:
-            resp = SESSION.get(url, timeout=30)
-            resp.raise_for_status()
+            resp = fetch_page(session, url)
         except requests.RequestException as e:
-            print(f"  [ERROR] Request failed (page {page_num}): {e}", file=sys.stderr)
+            logger.error("Request failed (page %d): %s", page_num, e)
             break
 
         properties = parse_page(resp.text, area)
         if not properties:
             if page_num == 1:
-                print(f"  No listings found")
+                logger.info("  No listings found")
             break
 
         all_properties.extend(properties)
         room_count = sum(len(p.rooms) for p in properties)
-        print(f"  Page {page_num}: {len(properties)} buildings, {room_count} units")
+        logger.info("  Page %d: %d buildings, %d units", page_num, len(properties), room_count)
 
         # Check if there are more pages
         soup = BeautifulSoup(resp.text, "html.parser")
@@ -377,7 +286,7 @@ def print_results(all_properties: list[Property]):
                     prop.building_age,
                 ])
 
-        table_rows.sort(key=lambda r: (0 if r[7] == "TBD" else 1, parse_man_yen(r[7]) if r[7] != "TBD" else 0))
+        table_rows.sort(key=lambda r: (0 if r[7] == "TBD" else 1, parse_yen(r[7]) if r[7] != "TBD" else 0))
 
         print(tabulate(
             table_rows,
@@ -428,33 +337,56 @@ def save_results(all_properties: list[Property], filename: str = "results_suumo.
 # ---------------------------------------------------------------------------
 
 def main():
-    print("SUUMO Rental Search")
-    print("=" * 40)
+    global REQUEST_DELAY, MAX_PAGES_PER_AREA
+    parser = build_arg_parser("suumo-search", "Search SUUMO rental listings")
+    args = parser.parse_args()
+
+    if args.verbose:
+        logger.setLevel("DEBUG")
+        for h in logger.handlers:
+            h.setLevel("DEBUG")
+
+    areas = filter_areas(AREAS, args.areas)
+    if args.max_pages is not None:
+        MAX_PAGES_PER_AREA = args.max_pages
+    if args.delay is not None:
+        REQUEST_DELAY = args.delay
+    output_file = args.output or "results_suumo.json"
+
+    logger.info("SUUMO Rental Search")
     if ROOM_TYPE_FILTER:
-        print(f"Filtering for: {', '.join(ROOM_TYPE_FILTER)}")
-    print(f"Searching {len(AREAS)} areas (max {MAX_PAGES_PER_AREA} pages each)...")
-    print()
+        logger.info("Filtering for: %s", ", ".join(ROOM_TYPE_FILTER))
+    logger.info("Searching %d areas (max %d pages each)...", len(areas), MAX_PAGES_PER_AREA)
+
+    if args.dry_run:
+        for area in areas:
+            logger.info("[DRY RUN] %s", build_url(area))
+        return
+
+    session = create_session(extra_headers={
+        "Accept-Language": "ja,en;q=0.9",
+    })
 
     all_properties: list[Property] = []
 
-    for i, area in enumerate(AREAS):
-        print(f"\n[{area['name']}] Searching...")
+    for i, area in enumerate(areas):
+        logger.info("[%s] Searching...", area.name)
 
-        props = search_area(area)
+        props = search_area(area, session)
 
         if props:
             room_count = sum(len(p.rooms) for p in props)
-            print(f"  Total: {len(props)} buildings with {room_count} units")
+            logger.info("  Total: %d buildings with %d units", len(props), room_count)
             all_properties.extend(props)
         else:
-            print(f"  No listings")
+            logger.info("  No listings")
 
         # Rate limiting between areas
-        if i < len(AREAS) - 1:
+        if i < len(areas) - 1:
             time.sleep(REQUEST_DELAY)
 
     print_results(all_properties)
-    save_results(all_properties)
+    save_results(all_properties, output_file)
 
 
 if __name__ == "__main__":

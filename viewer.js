@@ -1,0 +1,1320 @@
+// =====================================================================
+// Japanese → English translation maps
+// =====================================================================
+const JP_TRANSLATIONS = {
+  'コンフォール': 'Comfort',
+  'ハイタウン': 'High Town',
+  'エステート': 'Estate',
+  'ビュープラザ': 'View Plaza',
+  'ビューコート': 'View Court',
+  'ベイサイト': 'Bayside',
+  'ライトタウン': 'Light Town',
+  'ラ・ヴェール': 'La Vert',
+  'アクティ': 'Acty',
+  'ニュータウン': 'New Town',
+  'マリナイースト': 'Marina East',
+  'イーストシティ': 'East City',
+  'センター北': 'Center Kita',
+  '港北': 'Kohoku',
+  '仲町台': 'Nakamachidai',
+  'JR武蔵野線': 'JR Musashino Line',
+  'JR総武線': 'JR Sobu Line',
+  'JR京葉線': 'JR Keiyo Line',
+  'JR京浜東北・根岸線': 'JR Keihin-Tohoku/Negishi Line',
+  'JR東海道本線': 'JR Tokaido Line',
+  'JR横浜線': 'JR Yokohama Line',
+  'JR相模線': 'JR Sagami Line',
+  '東武東上線': 'Tobu Tojo Line',
+  '京急本線': 'Keikyu Main Line',
+  '京成松戸線': 'Keisei Matsudo Line',
+  '小田急江ノ島線': 'Odakyu Enoshima Line',
+  'みなとみらい線': 'Minato Mirai Line',
+  '横浜市営地下鉄ブルーライン': 'Yokohama Blue Line',
+  '埼玉高速鉄道': 'Saitama Railway',
+  '東京メトロ東西線': 'Tokyo Metro Tozai Line',
+  '駅': ' Stn',
+  '徒歩': 'walk ',
+  'バス': 'bus ',
+  '分': 'min',
+  '又は': ' or ',
+  'または': ' or ',
+  '階': 'F',
+  '号棟': ' Bldg',
+  '号室': '',
+  'か月': ' months',
+  'ヶ月': ' months',
+  'ナシ': 'None',
+};
+
+// Pre-sorted keys for translation (longest first)
+const JP_SORTED_KEYS = Object.keys(JP_TRANSLATIONS).sort((a, b) => b.length - a.length);
+
+function translateAccess(jp) {
+  if (!jp) return '';
+  let en = jp;
+  for (const jp_word of JP_SORTED_KEYS) {
+    en = en.split(jp_word).join(JP_TRANSLATIONS[jp_word]);
+  }
+  en = en.replace(/「([^」]+)」/g, '"$1"');
+  return en;
+}
+
+function translateDeposit(jp) {
+  if (!jp) return '';
+  let en = jp;
+  en = en.replace(/(\d+)か月/, '$1 months');
+  en = en.replace(/(\d+)ヶ月/, '$1 months');
+  if (en === 'ナシ') en = 'None';
+  return en;
+}
+
+function translateFloor(jp) {
+  if (!jp) return '';
+  return jp.replace(/(\d+)階/, '$1F');
+}
+
+function translateRoomName(jp) {
+  if (!jp) return '';
+  return jp.replace(/号棟/g, ' Bldg').replace(/号室/g, '').replace(/-/g, '-');
+}
+
+// =====================================================================
+// Priority scoring
+// =====================================================================
+const AREA_PRIORITY = {
+  'Kawaguchi': 95, 'Wako': 95,
+  'Urawa': 85, 'Ichikawa': 85,
+  'Omiya': 80, 'Saitama Minami-ku': 80, 'Funabashi': 80, 'Nakahara-ku': 80,
+  'Asaka': 75, 'Saitama Chuo-ku': 75, 'Urayasu': 75,
+  'Kawagoe': 70, 'Toda': 70, 'Warabi': 70, 'Niiza': 70,
+  'Kawasaki-ku': 70, 'Saiwai-ku': 70, 'Kawasaki': 70,
+  'Matsudo': 65, 'Takatsu-ku': 65, 'Kita-ku': 65, 'Itabashi-ku': 65,
+  'Yokohama Nishi-ku': 60, 'Yokohama Naka-ku': 60, 'Yokohama': 60,
+  'Yokohama Kohoku-ku': 60, 'Yokohama Tsuzuki-ku': 60, 'Nerima-ku': 60,
+  'Yokohama Kanagawa-ku': 55, 'Yokohama Aoba-ku': 55, 'Yokohama Tsurumi-ku': 55,
+  'Yokohama Konan-ku': 55, 'Yokohama Hodogaya-ku': 50, 'Yokohama Minami-ku': 50,
+  'Adachi-ku': 55, 'Edogawa-ku': 55,
+  'Kamakura': 45, 'Fujisawa': 45, 'Chigasaki': 45,
+};
+
+const BRIEF = {
+  commute: {
+    known: {
+      'Kawaguchi': { min: 25, transfers: 0, line: 'Namboku' },
+      'Wako': { min: 30, transfers: 1, line: 'Tobu Tojo + Marunouchi' },
+      'Urawa': { min: 40, transfers: 1, line: 'JR + JR Chuo' },
+      'Omiya': { min: 45, transfers: 1, line: 'JR + JR Chuo' },
+      'Kawagoe': { min: 50, transfers: 1, line: 'Tobu Tojo + Marunouchi' },
+      'Toda': { min: 30, transfers: 1, line: 'JR Saikyo' },
+      'Warabi': { min: 30, transfers: 1, line: 'JR Keihin-Tohoku' },
+      'Asaka': { min: 35, transfers: 1, line: 'Tobu Tojo + Marunouchi' },
+      'Niiza': { min: 40, transfers: 1, line: 'Tobu Tojo + Marunouchi' },
+      'Saitama Minami-ku': { min: 35, transfers: 1, line: 'JR + Namboku' },
+      'Saitama Chuo-ku': { min: 40, transfers: 1, line: 'JR + JR Chuo' },
+      'Ichikawa': { min: 30, transfers: 0, line: 'JR Sobu' },
+      'Funabashi': { min: 40, transfers: 0, line: 'JR Sobu' },
+      'Urayasu': { min: 35, transfers: 1, line: 'Tozai + Marunouchi' },
+      'Matsudo': { min: 45, transfers: 1, line: 'JR Joban + Chiyoda' },
+      'Nakahara-ku': { min: 22, transfers: 1, line: 'JR Shonan-Shinjuku' },
+      'Kawasaki-ku': { min: 25, transfers: 1, line: 'JR + JR Chuo' },
+      'Kawasaki': { min: 25, transfers: 1, line: 'JR + JR Chuo' },
+      'Saiwai-ku': { min: 25, transfers: 1, line: 'JR + JR Chuo' },
+      'Takatsu-ku': { min: 30, transfers: 1, line: 'Tokyu Denentoshi' },
+      'Yokohama': { min: 40, transfers: 1, line: 'JR Tokaido + JR Chuo' },
+      'Yokohama Nishi-ku': { min: 40, transfers: 1, line: 'JR Tokaido + JR Chuo' },
+      'Yokohama Naka-ku': { min: 45, transfers: 1, line: 'JR Negishi + JR Chuo' },
+      'Yokohama Kohoku-ku': { min: 45, transfers: 1, line: 'Tokyu Toyoko' },
+      'Yokohama Tsuzuki-ku': { min: 50, transfers: 1, line: 'Yokohama Blue Line' },
+      'Yokohama Kanagawa-ku': { min: 40, transfers: 1, line: 'JR Tokaido' },
+      'Yokohama Aoba-ku': { min: 50, transfers: 1, line: 'Tokyu Denentoshi' },
+      'Yokohama Tsurumi-ku': { min: 35, transfers: 1, line: 'JR Keihin-Tohoku' },
+      'Yokohama Konan-ku': { min: 50, transfers: 1, line: 'JR Negishi' },
+      'Yokohama Hodogaya-ku': { min: 45, transfers: 1, line: 'JR Tokaido' },
+      'Yokohama Minami-ku': { min: 50, transfers: 1, line: 'Yokohama Blue Line' },
+      'Kita-ku': { min: 20, transfers: 1, line: 'JR Keihin-Tohoku' },
+      'Itabashi-ku': { min: 20, transfers: 1, line: 'Tobu Tojo + Marunouchi' },
+      'Nerima-ku': { min: 25, transfers: 1, line: 'Seibu Ikebukuro' },
+      'Adachi-ku': { min: 30, transfers: 1, line: 'Chiyoda Line' },
+      'Edogawa-ku': { min: 25, transfers: 1, line: 'JR Sobu' },
+      'Kamakura': { min: 60, transfers: 1, line: 'JR Yokosuka' },
+      'Fujisawa': { min: 55, transfers: 1, line: 'JR Tokaido' },
+      'Chigasaki': { min: 60, transfers: 1, line: 'JR Tokaido' },
+    },
+    prefectureDefault: { saitama: { min: 45, transfers: 1 }, chiba: { min: 45, transfers: 1 }, kanagawa: { min: 50, transfers: 1 }, tokyo: { min: 25, transfers: 1 } },
+  },
+  budget: { idealMin: 100000, idealMax: 150000, hardMax: 200000, moveInMax: 600000 },
+  size: { idealMin: 55, idealMax: 65, okMin: 50, okMax: 75 },
+  walk: { great: 5, good: 10, ok: 15, max: 20 },
+  roomType: { '2LDK': 1.0, '2SLDK': 0.95, '3LDK': 0.7, '3DK': 0.4, '3K': 0.3 },
+  prefScores: { saitama: 8.0, chiba: 6.4, kanagawa: 6.25, tokyo: 6.6 },
+  buildingAge: { ideal: 15, ok: 25, old: 35 },
+  weights: { area: 25, budget: 25, size: 15, roomType: 10, walkTime: 10, moveIn: 8, buildAge: 7 },
+};
+
+function getPrefecture(areaName) {
+  const saitama = ['Kawaguchi','Wako','Urawa','Omiya','Kawagoe','Toda','Warabi','Asaka','Niiza','Saitama Minami','Saitama Chuo'];
+  const chiba = ['Ichikawa','Funabashi','Urayasu','Matsudo'];
+  const tokyo = ['Kita-ku','Itabashi-ku','Nerima-ku','Adachi-ku','Edogawa-ku'];
+  if (saitama.some(a => areaName.includes(a))) return 'saitama';
+  if (chiba.some(a => areaName.includes(a))) return 'chiba';
+  if (tokyo.some(a => areaName.includes(a))) return 'tokyo';
+  return 'kanagawa';
+}
+
+function normalizeArea(area) {
+  return area.replace(/\s*\(.*\)$/, '').trim();
+}
+
+function getAreaPriority(areaName) {
+  if (AREA_PRIORITY[areaName] !== undefined) return AREA_PRIORITY[areaName];
+  for (const [key, val] of Object.entries(AREA_PRIORITY)) {
+    if (areaName.includes(key)) return val;
+  }
+  return 40;
+}
+
+function parseSize(s) {
+  if (!s) return 0;
+  const m = s.match(/([\d.]+)/);
+  return m ? parseFloat(m[1]) : 0;
+}
+
+function parseFloor(s) {
+  if (!s) return 0;
+  const m = s.match(/(\d+)/);
+  return m ? parseInt(m[1]) : 0;
+}
+
+function parseWalkTime(room) {
+  const access = room.access || '';
+  const matches = [];
+  // JP: 徒歩12分, 歩5分, 徒歩16～19分
+  const jpMatches = access.matchAll(/(?:徒歩|歩)(\d+)/g);
+  for (const m of jpMatches) matches.push(parseInt(m[1]));
+  // EN: 6 min. walk, 6-min walk
+  const enMatches = access.matchAll(/(\d+)\s*(?:-\s*)?min\.?\s*walk/gi);
+  for (const m of enMatches) matches.push(parseInt(m[1]));
+  return matches.length > 0 ? Math.min(...matches) : -1;
+}
+
+function getGrade(score) {
+  if (score >= 80) return { letter: 'A', label: 'Excellent match', cls: 'grade-A' };
+  if (score >= 65) return { letter: 'B', label: 'Good match', cls: 'grade-B' };
+  if (score >= 50) return { letter: 'C', label: 'Fair match', cls: 'grade-C' };
+  return { letter: 'D', label: 'Weak match', cls: 'grade-D' };
+}
+
+function round1(n) { return Math.round(n * 10) / 10; }
+
+function computeScore(room) {
+  const breakdown = {};
+  const W = BRIEF.weights;
+
+  // 1. Area/Commute (25pts)
+  const commData = BRIEF.commute.known[normalizeArea(room.area)] || BRIEF.commute.prefectureDefault[room.prefecture] || { min: 55, transfers: 1 };
+  const commuteMin = commData.min;
+  let commuteRatio;
+  if (commuteMin <= 20) commuteRatio = 1.0;
+  else if (commuteMin <= 30) commuteRatio = 1.0 - (commuteMin - 20) * 0.015;
+  else if (commuteMin <= 45) commuteRatio = 0.85 - (commuteMin - 30) * 0.025;
+  else if (commuteMin <= 60) commuteRatio = 0.475 - (commuteMin - 45) * 0.025;
+  else commuteRatio = 0.1;
+  const prefComposite = (BRIEF.prefScores[room.prefecture] || 5) / 10;
+  let areaRatio = commuteRatio * 0.6 + prefComposite * 0.4;
+  if (commData.transfers === 0) areaRatio = Math.min(1, areaRatio + 0.1);
+  const areaScore = round1(areaRatio * W.area);
+  breakdown.area = { score: areaScore, max: W.area, commute: commuteMin, transfers: commData.transfers, line: commData.line || '', prefScore: BRIEF.prefScores[room.prefecture] || 5 };
+
+  // 2. Budget (25pts)
+  let budgetRatio = 0;
+  const totalRent = room.total_value;
+  if (totalRent > 0) {
+    if (totalRent <= BRIEF.budget.idealMax && totalRent >= BRIEF.budget.idealMin) {
+      budgetRatio = 1.0;
+    } else if (totalRent < BRIEF.budget.idealMin) {
+      budgetRatio = 0.85 + 0.15 * (totalRent / BRIEF.budget.idealMin);
+    } else if (totalRent <= BRIEF.budget.hardMax) {
+      budgetRatio = 1.0 - (totalRent - BRIEF.budget.idealMax) / (BRIEF.budget.hardMax - BRIEF.budget.idealMax);
+    } else {
+      budgetRatio = 0;
+    }
+  }
+  const budgetScore = round1(budgetRatio * W.budget);
+  breakdown.budget = { score: budgetScore, max: W.budget, rent: totalRent };
+
+  // 3. Size (15pts)
+  const sqm = parseSize(room.floorspace || room.size);
+  let sizeRatio = 0;
+  if (sqm > 0) {
+    if (sqm >= BRIEF.size.idealMin && sqm <= BRIEF.size.idealMax) {
+      sizeRatio = 1.0;
+    } else if (sqm >= BRIEF.size.okMin && sqm < BRIEF.size.idealMin) {
+      sizeRatio = 0.6 + 0.4 * (sqm - BRIEF.size.okMin) / (BRIEF.size.idealMin - BRIEF.size.okMin);
+    } else if (sqm > BRIEF.size.idealMax && sqm <= BRIEF.size.okMax) {
+      sizeRatio = 0.6 + 0.4 * (BRIEF.size.okMax - sqm) / (BRIEF.size.okMax - BRIEF.size.idealMax);
+    } else if (sqm < BRIEF.size.okMin) {
+      sizeRatio = Math.max(0, 0.6 * (sqm / BRIEF.size.okMin));
+    } else {
+      sizeRatio = Math.max(0, 0.6 * (1 - (sqm - BRIEF.size.okMax) / 30));
+    }
+  }
+  const sizeScore = round1(sizeRatio * W.size);
+  breakdown.size = { score: sizeScore, max: W.size, sqm };
+
+  // 4. Room Type (10pts)
+  const rt = room.room_type || room.layout || '';
+  let typeRatio = 0.3; // default for unknown
+  for (const [key, val] of Object.entries(BRIEF.roomType)) {
+    if (rt.includes(key)) { typeRatio = val; break; }
+  }
+  const typeScore = round1(typeRatio * W.roomType);
+  breakdown.roomType = { score: typeScore, max: W.roomType, type: rt };
+
+  // 5. Walk Time (10pts)
+  const walkMin = room._walkMin != null ? room._walkMin : parseWalkTime(room);
+  let walkRatio = 0.3; // unknown default
+  if (walkMin > 0) {
+    if (walkMin <= BRIEF.walk.great) walkRatio = 1.0;
+    else if (walkMin <= BRIEF.walk.good) walkRatio = 1.0 - (walkMin - BRIEF.walk.great) * 0.06;
+    else if (walkMin <= BRIEF.walk.ok) walkRatio = 0.7 - (walkMin - BRIEF.walk.good) * 0.06;
+    else if (walkMin <= BRIEF.walk.max) walkRatio = 0.4 - (walkMin - BRIEF.walk.ok) * 0.08;
+    else walkRatio = 0;
+  }
+  const walkScore = round1(walkRatio * W.walkTime);
+  breakdown.walkTime = { score: walkScore, max: W.walkTime, walkMin };
+
+  // 6. Move-in Cost (8pts)
+  let moveInRatio = 0.5; // default for unknown/UR
+  if (room.source === 'ur') {
+    moveInRatio = 1.0; // UR has no key money, low move-in
+  } else if (room.move_in_cost > 0) {
+    if (room.move_in_cost <= BRIEF.budget.moveInMax) {
+      moveInRatio = 1.0;
+    } else {
+      moveInRatio = Math.max(0, 1.0 - (room.move_in_cost - BRIEF.budget.moveInMax) / BRIEF.budget.moveInMax);
+    }
+  }
+  const moveInScore = round1(moveInRatio * W.moveIn);
+  breakdown.moveIn = { score: moveInScore, max: W.moveIn, cost: room.move_in_cost };
+
+  // 7. Building Age (7pts)
+  let ageRatio = 0.4; // unknown default
+  if (room.building_age_years >= 0) {
+    const age = room.building_age_years;
+    if (age <= BRIEF.buildingAge.ideal) {
+      ageRatio = 1.0;
+    } else if (age <= BRIEF.buildingAge.ok) {
+      ageRatio = 1.0 - (age - BRIEF.buildingAge.ideal) * 0.03;
+    } else if (age <= BRIEF.buildingAge.old) {
+      ageRatio = 0.7 - (age - BRIEF.buildingAge.ok) * 0.04;
+    } else {
+      ageRatio = Math.max(0, 0.3 - (age - BRIEF.buildingAge.old) * 0.015);
+    }
+  }
+  const ageScore = round1(ageRatio * W.buildAge);
+  breakdown.buildAge = { score: ageScore, max: W.buildAge, years: room.building_age_years };
+
+  const total = Math.round(areaScore + budgetScore + sizeScore + typeScore + walkScore + moveInScore + ageScore);
+  return { total, breakdown };
+}
+
+// =====================================================================
+// Favourites (localStorage)
+// =====================================================================
+let favourites = new Set();
+let showFavOnly = false;
+
+function loadFavourites() {
+  try {
+    const stored = localStorage.getItem('tokyoRental_favourites');
+    if (stored) favourites = new Set(JSON.parse(stored));
+  } catch (e) { /* ignore */ }
+}
+
+function saveFavourites() {
+  localStorage.setItem('tokyoRental_favourites', JSON.stringify([...favourites]));
+}
+
+function getFavKey(r) {
+  return r.source + ':' + (r.url || r.property + '|' + r.room_name);
+}
+
+function toggleFavourite(key) {
+  if (favourites.has(key)) favourites.delete(key);
+  else favourites.add(key);
+  saveFavourites();
+  updateFavButton();
+  render();
+}
+
+function updateFavButton() {
+  const btn = document.getElementById('btnFavOnly');
+  btn.textContent = `\u2605 Favourites (${favourites.size})`;
+  btn.classList.toggle('active', showFavOnly);
+}
+
+loadFavourites();
+
+// =====================================================================
+// Pagination
+// =====================================================================
+const PAGE_SIZE = 100;
+let currentPage = 0;
+
+// =====================================================================
+// Column sort state
+// =====================================================================
+const COLUMNS = [
+  { key: 'fav',      label: '★',         sortFn: null },
+  { key: 'score',    label: 'Score',     sortFn: (a, b) => a.score - b.score },
+  { key: 'source',   label: 'Source',    sortFn: (a, b) => a.source.localeCompare(b.source) },
+  { key: 'area',     label: 'Area',      sortFn: (a, b) => a.area.localeCompare(b.area) },
+  { key: 'property', label: 'Property / Access', sortFn: (a, b) => a.property.localeCompare(b.property) },
+  { key: 'type',     label: 'Type',      sortFn: (a, b) => (a.room_type||'').localeCompare(b.room_type||'') },
+  { key: 'size',     label: 'Size',      sortFn: (a, b) => parseSize(b.floorspace||b.size) - parseSize(a.floorspace||a.size) },
+  { key: 'floor',    label: 'Floor',     sortFn: (a, b) => parseFloor(b.floor) - parseFloor(a.floor) },
+  { key: 'walk',     label: 'Walk',     sortFn: (a, b) => (a._walkMin < 0 ? 999 : a._walkMin) - (b._walkMin < 0 ? 999 : b._walkMin) },
+  { key: 'rent',     label: 'Rent',      sortFn: (a, b) => (a.rent_value || 9999999) - (b.rent_value || 9999999) },
+  { key: 'total',    label: 'Total',     sortFn: (a, b) => (a.total_value || 9999999) - (b.total_value || 9999999) },
+  { key: 'yensqm',   label: '¥/㎡',     sortFn: (a, b) => {
+    const va = a.total_value && parseSize(a.floorspace||a.size) ? a.total_value / parseSize(a.floorspace||a.size) : 99999;
+    const vb = b.total_value && parseSize(b.floorspace||b.size) ? b.total_value / parseSize(b.floorspace||b.size) : 99999;
+    return va - vb;
+  }},
+  { key: 'movein',   label: 'Move-in',   sortFn: (a, b) => (a.move_in_cost || 9999999) - (b.move_in_cost || 9999999) },
+  { key: 'age',      label: 'Age',       sortFn: (a, b) => (a.building_age_years < 0 ? 999 : a.building_age_years) - (b.building_age_years < 0 ? 999 : b.building_age_years) },
+  { key: 'deposit',  label: 'Deposit',   sortFn: null },
+  { key: 'link',     label: 'Link',      sortFn: null },
+];
+
+let sortCol = 'score';
+let sortAsc = false;
+
+function toggleSort(key) {
+  const col = COLUMNS.find(c => c.key === key);
+  if (!col || !col.sortFn) return;
+  if (sortCol === key) {
+    sortAsc = !sortAsc;
+  } else {
+    sortCol = key;
+    sortAsc = ['area', 'property', 'type', 'source'].includes(key);
+  }
+  currentPage = 0;
+  render();
+  pushHashState();
+}
+
+// =====================================================================
+// Data loading — multi-source
+// =====================================================================
+let allRooms = [];
+
+function loadURData(data) {
+  const rooms = [];
+  for (const [areaName, properties] of Object.entries(data.areas)) {
+    for (const prop of properties) {
+      for (const room of prop.rooms) {
+        rooms.push({
+          source: 'ur',
+          area: areaName,
+          prefecture: getPrefecture(areaName),
+          property: prop.name,
+          access: prop.access,
+          room_name: room.room_name,
+          room_type: room.room_type,
+          floorspace: room.floorspace,
+          size: room.floorspace,
+          floor: room.floor,
+          rent: room.rent,
+          rent_value: room.rent_value,
+          commonfee: room.commonfee,
+          commonfee_value: room.commonfee_value,
+          total_value: room.total_value,
+          shikikin: room.shikikin,
+          deposit_value: 0,
+          key_money_value: 0,
+          move_in_cost: 0,
+          building_age_years: -1,
+          building_age: '',
+          url: room.url,
+          score: 0,
+        });
+      }
+    }
+  }
+  return rooms;
+}
+
+function loadSuumoData(data) {
+  const rooms = [];
+  for (const [areaName, properties] of Object.entries(data.areas)) {
+    for (const prop of properties) {
+      for (const room of prop.rooms) {
+        const depositVal = room.deposit_value || 0;
+        const keyVal = room.key_money_value || 0;
+        const moveIn = (room.rent_value || 0) + depositVal + keyVal;
+        rooms.push({
+          source: 'suumo',
+          area: areaName,
+          prefecture: getPrefecture(areaName),
+          property: prop.name,
+          access: prop.access,
+          room_name: '',
+          room_type: room.layout,
+          floorspace: room.size,
+          size: room.size,
+          floor: room.floor,
+          rent: room.rent,
+          rent_value: room.rent_value,
+          commonfee: room.admin_fee,
+          commonfee_value: room.admin_fee_value,
+          total_value: room.total_value,
+          shikikin: room.deposit,
+          deposit_value: depositVal,
+          key_money_value: keyVal,
+          move_in_cost: moveIn,
+          building_age_years: prop.building_age_years != null ? prop.building_age_years : -1,
+          building_age: prop.building_age || '',
+          url: room.detail_url,
+          score: 0,
+        });
+      }
+    }
+  }
+  return rooms;
+}
+
+function loadREJData(data) {
+  const rooms = [];
+  for (const [areaName, properties] of Object.entries(data.areas)) {
+    for (const prop of properties) {
+      for (const room of prop.rooms) {
+        const depositVal = room.deposit_value || 0;
+        const keyVal = room.key_money_value || 0;
+        const moveIn = (room.rent_value || 0) + depositVal + keyVal;
+        rooms.push({
+          source: 'rej',
+          area: areaName,
+          prefecture: getPrefecture(areaName),
+          property: prop.name,
+          access: prop.access,
+          room_name: '',
+          room_type: room.layout,
+          floorspace: room.size,
+          size: room.size,
+          floor: room.floor,
+          rent: room.rent,
+          rent_value: room.rent_value,
+          commonfee: room.admin_fee || '',
+          commonfee_value: room.admin_fee_value || 0,
+          total_value: room.total_value,
+          shikikin: room.deposit || '',
+          deposit_value: depositVal,
+          key_money_value: keyVal,
+          move_in_cost: moveIn,
+          building_age_years: prop.building_age_years != null ? prop.building_age_years : -1,
+          building_age: prop.building_age || '',
+          url: room.detail_url,
+          score: 0,
+        });
+      }
+    }
+  }
+  return rooms;
+}
+
+// =====================================================================
+// Pre-compute translations (Step 1)
+// =====================================================================
+function precomputeTranslations() {
+  for (const r of allRooms) {
+    const accessFirst = r.access ? r.access.split(' / ')[0] : '';
+    r._accessEn = r.source === 'rej' ? accessFirst : translateAccess(accessFirst);
+    r._floorEn = r.source === 'rej' ? (r.floor || '') : translateFloor(r.floor);
+    r._favKey = getFavKey(r);
+    r._walkMin = parseWalkTime(r);
+
+    // Pre-compute deposit display
+    if (r.source === 'ur') {
+      r._depositDisplay = translateDeposit(r.shikikin);
+    } else {
+      const parts = [];
+      if (r.shikikin) parts.push('D: ' + r.shikikin);
+      if (r.key_money_value > 0) parts.push('K: \u00a5' + r.key_money_value.toLocaleString());
+      if (parts.length === 0 && r.deposit_value === 0 && r.key_money_value === 0) {
+        r._depositDisplay = 'None';
+      } else if (parts.length === 0) {
+        r._depositDisplay = r.shikikin || '-';
+      } else {
+        r._depositDisplay = parts.join(' / ');
+      }
+    }
+
+    // Pre-compute search text (lowercase for fast matching)
+    r._searchText = ((r.property || '') + ' ' + (r.access || '') + ' ' + (r._accessEn || '') + ' ' + (r.area || '')).toLowerCase();
+  }
+}
+
+// =====================================================================
+// Area dropdown (Step 5)
+// =====================================================================
+function populateAreaDropdown() {
+  const prefFilter = document.getElementById('filterPref').value;
+  const areaSelect = document.getElementById('filterArea');
+  const currentArea = areaSelect.value;
+
+  const areas = new Set();
+  for (const r of allRooms) {
+    if (prefFilter && r.prefecture !== prefFilter) continue;
+    areas.add(r.area);
+  }
+
+  const sorted = [...areas].sort();
+  let html = '<option value="">All Areas</option>';
+  for (const a of sorted) {
+    html += `<option value="${a}">${a}</option>`;
+  }
+  areaSelect.innerHTML = html;
+
+  // Restore selection if still valid
+  if (areas.has(currentArea)) {
+    areaSelect.value = currentArea;
+  }
+}
+
+async function loadData() {
+  const sources = [
+    { file: 'results.json',              loader: loadURData,    label: 'UR' },
+    { file: 'results_suumo.json',        loader: loadSuumoData, label: 'SUUMO' },
+    { file: 'results_realestate_jp.json', loader: loadREJData,   label: 'REJ' },
+  ];
+
+  allRooms = [];
+  const loaded = [];
+
+  for (const src of sources) {
+    try {
+      const resp = await fetch(src.file);
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const rooms = src.loader(data);
+      allRooms.push(...rooms);
+      loaded.push(`${src.label}: ${rooms.length}`);
+    } catch (e) {
+      // Source not available — skip silently
+    }
+  }
+
+  if (allRooms.length === 0) {
+    document.getElementById('subtitle').textContent =
+      'No data found. Run the scrapers first: python3 ur_rental_search.py / suumo_search.py / realestate_jp_search.py';
+    return;
+  }
+
+  precomputeTranslations();
+  allRooms.forEach(r => { const s = computeScore(r); r.score = s.total; r._breakdown = s.breakdown; });
+  populateAreaDropdown();
+  updateFavButton();
+
+  // Load POI data for map
+  poiData = await loadPOIData();
+
+  document.getElementById('subtitle').textContent =
+    `Loaded: ${loaded.join(' | ')} (${allRooms.length} total rooms)`;
+
+  // Restore state from URL hash before first render
+  restoreHashState();
+  render();
+}
+
+function getFiltered() {
+  const source = document.getElementById('filterSource').value;
+  const pref = document.getElementById('filterPref').value;
+  const area = document.getElementById('filterArea').value;
+  const type = document.getElementById('filterType').value;
+  const maxRent = parseInt(document.getElementById('filterMaxRent').value) || 0;
+  const minSize = parseInt(document.getElementById('filterMinSize').value) || 0;
+  const maxAge = parseInt(document.getElementById('filterMaxAge').value) || 0;
+  const maxWalk = parseInt(document.getElementById('filterMaxWalk').value) || 0;
+  const minGrade = parseInt(document.getElementById('filterMinGrade').value) || 0;
+  const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+
+  return allRooms.filter(r => {
+    if (source && r.source !== source) return false;
+    if (pref && r.prefecture !== pref) return false;
+    if (area && r.area !== area) return false;
+    if (type && !(r.room_type || '').includes(type)) return false;
+    if (maxRent && r.total_value > maxRent && r.total_value > 0) return false;
+    if (minSize && parseSize(r.floorspace || r.size) < minSize) return false;
+    if (maxAge && r.building_age_years >= 0 && r.building_age_years > maxAge) return false;
+    if (maxWalk && r._walkMin > 0 && r._walkMin > maxWalk) return false;
+    if (minGrade && r.score < minGrade) return false;
+    if (search && !r._searchText.includes(search)) return false;
+    if (showFavOnly && !favourites.has(r._favKey)) return false;
+    return true;
+  });
+}
+
+function getSorted(rooms) {
+  const col = COLUMNS.find(c => c.key === sortCol);
+  if (!col || !col.sortFn) return rooms;
+  const copy = [...rooms];
+  copy.sort((a, b) => {
+    const result = col.sortFn(a, b);
+    return sortAsc ? result : -result;
+  });
+  return copy;
+}
+
+// =====================================================================
+// Render
+// =====================================================================
+const SOURCE_LABELS = { ur: 'UR', suumo: 'SUUMO', rej: 'REJ' };
+
+function render() {
+  const filtered = getFiltered();
+  const sorted = getSorted(filtered);
+
+  // Clamp page
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  if (currentPage < 0) currentPage = 0;
+
+  const pageStart = currentPage * PAGE_SIZE;
+  const pageSlice = sorted.slice(pageStart, pageStart + PAGE_SIZE);
+
+  // Stats
+  const statsEl = document.getElementById('stats');
+  const withRent = filtered.filter(r => r.total_value > 0);
+  const avgRent = withRent.length ? Math.round(withRent.reduce((s, r) => s + r.total_value, 0) / withRent.length) : 0;
+  const avgSize = withRent.length ? Math.round(withRent.reduce((s, r) => s + parseSize(r.floorspace||r.size), 0) / withRent.length) : 0;
+  const minRent = withRent.length ? Math.min(...withRent.map(r => r.total_value)) : 0;
+  const maxSize = withRent.length ? Math.max(...withRent.map(r => parseSize(r.floorspace||r.size))) : 0;
+
+  const srcCounts = {};
+  filtered.forEach(r => { srcCounts[r.source] = (srcCounts[r.source] || 0) + 1; });
+  const srcSummary = Object.entries(srcCounts).map(([k,v]) => `${SOURCE_LABELS[k]||k}: ${v}`).join(' / ');
+
+  const favCount = filtered.filter(r => favourites.has(r._favKey)).length;
+
+  statsEl.innerHTML = `
+    <div class="stat"><div class="stat-value">${sorted.length}</div><div class="stat-label">Rooms</div></div>
+    <div class="stat clickable" id="statCheapest"><div class="stat-value">&yen;${minRent.toLocaleString()}</div><div class="stat-label">Cheapest &rarr;</div></div>
+    <div class="stat"><div class="stat-value">&yen;${avgRent.toLocaleString()}</div><div class="stat-label">Avg Total</div></div>
+    <div class="stat"><div class="stat-value">${avgSize}&#13217;</div><div class="stat-label">Avg Size</div></div>
+    <div class="stat clickable" id="statLargest"><div class="stat-value">${maxSize}&#13217;</div><div class="stat-label">Largest &rarr;</div></div>
+    <div class="stat"><div class="stat-value" style="font-size:0.9rem">${srcSummary}</div><div class="stat-label">By Source</div></div>
+    ${favCount > 0 ? `<div class="stat"><div class="stat-value" style="color:var(--gold)">${favCount}</div><div class="stat-label">Favourites</div></div>` : ''}
+  `;
+
+  // Stat card click handlers are bound once via event delegation (see below render())
+
+  // Table head
+  const head = document.getElementById('tableHead');
+  head.innerHTML = COLUMNS.map(col => {
+    const isSorted = sortCol === col.key;
+    const arrow = col.sortFn
+      ? (isSorted ? (sortAsc ? '&#9650;' : '&#9660;') : '&#9650;')
+      : '';
+    const cls = isSorted ? 'sorted' : '';
+    const onclick = col.sortFn ? `onclick="toggleSort('${col.key}')"` : '';
+    return `<th class="${cls}" ${onclick}>${col.label}${arrow ? `<span class="sort-arrow">${arrow}</span>` : ''}</th>`;
+  }).join('');
+
+  // Table body — only render current page slice (Step 2)
+  const body = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  if (sorted.length === 0) {
+    body.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+
+  body.innerHTML = pageSlice.map(r => {
+    const prefClass = `pref-${r.prefecture}`;
+    const sourceClass = `source-${r.source}`;
+    const grade = getGrade(r.score);
+    const scoreClass = r.score >= 80 ? 'score-high' : r.score >= 65 ? 'score-med' : 'score-low';
+    const scorePct = Math.min(100, r.score);
+    const sqm = parseSize(r.floorspace || r.size);
+    const yenPerSqm = r.total_value && sqm ? Math.round(r.total_value / sqm) : null;
+    const roomType = r.room_type || r.layout || '';
+    const sizeDisplay = r.floorspace || r.size || '';
+    const isFav = favourites.has(r._favKey);
+
+    const rentDisplay = r.rent_value > 0 ? `<span class="money">${r.rent}</span>` : '<span class="rent-tbd">Inquiry</span>';
+    const totalDisplay = r.total_value > 0 ? `<span class="money">&yen;${r.total_value.toLocaleString()}</span>` : '<span class="rent-tbd">TBD</span>';
+    const yenDisplay = yenPerSqm ? `<span class="money">&yen;${yenPerSqm.toLocaleString()}</span>` : '-';
+    const linkDisplay = r.url ? `<a class="view-link" href="${r.url}" target="_blank" rel="noopener">View</a>` : '-';
+
+    let moveInDisplay = '-';
+    if (r.source !== 'ur' && r.move_in_cost > 0) {
+      moveInDisplay = `<span class="money">&yen;${r.move_in_cost.toLocaleString()}</span>`;
+    }
+
+    let ageDisplay = '-';
+    if (r.building_age_years >= 0) {
+      ageDisplay = `${r.building_age_years}y`;
+    } else if (r.building_age) {
+      ageDisplay = r.building_age;
+    }
+
+    // Use pre-computed values
+    const favKey = r._favKey.replace(/'/g, "\\'");
+
+    return `<tr class="${isFav ? 'fav-row' : ''}">
+      <td><span class="fav-star ${isFav ? 'starred' : ''}" onclick="toggleFavourite('${favKey}')">${isFav ? '\u2605' : '\u2606'}</span></td>
+      <td class="score-cell" onclick="showBreakdown(${allRooms.indexOf(r)})" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${grade.label}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
+      <td><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || r.source}</span></td>
+      <td><span class="area-tag ${prefClass}">${r.area}</span></td>
+      <td><div class="prop-name">${r.property}</div><div class="prop-access" title="${r.access || ''}">${r._accessEn}</div></td>
+      <td>${roomType}</td>
+      <td class="size-cell">${sizeDisplay}</td>
+      <td>${r._floorEn}</td>
+      <td class="walk-cell ${r._walkMin > 0 ? (r._walkMin <= 5 ? 'walk-great' : r._walkMin <= 10 ? 'walk-good' : r._walkMin <= 15 ? 'walk-ok' : 'walk-far') : ''}">${r._walkMin > 0 ? r._walkMin + ' min' : '-'}</td>
+      <td>${rentDisplay}</td>
+      <td>${totalDisplay}</td>
+      <td>${yenDisplay}</td>
+      <td>${moveInDisplay}</td>
+      <td>${ageDisplay}</td>
+      <td><div>${r._depositDisplay}</div></td>
+      <td>${linkDisplay}</td>
+    </tr>`;
+  }).join('');
+
+  // Pagination bar (Step 2)
+  const paginationEl = document.getElementById('pagination');
+  if (totalPages > 1) {
+    paginationEl.style.display = 'flex';
+    document.getElementById('pageInfo').textContent =
+      `Page ${currentPage + 1} of ${totalPages} (${sorted.length.toLocaleString()} results)`;
+    document.getElementById('btnPrev').disabled = currentPage === 0;
+    document.getElementById('btnNext').disabled = currentPage >= totalPages - 1;
+  } else {
+    paginationEl.style.display = 'none';
+  }
+
+  // Update map & area cards
+  renderAreaCards();
+  syncMapToFilters();
+}
+
+// =====================================================================
+// URL hash state (Step 8)
+// =====================================================================
+function pushHashState() {
+  const params = new URLSearchParams();
+  const source = document.getElementById('filterSource').value;
+  const pref = document.getElementById('filterPref').value;
+  const area = document.getElementById('filterArea').value;
+  const type = document.getElementById('filterType').value;
+  const maxRent = document.getElementById('filterMaxRent').value;
+  const minSize = document.getElementById('filterMinSize').value;
+  const maxAge = document.getElementById('filterMaxAge').value;
+  const maxWalk = document.getElementById('filterMaxWalk').value;
+  const minGrade = document.getElementById('filterMinGrade').value;
+  const search = document.getElementById('filterSearch').value;
+
+  if (source) params.set('source', source);
+  if (pref) params.set('pref', pref);
+  if (area) params.set('area', area);
+  if (type) params.set('type', type);
+  if (maxRent) params.set('maxRent', maxRent);
+  if (minSize) params.set('minSize', minSize);
+  if (maxAge) params.set('maxAge', maxAge);
+  if (maxWalk) params.set('maxWalk', maxWalk);
+  if (minGrade) params.set('minGrade', minGrade);
+  if (search) params.set('search', search);
+  if (sortCol !== 'score') params.set('sort', sortCol);
+  if (sortAsc) params.set('asc', '1');
+  if (currentPage > 0) params.set('p', String(currentPage));
+  if (showFavOnly) params.set('fav', '1');
+
+  const hash = params.toString();
+  history.replaceState(null, '', hash ? '#' + hash : location.pathname + location.search);
+}
+
+function restoreHashState() {
+  const hash = location.hash.slice(1);
+  if (!hash) return;
+  const params = new URLSearchParams(hash);
+
+  if (params.has('source')) document.getElementById('filterSource').value = params.get('source');
+  if (params.has('pref')) {
+    document.getElementById('filterPref').value = params.get('pref');
+    populateAreaDropdown();
+  }
+  if (params.has('area')) document.getElementById('filterArea').value = params.get('area');
+  if (params.has('type')) document.getElementById('filterType').value = params.get('type');
+  if (params.has('maxRent')) document.getElementById('filterMaxRent').value = params.get('maxRent');
+  if (params.has('minSize')) document.getElementById('filterMinSize').value = params.get('minSize');
+  if (params.has('maxAge')) document.getElementById('filterMaxAge').value = params.get('maxAge');
+  if (params.has('maxWalk')) document.getElementById('filterMaxWalk').value = params.get('maxWalk');
+  if (params.has('minGrade')) document.getElementById('filterMinGrade').value = params.get('minGrade');
+  if (params.has('search')) document.getElementById('filterSearch').value = params.get('search');
+  if (params.has('sort')) sortCol = params.get('sort');
+  if (params.has('asc')) sortAsc = params.get('asc') === '1';
+  if (params.has('p')) currentPage = parseInt(params.get('p')) || 0;
+  if (params.has('fav')) {
+    showFavOnly = params.get('fav') === '1';
+    updateFavButton();
+  }
+}
+
+// =====================================================================
+// Score breakdown popup
+// =====================================================================
+function showBreakdown(idx) {
+  const r = allRooms[idx];
+  if (!r || !r._breakdown) return;
+  const b = r._breakdown;
+  const grade = getGrade(r.score);
+
+  const dims = [
+    { key: 'area', label: 'Area', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}` },
+    { key: 'budget', label: 'Budget', detail: b.budget.rent > 0 ? `¥${b.budget.rent.toLocaleString()}/mo` : 'Unknown' },
+    { key: 'size', label: 'Size', detail: b.size.sqm > 0 ? `${b.size.sqm}㎡` : 'Unknown' },
+    { key: 'roomType', label: 'Type', detail: b.roomType.type || 'Unknown' },
+    { key: 'walkTime', label: 'Walk', detail: b.walkTime.walkMin > 0 ? `${b.walkTime.walkMin} min to station` : 'Unknown' },
+    { key: 'moveIn', label: 'Move-in', detail: b.moveIn.cost > 0 ? `¥${b.moveIn.cost.toLocaleString()}` : (r.source === 'ur' ? 'UR (low cost)' : 'Unknown') },
+    { key: 'buildAge', label: 'Age', detail: b.buildAge.years >= 0 ? `${b.buildAge.years} years` : 'Unknown' },
+  ];
+
+  const barColor = (score, max) => {
+    const pct = max > 0 ? score / max : 0;
+    if (pct >= 0.8) return 'var(--green)';
+    if (pct >= 0.6) return 'var(--accent)';
+    if (pct >= 0.4) return 'var(--yellow)';
+    return 'var(--red)';
+  };
+
+  const rowsHtml = dims.map(d => {
+    const dim = b[d.key];
+    const pct = dim.max > 0 ? Math.round(dim.score / dim.max * 100) : 0;
+    return `<div class="breakdown-row">
+      <div class="breakdown-label">${d.label}</div>
+      <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct}%;background:${barColor(dim.score, dim.max)}"></div></div>
+      <div class="breakdown-score">${dim.score}/${dim.max}</div>
+    </div>
+    <div class="breakdown-detail">${d.detail}</div>`;
+  }).join('');
+
+  const overlay = document.createElement('div');
+  overlay.className = 'score-popup-overlay';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  overlay.innerHTML = `<div class="score-popup">
+    <h3>${r.property}</h3>
+    <div class="popup-subtitle">${r.area} · ${r.room_type || r.layout || ''} · ${r.floorspace || r.size || ''}</div>
+    <div class="popup-total">
+      <span class="grade-badge ${grade.cls}">${grade.letter}</span>
+      <div><div class="popup-total-num">${r.score}<span style="font-size:0.8rem;color:var(--text-dim)">/100</span></div><div class="popup-total-label">${grade.label}</div></div>
+    </div>
+    ${rowsHtml}
+    <button class="popup-close" onclick="this.closest('.score-popup-overlay').remove()">Close</button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+// =====================================================================
+// Debounce (Step 3)
+// =====================================================================
+function debounce(fn, ms) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+const debouncedRender = debounce(() => {
+  currentPage = 0;
+  render();
+  pushHashState();
+}, 300);
+
+// =====================================================================
+// Event bindings
+// =====================================================================
+
+// Stat card clicks — event delegation on static container (avoids re-binding inside render())
+document.getElementById('stats').addEventListener('click', (e) => {
+  const cheapest = e.target.closest('#statCheapest');
+  const largest = e.target.closest('#statLargest');
+  if (cheapest) { sortCol = 'total'; sortAsc = true; currentPage = 0; render(); pushHashState(); }
+  if (largest) { sortCol = 'size'; sortAsc = false; currentPage = 0; render(); pushHashState(); }
+});
+
+// Dropdowns — instant
+['filterSource', 'filterType', 'filterMinGrade'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    currentPage = 0;
+    render();
+    pushHashState();
+  });
+});
+
+// Prefecture — instant + repopulate area dropdown
+document.getElementById('filterPref').addEventListener('change', () => {
+  populateAreaDropdown();
+  currentPage = 0;
+  render();
+  pushHashState();
+});
+
+// Area — instant
+document.getElementById('filterArea').addEventListener('change', () => {
+  currentPage = 0;
+  render();
+  pushHashState();
+});
+
+// Number inputs + text search — debounced (Step 3 + Step 6)
+['filterMaxRent', 'filterMinSize', 'filterMaxAge', 'filterMaxWalk', 'filterSearch'].forEach(id => {
+  document.getElementById(id).addEventListener('input', debouncedRender);
+});
+
+// Favourites toggle
+document.getElementById('btnFavOnly').addEventListener('click', () => {
+  showFavOnly = !showFavOnly;
+  currentPage = 0;
+  updateFavButton();
+  render();
+  pushHashState();
+});
+
+// Reset
+document.getElementById('btnReset').addEventListener('click', () => {
+  document.getElementById('filterSource').value = '';
+  document.getElementById('filterPref').value = '';
+  document.getElementById('filterType').value = '';
+  document.getElementById('filterMaxRent').value = '';
+  document.getElementById('filterMinSize').value = '';
+  document.getElementById('filterMaxAge').value = '';
+  document.getElementById('filterMaxWalk').value = '';
+  document.getElementById('filterMinGrade').value = '';
+  document.getElementById('filterSearch').value = '';
+  showFavOnly = false;
+  populateAreaDropdown();
+  document.getElementById('filterArea').value = '';
+  sortCol = 'score';
+  sortAsc = false;
+  currentPage = 0;
+  updateFavButton();
+  render();
+  pushHashState();
+});
+
+// Pagination buttons
+document.getElementById('btnPrev').addEventListener('click', () => {
+  if (currentPage > 0) { currentPage--; render(); pushHashState(); window.scrollTo(0, 0); }
+});
+document.getElementById('btnNext').addEventListener('click', () => {
+  currentPage++; render(); pushHashState(); window.scrollTo(0, 0);
+});
+
+// =====================================================================
+// Area POI data & Interactive Map
+// =====================================================================
+let poiData = null;
+let leafletMap = null;
+let mapInitialized = false;
+let areaMarkers = {}; // area name → marker
+
+const PREF_COLORS = {
+  saitama:  '#4ade80',
+  chiba:    '#fbbf24',
+  kanagawa: '#6c9cfc',
+  tokyo:    '#c084fc',
+};
+
+const POI_ICONS = {
+  station: '\u{1F689}',
+  supermarket: '\u{1F6D2}',
+  shopping: '\u{1F6CD}',
+  park: '\u{1F333}',
+  hospital: '\u{1F3E5}',
+  expat: '\u{1F30D}',
+  dining: '\u{1F37B}',
+  culture: '\u{1F3DB}',
+  transit: '\u{1F686}',
+};
+
+async function loadPOIData() {
+  try {
+    const resp = await fetch('area_pois.json');
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function getAreaStats() {
+  const filtered = getFiltered();
+  const byArea = {};
+  for (const r of filtered) {
+    if (!byArea[r.area]) byArea[r.area] = [];
+    byArea[r.area].push(r);
+  }
+  const stats = {};
+  for (const [area, rooms] of Object.entries(byArea)) {
+    const withRent = rooms.filter(r => r.total_value > 0);
+    const avgScore = rooms.length ? Math.round(rooms.reduce((s, r) => s + r.score, 0) / rooms.length) : 0;
+    const avgRent = withRent.length ? Math.round(withRent.reduce((s, r) => s + r.total_value, 0) / withRent.length) : 0;
+    const avgSize = withRent.length ? Math.round(withRent.reduce((s, r) => s + parseSize(r.floorspace || r.size), 0) / withRent.length) : 0;
+    const grade = getGrade(avgScore);
+    const pref = rooms[0].prefecture;
+    const commData = BRIEF.commute.known[normalizeArea(area)] || BRIEF.commute.prefectureDefault[pref] || { min: 55, transfers: 1 };
+    stats[area] = {
+      count: rooms.length,
+      avgScore, avgRent, avgSize, grade, pref,
+      commute: commData,
+    };
+  }
+  return stats;
+}
+
+function initMap() {
+  if (mapInitialized) return;
+  if (!poiData) {
+    document.getElementById('map').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-dim);font-size:0.9rem">Map unavailable — area_pois.json not found. Run: python3 build_pois.py</div>';
+    return;
+  }
+  mapInitialized = true;
+
+  leafletMap = L.map('map', { zoomControl: true }).setView([35.68, 139.70], 10);
+
+  // Dark CartoDB tiles
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 18,
+  }).addTo(leafletMap);
+
+  // Office marker (red)
+  const office = poiData.office;
+  L.circleMarker([office.lat, office.lng], {
+    radius: 9, color: '#f87171', fillColor: '#f87171', fillOpacity: 0.9, weight: 2,
+  }).addTo(leafletMap).bindPopup(`<div class="map-popup-title">${office.name}</div><div class="map-popup-pref">${office.note || ''}</div>`);
+
+  // Hub markers (purple)
+  for (const hub of poiData.hubs || []) {
+    L.circleMarker([hub.lat, hub.lng], {
+      radius: 7, color: '#c084fc', fillColor: '#c084fc', fillOpacity: 0.7, weight: 2,
+    }).addTo(leafletMap).bindPopup(`<div class="map-popup-title">${hub.name}</div><div class="map-popup-pref">Entertainment Hub</div>`);
+  }
+
+  // Area markers — POI keys are bare names, stats keys are full names with JP
+  const areaStats = getAreaStats();
+  function findStats(bareName) {
+    return Object.entries(areaStats).find(([k]) => normalizeArea(k) === bareName)?.[1] || null;
+  }
+
+  for (const [areaName, areaInfo] of Object.entries(poiData.areas)) {
+    const pref = getPrefecture(areaName);
+    const color = PREF_COLORS[pref] || '#8b8fa3';
+    const stats = findStats(areaName);
+
+    const marker = L.circleMarker([areaInfo.lat, areaInfo.lng], {
+      radius: stats ? Math.min(10, 5 + Math.log2(stats.count + 1)) : 5,
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.7,
+      weight: 2,
+    }).addTo(leafletMap);
+
+    marker.on('click', () => {
+      const freshStats = getAreaStats();
+      const s = Object.entries(freshStats).find(([k]) => normalizeArea(k) === areaName)?.[1] || null;
+      marker.unbindPopup();
+      marker.bindPopup(buildAreaPopup(areaName, areaInfo, pref, s), { maxWidth: 320 }).openPopup();
+    });
+
+    areaMarkers[areaName] = marker;
+  }
+}
+
+function buildAreaPopup(areaName, areaInfo, pref, stats) {
+  const prefLabel = pref.charAt(0).toUpperCase() + pref.slice(1);
+  const commData = BRIEF.commute.known[normalizeArea(areaName)] || BRIEF.commute.prefectureDefault[pref] || { min: '?', transfers: '?' };
+
+  let statsHtml = '';
+  if (stats) {
+    statsHtml = `<div class="map-popup-stats">
+      Commute: ${commData.min} min, ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''}${commData.line ? ' (' + commData.line + ')' : ''}<br>
+      ${stats.count} rooms &middot; Avg score: ${stats.avgScore} (${stats.grade.letter}) &middot; Avg &yen;${stats.avgRent.toLocaleString()} &middot; ${stats.avgSize}&#13217;
+    </div>`;
+  } else {
+    statsHtml = `<div class="map-popup-stats">
+      Commute: ${commData.min} min, ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''}${commData.line ? ' (' + commData.line + ')' : ''}<br>
+      No listings match current filters
+    </div>`;
+  }
+
+  let stationsHtml = '';
+  if (areaInfo.stations && areaInfo.stations.length > 0) {
+    stationsHtml = '<div class="map-popup-stations"><strong>Stations:</strong>';
+    for (const s of areaInfo.stations.slice(0, 5)) {
+      const lines = s.lines && s.lines.length ? ' \u2014 ' + s.lines.join(', ') : '';
+      stationsHtml += `<div>${POI_ICONS.station} ${s.name}${lines}</div>`;
+    }
+    stationsHtml += '</div>';
+  }
+
+  let poisHtml = '';
+  if (areaInfo.pois && areaInfo.pois.length > 0) {
+    poisHtml = '<div class="map-popup-pois"><strong>Highlights:</strong>';
+    for (const p of areaInfo.pois.slice(0, 5)) {
+      const icon = POI_ICONS[p.cat] || '\u{1F4CD}';
+      const note = p.note ? ` <span style="color:var(--text-dim);font-size:0.72rem">(${p.note})</span>` : '';
+      poisHtml += `<div>${icon} ${p.name}${note}</div>`;
+    }
+    poisHtml += '</div>';
+  }
+
+  return `<div class="map-popup-title">${areaName}</div>
+    <div class="map-popup-pref">${prefLabel}</div>
+    ${statsHtml}${stationsHtml}${poisHtml}
+    <a class="map-popup-filter" onclick="filterToArea('${areaName.replace(/'/g, "\\'")}')">Filter to this area &rarr;</a>`;
+}
+
+function filterToArea(areaName) {
+  const pref = getPrefecture(areaName);
+  document.getElementById('filterPref').value = pref;
+  populateAreaDropdown();
+  // Find matching dropdown option (dropdown values are full names like "Kawaguchi (川口市)")
+  const areaSelect = document.getElementById('filterArea');
+  const norm = normalizeArea(areaName);
+  let matched = false;
+  for (const opt of areaSelect.options) {
+    if (opt.value && normalizeArea(opt.value) === norm) {
+      areaSelect.value = opt.value;
+      matched = true;
+      break;
+    }
+  }
+  if (!matched) areaSelect.value = ''; // no matching area in current listings
+  currentPage = 0;
+  render();
+  pushHashState();
+  if (leafletMap) leafletMap.closePopup();
+}
+
+function syncMapToFilters() {
+  if (!leafletMap || !mapInitialized) return;
+  const pref = document.getElementById('filterPref').value;
+  const area = document.getElementById('filterArea').value;
+  const normArea = area ? normalizeArea(area) : '';
+  const allStats = getAreaStats(); // compute once outside loop
+
+  for (const [areaName, marker] of Object.entries(areaMarkers)) {
+    const areaPref = getPrefecture(areaName);
+    let opacity = 0.7;
+    let radius = 5;
+    // Match POI area key (bare) against viewer area key (full) via normalize
+    const s = Object.entries(allStats).find(([k]) => normalizeArea(k) === areaName)?.[1];
+    if (s) radius = Math.min(10, 5 + Math.log2(s.count + 1));
+
+    if (normArea) {
+      opacity = (areaName === normArea) ? 0.9 : 0.15;
+      if (areaName === normArea) radius = Math.max(radius, 8);
+    } else if (pref) {
+      opacity = (areaPref === pref) ? 0.7 : 0.15;
+    }
+
+    marker.setStyle({ fillOpacity: opacity, opacity: opacity });
+    marker.setRadius(radius);
+  }
+}
+
+function renderAreaCards() {
+  const container = document.getElementById('areaCards');
+  if (!poiData) { container.innerHTML = ''; return; }
+
+  const currentArea = document.getElementById('filterArea').value;
+  const areaStats = getAreaStats();
+
+  if (currentArea && areaStats[currentArea]) {
+    // Single active area card
+    const s = areaStats[currentArea];
+    const norm = normalizeArea(currentArea);
+    const info = poiData.areas[norm];
+    const prefLabel = s.pref.charAt(0).toUpperCase() + s.pref.slice(1);
+    const commData = BRIEF.commute.known[norm] || BRIEF.commute.prefectureDefault[s.pref] || { min: '?', transfers: '?', line: '' };
+
+    let stationsHtml = '';
+    if (info && info.stations) {
+      for (const st of info.stations.slice(0, 4)) {
+        const lines = st.lines && st.lines.length ? ' (' + st.lines.join(', ') + ')' : '';
+        stationsHtml += `<div class="area-card-poi">${POI_ICONS.station} ${st.name}${lines}</div>`;
+      }
+    }
+    let poisHtml = '';
+    if (info && info.pois) {
+      for (const p of info.pois.slice(0, 4)) {
+        const icon = POI_ICONS[p.cat] || '\u{1F4CD}';
+        poisHtml += `<div class="area-card-poi">${icon} ${p.name}</div>`;
+      }
+    }
+
+    container.innerHTML = `<div class="area-cards"><div class="area-card active-card" style="max-width:480px">
+      <div class="area-card-title">${norm}</div>
+      <div class="area-card-pref">${prefLabel}</div>
+      <div class="area-card-commute">${commData.min} min to Yotsuya &middot; ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''} &middot; ${commData.line || ''}</div>
+      ${stationsHtml}${poisHtml}
+      <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; ${s.grade.letter} avg</div>
+    </div></div>`;
+  } else {
+    // Top 5 areas by average score (min 5 listings to qualify)
+    const ranked = Object.entries(areaStats)
+      .filter(([, s]) => s.count >= 5)
+      .sort((a, b) => b[1].avgScore - a[1].avgScore)
+      .slice(0, 5);
+
+    if (ranked.length === 0) { container.innerHTML = ''; return; }
+
+    let html = '<div class="area-cards">';
+    for (const [areaName, s] of ranked) {
+      const norm = normalizeArea(areaName);
+      const prefLabel = s.pref.charAt(0).toUpperCase() + s.pref.slice(1);
+      const commData = BRIEF.commute.known[norm] || BRIEF.commute.prefectureDefault[s.pref] || { min: '?', transfers: '?' };
+      const color = PREF_COLORS[s.pref] || '#8b8fa3';
+      const info = poiData.areas[norm];
+
+      let highlight = '';
+      if (info && info.pois && info.pois.length > 0) {
+        const p = info.pois[0];
+        const icon = POI_ICONS[p.cat] || '\u{1F4CD}';
+        highlight = `<div class="area-card-poi">${icon} ${p.name}</div>`;
+      }
+
+      html += `<div class="area-card" onclick="filterToArea('${areaName.replace(/'/g, "\\'")}')">
+        <div class="area-card-title" style="color:${color}">${norm}</div>
+        <div class="area-card-pref">${prefLabel} &middot; ${commData.min} min, ${commData.transfers}x</div>
+        ${highlight}
+        <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; <span class="grade-badge ${s.grade.cls}" style="width:18px;height:18px;line-height:18px;font-size:0.65rem">${s.grade.letter}</span></div>
+      </div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  }
+}
+
+// Map toggle button
+document.getElementById('btnToggleMap').addEventListener('click', () => {
+  const container = document.getElementById('mapContainer');
+  const btn = document.getElementById('btnToggleMap');
+  const visible = container.style.display !== 'none';
+  container.style.display = visible ? 'none' : 'block';
+  btn.textContent = visible ? 'Show Area Map' : 'Hide Area Map';
+  btn.classList.toggle('active', !visible);
+  if (!visible && !mapInitialized) {
+    initMap();
+    // Leaflet needs a tick to measure container
+    setTimeout(() => leafletMap && leafletMap.invalidateSize(), 100);
+  }
+});
+
+loadData();

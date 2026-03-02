@@ -14,55 +14,28 @@ Usage:
 import json
 import math
 import time
-import urllib.request
-import urllib.parse
+
+import re
+
+from shared.http_client import create_session, fetch_page
+from shared.logging_setup import setup_logging
+from shared.config import AREAS as ALL_AREAS
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
-# Approximate centre coordinates for each area
+
+def _short_name(full_name: str) -> str:
+    """Extract short area name: 'Kawaguchi (川口市)' → 'Kawaguchi'."""
+    return re.sub(r"\s*\(.*\)$", "", full_name)
+
+
+# Build AREA_CENTRES from unified config (only areas with lat/lng)
 AREA_CENTRES = {
-    # Saitama
-    "Kawaguchi":        (35.808, 139.724),
-    "Wako":             (35.787, 139.606),
-    "Urawa":            (35.858, 139.657),
-    "Omiya":            (35.906, 139.631),
-    "Kawagoe":          (35.925, 139.486),
-    "Toda":             (35.817, 139.678),
-    "Warabi":           (35.826, 139.680),
-    "Asaka":            (35.797, 139.593),
-    "Niiza":            (35.793, 139.565),
-    "Saitama Minami-ku":(35.845, 139.645),
-    "Saitama Chuo-ku":  (35.874, 139.625),
-    # Chiba
-    "Ichikawa":         (35.732, 139.931),
-    "Funabashi":        (35.695, 139.983),
-    "Urayasu":          (35.654, 139.902),
-    "Matsudo":          (35.788, 139.901),
-    # Kanagawa
-    "Nakahara-ku":      (35.576, 139.660),
-    "Kawasaki-ku":      (35.531, 139.703),
-    "Saiwai-ku":        (35.541, 139.684),
-    "Takatsu-ku":       (35.588, 139.615),
-    "Yokohama Nishi-ku":(35.466, 139.622),
-    "Yokohama Naka-ku": (35.444, 139.638),
-    "Yokohama Kohoku-ku":(35.520, 139.593),
-    "Yokohama Tsuzuki-ku":(35.546, 139.571),
-    "Yokohama Kanagawa-ku":(35.479, 139.637),
-    "Yokohama Aoba-ku": (35.564, 139.541),
-    "Yokohama Tsurumi-ku":(35.508, 139.682),
-    "Yokohama Konan-ku":(35.398, 139.591),
-    "Yokohama Hodogaya-ku":(35.443, 139.596),
-    "Yokohama Minami-ku":(35.428, 139.596),
-    # Tokyo (border wards)
-    "Kita-ku":          (35.753, 139.734),
-    "Itabashi-ku":      (35.769, 139.709),
-    "Nerima-ku":        (35.736, 139.652),
-    "Adachi-ku":        (35.776, 139.804),
-    "Edogawa-ku":       (35.707, 139.868),
-    # Shonan
-    "Kamakura":         (35.319, 139.547),
-    "Fujisawa":         (35.339, 139.490),
-    "Chigasaki":        (35.334, 139.405),
+    _short_name(a.name): (a.lat, a.lng)
+    for a in ALL_AREAS
+    if a.lat != 0.0 and a.lng != 0.0
+    # Skip REJ-only broad city entries that duplicate ward-level entries
+    and a.name not in ("Kawasaki (川崎市)", "Yokohama (横浜市)")
 }
 
 RADIUS = 3000  # metres
@@ -109,21 +82,17 @@ out center;
 """
 
 
-def query_overpass(query, retries=3):
-    """Send query to Overpass API with retries and exponential backoff."""
-    data = urllib.parse.urlencode({"data": query}).encode("utf-8")
-    for attempt in range(retries):
-        try:
-            req = urllib.request.Request(OVERPASS_URL, data=data)
-            req.add_header("User-Agent", "finding-property-tokyo/1.0")
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except Exception as e:
-            wait = 5 * (2 ** attempt)
-            print(f"  Attempt {attempt+1} failed: {e} — retrying in {wait}s")
-            if attempt < retries - 1:
-                time.sleep(wait)
-    return None
+logger = setup_logging(name="build-pois")
+
+
+def query_overpass(query, session):
+    """Send query to Overpass API (retries handled by shared http_client)."""
+    try:
+        resp = fetch_page(session, OVERPASS_URL, method="POST", timeout=120, data={"data": query})
+        return resp.json()
+    except Exception as e:
+        logger.error("Overpass query failed: %s", e)
+        return None
 
 
 def categorize_element(el):
@@ -199,12 +168,18 @@ def deduplicate(pois, max_per_cat=8):
 
 
 def main():
+    session = create_session(
+        max_retries=3,
+        backoff_factor=5.0,
+        extra_headers={"User-Agent": "finding-property-tokyo/1.0"},
+    )
+
     print(f"Fetching POIs for {len(AREA_CENTRES)} areas in a single batch query...")
     bbox = build_bbox()
     print(f"Bounding box: {bbox[0]:.3f},{bbox[1]:.3f} to {bbox[2]:.3f},{bbox[3]:.3f}")
 
     query = build_batch_query()
-    result = query_overpass(query)
+    result = query_overpass(query, session)
 
     if not result:
         print("FAILED — Overpass API did not respond. Try again later.")
