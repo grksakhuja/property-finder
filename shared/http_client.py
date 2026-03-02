@@ -20,6 +20,7 @@ def create_session(
     max_retries: int = 3,
     backoff_factor: float = 1.0,
     extra_headers: Optional[dict] = None,
+    pool_size: int = 10,
 ) -> requests.Session:
     """Create a requests Session with automatic retry on transient errors.
 
@@ -34,7 +35,11 @@ def create_session(
         status_forcelist=[429, 500, 502, 503, 504],
         allowed_methods=["GET", "POST", "HEAD"],
     )
-    adapter = HTTPAdapter(max_retries=retry)
+    adapter = HTTPAdapter(
+        max_retries=retry,
+        pool_connections=pool_size,
+        pool_maxsize=pool_size,
+    )
     session.mount("https://", adapter)
 
     headers = {"User-Agent": DEFAULT_USER_AGENT}
