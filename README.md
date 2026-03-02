@@ -208,6 +208,27 @@ The API requires a `Referer` header from `www.ur-net.go.jp`. The `X-Requested-Wi
 
 No documented rate limits, but be respectful. The script uses a 2-second delay between area requests.
 
+## Development
+
+### Setup
+
+```bash
+pip install -r requirements.txt
+git config core.hooksPath .githooks
+```
+
+The second command enables the pre-push hook, which runs the test suite before every `git push`. If any test fails, the push is blocked.
+
+### Running Tests
+
+```bash
+python -m pytest tests/
+```
+
+### CI
+
+GitHub Actions runs the test suite on every push to master and on all PRs targeting master. See `.github/workflows/ci.yml`.
+
 ## Dependencies
 
 - `requests` — HTTP client
