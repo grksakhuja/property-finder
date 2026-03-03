@@ -22,8 +22,9 @@ from tabulate import tabulate
 from shared.parsers import parse_yen
 from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
-from shared.config import Area, get_areas_for_source
+from shared.config import Area, get_areas_for_source, get_target_room_types
 from shared.cli import build_arg_parser, filter_areas
+from shared.scraper_template import safe_write_json
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -37,8 +38,8 @@ DEFAULT_WORKERS = 5  # parallel workers for area scraping
 # Prefecture code mapping (tdfk uses JIS prefecture codes):
 # 11 = Saitama, 12 = Chiba, 13 = Tokyo, 14 = Kanagawa
 
-# Room type filter — set to None to show all, or e.g. ["2LDK", "3LDK"]
-ROOM_TYPE_FILTER = ["2LDK", "2SLDK", "3LDK", "3DK"]
+# Room type filter — loaded from scoring_config.json
+ROOM_TYPE_FILTER = get_target_room_types()
 
 AREAS = get_areas_for_source("ur")
 
@@ -285,8 +286,7 @@ def save_results(all_properties: list[Property], filename: str = "results.json")
         }
         data["areas"][area].append(prop_dict)
 
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    safe_write_json(data, filename)
 
     print(f"\nResults saved to {filename}")
 
