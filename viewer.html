@@ -6,7 +6,10 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data: https://*.basemaps.cartocdn.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org; connect-src 'self'; object-src 'none'; base-uri 'self'">
 <title>Tokyo Rental Search Results</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha256-YU3qCpj/P06tdPBJGPax0bm6Q1wltfwjsho5TR4+TYc=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" integrity="sha256-YSWCMtmNZNwqex4CEw1nQhvFub2lmU7vcCKP+XVwwXA=" crossorigin="anonymous">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha256-Hk4dIpcqOSb0hZjgyvFOP+cEmDXUKKNE/tT542ZbNQg=" crossorigin="anonymous"></script>
 <link rel="stylesheet" href="viewer.css">
 </head>
 <body>
@@ -17,6 +20,31 @@
 </header>
 
 <div class="stats" id="stats"></div>
+
+<div class="scraper-panel">
+  <button class="btn-scraper-toggle" id="btnScraperToggle">Run Scrapers</button>
+  <div class="scraper-panel-body" id="scraperPanelBody" style="display:none">
+    <div class="scraper-group">
+      <div class="scraper-group-title foreigner-friendly">Foreigner Friendly</div>
+      <div class="scraper-items" id="scraperGroupForeignerFriendly"></div>
+    </div>
+    <div class="scraper-group">
+      <div class="scraper-group-title japanese-only">Japanese Only</div>
+      <div class="scraper-items" id="scraperGroupJapaneseOnly"></div>
+    </div>
+    <div class="scraper-group">
+      <div class="scraper-group-title utility">Utilities</div>
+      <div class="scraper-items" id="scraperGroupUtility"></div>
+    </div>
+    <div class="scraper-actions">
+      <span class="scraper-helpers">
+        <a href="#" id="scraperSelectAll">Select All</a>
+        <a href="#" id="scraperSelectNone">Select None</a>
+      </span>
+      <button class="btn-scrape" id="btnRunScrapers">Run Selected Scrapers</button>
+    </div>
+  </div>
+</div>
 
 <div class="legend">
   <span><span class="grade-badge grade-A">A</span> Excellent (80+)</span>
@@ -33,6 +61,10 @@
       <option value="ur">UR Housing</option>
       <option value="suumo">SUUMO</option>
       <option value="rej">Real Estate Japan</option>
+      <option value="best_estate">Best Estate</option>
+      <option value="gaijinpot">GaijinPot</option>
+      <option value="wagaya">Wagaya Japan</option>
+      <option value="villagehouse">Village House</option>
     </select>
   </div>
   <div class="control-group">
@@ -58,6 +90,7 @@
       <option value="2LDK">2LDK</option>
       <option value="2SLDK">2SLDK</option>
       <option value="3LDK">3LDK</option>
+      <option value="3SLDK">3SLDK</option>
       <option value="3DK">3DK</option>
       <option value="3K">3K</option>
     </select>
