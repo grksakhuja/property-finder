@@ -13,6 +13,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field, asdict
+from urllib.parse import quote
 
 import requests
 from bs4 import BeautifulSoup
@@ -21,8 +22,9 @@ from tabulate import tabulate
 from shared.parsers import parse_yen, parse_building_age, parse_size_sqm
 from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
-from shared.config import Area, get_areas_for_source
+from shared.config import Area, get_areas_for_source, get_target_room_types
 from shared.cli import build_arg_parser, filter_areas
+from shared.scraper_template import safe_write_json
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -36,9 +38,9 @@ DEFAULT_WORKERS = 3  # parallel workers for area scraping
 # Room type codes for SUUMO md parameter
 # md=07 → 2LDK, md=08 → 3K, md=09 → 3DK, md=10 → 3LDK
 ROOM_TYPE_CODES = ["07", "08", "09", "10"]
-ROOM_TYPE_FILTER = ["2LDK", "2SLDK", "3LDK", "3DK", "3K"]
+ROOM_TYPE_FILTER = get_target_room_types()
 
-AREAS = get_areas_for_source("suumo")
+SOURCE_AREAS = get_areas_for_source("suumo")
 
 logger = setup_logging(name="suumo-search")
 
@@ -83,8 +85,8 @@ class Property:
 
 def build_url(area, page: int = 1) -> str:
     """Build SUUMO search URL for an area + page."""
-    prefecture = area.prefecture
-    code = area.suumo_code
+    prefecture = quote(area.prefecture, safe="")
+    code = quote(area.suumo_code, safe="")
     md_params = "&".join(f"md={c}" for c in ROOM_TYPE_CODES)
     url = f"{BASE_URL}/{prefecture}/{code}/?{md_params}&pc=50"
     if page > 1:
@@ -205,11 +207,16 @@ def parse_page(html_content: str, area: "Area") -> list[Property]:
     return properties
 
 
-def search_area(area: "Area", session: requests.Session) -> list[Property]:
-    """Scrape all pages for an area (up to MAX_PAGES_PER_AREA)."""
+def search_area(area: "Area", session: requests.Session, *,
+                max_pages: int = 0, delay: float = 0) -> list[Property]:
+    """Scrape all pages for an area (up to max_pages)."""
+    if max_pages <= 0:
+        max_pages = MAX_PAGES_PER_AREA
+    if delay <= 0:
+        delay = REQUEST_DELAY
     all_properties = []
 
-    for page_num in range(1, MAX_PAGES_PER_AREA + 1):
+    for page_num in range(1, max_pages + 1):
         url = build_url(area, page_num)
 
         try:
@@ -235,8 +242,8 @@ def search_area(area: "Area", session: requests.Session) -> list[Property]:
         if total == 0 or fetched_so_far >= total:
             break
 
-        if page_num < MAX_PAGES_PER_AREA:
-            time.sleep(REQUEST_DELAY)
+        if page_num < max_pages:
+            time.sleep(delay)
 
     return all_properties
 
@@ -328,8 +335,7 @@ def save_results(all_properties: list[Property], filename: str = "results_suumo.
         }
         data["areas"][area].append(prop_dict)
 
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    safe_write_json(data, filename)
 
     print(f"\nResults saved to {filename}")
 
@@ -339,7 +345,6 @@ def save_results(all_properties: list[Property], filename: str = "results_suumo.
 # ---------------------------------------------------------------------------
 
 def main():
-    global REQUEST_DELAY, MAX_PAGES_PER_AREA
     parser = build_arg_parser("suumo-search", "Search SUUMO rental listings")
     args = parser.parse_args()
 
@@ -348,17 +353,15 @@ def main():
         for h in logger.handlers:
             h.setLevel("DEBUG")
 
-    areas = filter_areas(AREAS, args.areas)
-    if args.max_pages is not None:
-        MAX_PAGES_PER_AREA = args.max_pages
-    if args.delay is not None:
-        REQUEST_DELAY = args.delay
+    areas = filter_areas(SOURCE_AREAS, args.areas)
+    max_pages = args.max_pages if args.max_pages is not None else MAX_PAGES_PER_AREA
+    delay = args.delay if args.delay is not None else REQUEST_DELAY
     output_file = args.output or "results_suumo.json"
 
     logger.info("SUUMO Rental Search")
     if ROOM_TYPE_FILTER:
         logger.info("Filtering for: %s", ", ".join(ROOM_TYPE_FILTER))
-    logger.info("Searching %d areas (max %d pages each)...", len(areas), MAX_PAGES_PER_AREA)
+    logger.info("Searching %d areas (max %d pages each)...", len(areas), max_pages)
 
     if args.dry_run:
         for area in areas:
@@ -374,7 +377,7 @@ def main():
 
     def _search_one(area):
         logger.info("[%s] Searching...", area.name)
-        return area, search_area(area, session)
+        return area, search_area(area, session, max_pages=max_pages, delay=delay)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_search_one, area): area for area in areas}

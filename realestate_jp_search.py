@@ -15,6 +15,7 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
+from urllib.parse import urlencode
 
 import requests
 from bs4 import BeautifulSoup
@@ -25,6 +26,7 @@ from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
 from shared.config import Area, get_areas_for_source
 from shared.cli import build_arg_parser, filter_areas
+from shared.scraper_template import safe_write_json
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -35,7 +37,10 @@ REQUEST_DELAY = 1  # seconds between page fetches
 MAX_PAGES_PER_AREA = 5  # cap at 75 listings per area (15/page)
 DEFAULT_WORKERS = 3  # parallel workers for area scraping
 
-# rooms=30 means 2LDK minimum (includes 2LDK, 3K, 3DK, 3LDK, etc.)
+# rooms=30 means ≥2LDK (includes 2LDK, 2SLDK, 3K, 3DK, 3LDK, 3SLDK, etc.).
+# REJ uses a numeric threshold rather than discrete room types, so we don't
+# use get_target_room_types() here — the threshold is already consistent
+# with the types defined in scoring_config.json.
 DEFAULT_PARAMS = {
     "rooms": "30",
     "min_price": "60000",
@@ -44,7 +49,7 @@ DEFAULT_PARAMS = {
     "order": "total_monthly_cost_ranking-asc",
 }
 
-AREAS = get_areas_for_source("rej")
+SOURCE_AREAS = get_areas_for_source("rej")
 
 logger = setup_logging(name="rej-search")
 
@@ -103,8 +108,7 @@ def build_url(area, page: int = 1) -> str:
     params["city"] = area.rej_city
     if page > 1:
         params["page"] = str(page)
-    query = "&".join(f"{k}={v}" for k, v in params.items())
-    return f"{BASE_URL}?{query}"
+    return f"{BASE_URL}?{urlencode(params)}"
 
 
 def extract_field_text(listing, label: str) -> str:
@@ -214,11 +218,16 @@ def parse_page(html_content: str) -> list[Room]:
     return rooms
 
 
-def search_area(area: "Area", session: requests.Session) -> list[Room]:
-    """Scrape all pages for an area (up to MAX_PAGES_PER_AREA)."""
+def search_area(area: "Area", session: requests.Session, *,
+                max_pages: int = 0, delay: float = 0) -> list[Room]:
+    """Scrape all pages for an area (up to max_pages)."""
+    if max_pages <= 0:
+        max_pages = MAX_PAGES_PER_AREA
+    if delay <= 0:
+        delay = REQUEST_DELAY
     all_rooms = []
 
-    for page_num in range(1, MAX_PAGES_PER_AREA + 1):
+    for page_num in range(1, max_pages + 1):
         url = build_url(area, page_num)
 
         try:
@@ -240,8 +249,8 @@ def search_area(area: "Area", session: requests.Session) -> list[Room]:
         if len(rooms) < 15:
             break
 
-        if page_num < MAX_PAGES_PER_AREA:
-            time.sleep(REQUEST_DELAY)
+        if page_num < max_pages:
+            time.sleep(delay)
 
     return all_rooms
 
@@ -342,8 +351,7 @@ def save_results(all_areas: dict[str, list[Room]], area_lookup: dict,
 
         data["areas"][area_name] = listings
 
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    safe_write_json(data, filename)
 
     print(f"\nResults saved to {filename}")
 
@@ -353,7 +361,6 @@ def save_results(all_areas: dict[str, list[Room]], area_lookup: dict,
 # ---------------------------------------------------------------------------
 
 def main():
-    global REQUEST_DELAY, MAX_PAGES_PER_AREA
     parser = build_arg_parser("rej-search", "Search Real Estate Japan rental listings")
     args = parser.parse_args()
 
@@ -362,15 +369,13 @@ def main():
         for h in logger.handlers:
             h.setLevel("DEBUG")
 
-    areas = filter_areas(AREAS, args.areas)
-    if args.max_pages is not None:
-        MAX_PAGES_PER_AREA = args.max_pages
-    if args.delay is not None:
-        REQUEST_DELAY = args.delay
+    areas = filter_areas(SOURCE_AREAS, args.areas)
+    max_pages = args.max_pages if args.max_pages is not None else MAX_PAGES_PER_AREA
+    delay = args.delay if args.delay is not None else REQUEST_DELAY
     output_file = args.output or "results_realestate_jp.json"
 
     logger.info("Real Estate Japan Rental Search")
-    logger.info("Searching %d areas (max %d pages each)...", len(areas), MAX_PAGES_PER_AREA)
+    logger.info("Searching %d areas (max %d pages each)...", len(areas), max_pages)
     logger.info("Filter: 2LDK+, ¥60,000-¥200,000, Mansion/Apartment")
 
     if args.dry_run:
@@ -392,7 +397,7 @@ def main():
 
     def _search_one(area):
         logger.info("[%s] Searching...", area.name)
-        return area, search_area(area, session)
+        return area, search_area(area, session, max_pages=max_pages, delay=delay)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_search_one, area): area for area in areas}
