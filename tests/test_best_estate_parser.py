@@ -23,66 +23,52 @@ def _load_fixture():
 
 
 class TestBestEstateParser:
-    def test_returns_properties(self):
+    def setup_method(self):
         html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        assert len(props) >= 1
+        self.props = scraper.parse_page(html, AREA)
+
+    def test_returns_properties(self):
+        assert len(self.props) >= 1
 
     def test_properties_have_rooms(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        total_rooms = sum(len(p.rooms) for p in props)
+        total_rooms = sum(len(p.rooms) for p in self.props)
         assert total_rooms >= 1
 
     def test_rent_values_positive(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.rent_value > 0, f"Rent should be positive, got {room.rent_value}"
 
     def test_building_names_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             assert prop.name, "Property name should not be empty"
 
     def test_address_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
         # Streamed listings may lack address; check non-streamed ones
-        named_props = [p for p in props if not p.name.startswith("(")]
+        named_props = [p for p in self.props if not p.name.startswith("(")]
         assert len(named_props) >= 1
         for prop in named_props:
             assert prop.address, "Address should not be empty"
 
     def test_building_age_parsed(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             # building_age_years should be a non-negative int or -1 (unknown)
             assert isinstance(prop.building_age_years, int)
             assert prop.building_age_years >= -1
 
     def test_detail_urls_absolute(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 if room.detail_url:
                     assert room.detail_url.startswith("https://www.best-estate.jp/"), \
                         f"URL should be absolute, got {room.detail_url}"
 
     def test_layout_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.layout, "Layout should not be empty"
 
     def test_size_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.size, "Size should not be empty"

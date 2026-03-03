@@ -17,57 +17,45 @@ def _load_fixture():
 
 
 class TestWagayaParser:
-    def test_returns_properties(self):
+    def setup_method(self):
         html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        assert len(props) >= 1
+        self.props = scraper.parse_page(html, AREA)
+
+    def test_returns_properties(self):
+        assert len(self.props) >= 1
 
     def test_properties_have_rooms(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        total_rooms = sum(len(p.rooms) for p in props)
+        total_rooms = sum(len(p.rooms) for p in self.props)
         assert total_rooms >= 1
 
     def test_rent_values_positive(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.rent_value > 0, f"Rent should be positive, got {room.rent_value}"
 
     def test_name_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             assert prop.name, "Property name should not be empty"
 
     def test_address_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             assert prop.address, "Address should not be empty"
 
     def test_layout_parsed(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        all_rooms = [room for p in props for room in p.rooms]
+        all_rooms = [room for p in self.props for room in p.rooms]
         with_layout = sum(1 for r in all_rooms if r.layout)
         assert with_layout / len(all_rooms) >= 0.5, \
             f"At least 50% of rooms should have layout, got {with_layout}/{len(all_rooms)}"
 
     def test_detail_url_constructed(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.detail_url, "Detail URL should not be empty"
                 assert "wagaya-japan.com" in room.detail_url
 
     def test_rent_in_valid_range(self):
         """Wagaya listings should have reasonable rent values."""
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert 10000 <= room.rent_value <= 500000, \
                     f"Rent {room.rent_value} outside valid range"

@@ -17,68 +17,54 @@ def _load_fixture():
 
 
 class TestGaijinPotParser:
-    def test_returns_properties(self):
+    def setup_method(self):
         html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        assert len(props) >= 1
+        self.props = scraper.parse_page(html, AREA)
+
+    def test_returns_properties(self):
+        assert len(self.props) >= 1
 
     def test_properties_have_rooms(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        total_rooms = sum(len(p.rooms) for p in props)
+        total_rooms = sum(len(p.rooms) for p in self.props)
         assert total_rooms >= 1
 
     def test_rent_values_positive(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.rent_value > 0, f"Rent should be positive, got {room.rent_value}"
 
     def test_layout_parsed(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.layout, f"Layout should not be empty for {prop.name}"
 
     def test_size_parsed(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.size, f"Size should not be empty for {prop.name}"
                 assert "m²" in room.size or "m2" in room.size.lower(), \
                     f"Size should contain m², got: {room.size}"
 
     def test_detail_url_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.detail_url, "Detail URL should not be empty"
                 assert room.detail_url.startswith("https://"), \
                     f"URL should start with https://, got: {room.detail_url}"
 
     def test_station_access_parsed(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        with_station = sum(1 for p in props if p.access)
-        assert with_station / len(props) >= 0.3, \
-            f"At least 30% of properties should have station access, got {with_station}/{len(props)}"
+        with_station = sum(1 for p in self.props if p.access)
+        assert with_station / len(self.props) >= 0.3, \
+            f"At least 30% of properties should have station access, got {with_station}/{len(self.props)}"
 
     def test_address_present(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             assert prop.address, "Address should not be empty"
 
     def test_building_age_parsed(self):
-        html = _load_fixture()
-        props = scraper.parse_page(html, AREA)
-        with_age = sum(1 for p in props if p.building_age_years >= 0)
-        assert with_age / len(props) >= 0.3, \
-            f"At least 30% of properties should have building age, got {with_age}/{len(props)}"
+        with_age = sum(1 for p in self.props if p.building_age_years >= 0)
+        assert with_age / len(self.props) >= 0.3, \
+            f"At least 30% of properties should have building age, got {with_age}/{len(self.props)}"
 
 
 class TestGaijinPotAddressMatching:
