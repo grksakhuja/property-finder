@@ -529,17 +529,22 @@ async function loadData() {
   allRooms = [];
   const loaded = [];
 
-  for (const src of sources) {
+  const results = await Promise.all(sources.map(async (src) => {
     try {
       const resp = await fetch(src.file);
-      if (!resp.ok) continue;
+      if (!resp.ok) return null;
       const data = await resp.json();
-      const rooms = loadSourceData(data, src.source);
-      allRooms.push(...rooms);
-      loaded.push(`${src.label}: ${rooms.length}`);
+      return { src, data };
     } catch (e) {
-      // Source not available — skip silently
+      return null; // Source not available — skip silently
     }
+  }));
+
+  for (const result of results) {
+    if (!result) continue;
+    const rooms = loadSourceData(result.data, result.src.source);
+    allRooms.push(...rooms);
+    loaded.push(`${result.src.label}: ${rooms.length}`);
   }
 
   if (allRooms.length === 0) {
@@ -1609,7 +1614,7 @@ document.getElementById('btnToggleMap').addEventListener('click', () => {
         return;
       }
       if (!r.ok) throw new Error('Failed to start');
-      pollTimer = setInterval(pollStatus, 2000);
+      if (!pollTimer) pollTimer = setInterval(pollStatus, 2000);
     }).catch(() => {
       runBtn.disabled = false;
       runBtn.textContent = 'Run Selected Scrapers';

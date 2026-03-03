@@ -76,7 +76,8 @@
     font-size: 0.85rem;
     min-width: 130px;
   }
-  select:focus, input:focus { outline: none; border-color: var(--accent); }
+  select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn-reset, .btn-fav {
     background: var(--surface);
     border: 1px solid var(--border);

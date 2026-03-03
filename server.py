@@ -110,7 +110,7 @@ def _run_single_scraper(key: str) -> None:
 def _run_scrape_job(keys: list[str]) -> None:
     """Run selected scrapers in parallel, then mark job as finished."""
     try:
-        with ThreadPoolExecutor(max_workers=len(keys)) as executor:
+        with ThreadPoolExecutor(max_workers=min(len(keys), 4)) as executor:
             executor.map(_run_single_scraper, keys)
     finally:
         with scrape_lock:
