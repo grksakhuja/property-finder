@@ -184,18 +184,27 @@ def extract_addresses_from_results() -> dict[str, dict]:
 
 
 def _guess_prefecture(area_name: str) -> str:
-    """Guess prefecture from area name (mirrors viewer.js getPrefecture)."""
+    """Guess prefecture from area name (mirrors viewer.js getPrefecture).
+
+    Returns empty string if prefecture cannot be determined — callers
+    handle this gracefully (e.g. normalize_address_for_geocoding skips
+    prefecture prepend when empty).
+    """
     saitama = ['Kawaguchi', 'Wako', 'Urawa', 'Omiya', 'Kawagoe', 'Toda',
                'Warabi', 'Asaka', 'Niiza', 'Saitama Minami', 'Saitama Chuo']
     chiba = ['Ichikawa', 'Funabashi', 'Urayasu', 'Matsudo']
+    kanagawa = ['Kawasaki', 'Saiwai', 'Nakahara', 'Takatsu', 'Yokohama',
+                'Kamakura', 'Fujisawa', 'Chigasaki']
     tokyo = ['Kita-ku', 'Itabashi-ku', 'Nerima-ku', 'Adachi-ku', 'Edogawa-ku']
     if any(a in area_name for a in saitama):
         return 'saitama'
     if any(a in area_name for a in chiba):
         return 'chiba'
+    if any(a in area_name for a in kanagawa):
+        return 'kanagawa'
     if any(a in area_name for a in tokyo):
         return 'tokyo'
-    return 'kanagawa'
+    return ''
 
 
 def geocode_address(session: requests.Session, query: str,
