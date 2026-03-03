@@ -390,17 +390,9 @@ class BestEstateScraper(BaseScraper):
                 orphan_rooms.append(room)
 
         if orphan_rooms:
-            # Group orphan rooms into a single property per page
-            properties.append(StandardProperty(
-                name="(Streamed listing)",
-                address="",
-                access="",
-                building_age="",
-                building_age_years=-1,
-                area_name=area.name,
-                prefecture=area.prefecture,
-                rooms=orphan_rooms,
-            ))
+            self.logger.debug(
+                "%d orphan rooms from React streaming (no building info, "
+                "will be discarded during area matching)", len(orphan_rooms))
 
         return properties
 
