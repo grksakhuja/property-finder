@@ -22,6 +22,10 @@ SCRAPERS = [
     {"name": "UR", "cmd": [sys.executable, "ur_rental_search.py"]},
     {"name": "SUUMO", "cmd": [sys.executable, "suumo_search.py"]},
     {"name": "REJ", "cmd": [sys.executable, "realestate_jp_search.py"]},
+    {"name": "BestEstate", "cmd": [sys.executable, "best_estate_search.py"]},
+    {"name": "GaijinPot", "cmd": [sys.executable, "gaijinpot_search.py"]},
+    {"name": "Wagaya", "cmd": [sys.executable, "wagaya_search.py"]},
+    {"name": "VillageHouse", "cmd": [sys.executable, "villagehouse_search.py"]},
     {"name": "POIs", "cmd": [sys.executable, "build_pois.py"]},
 ]
 
@@ -141,6 +145,30 @@ def main():
         sys.exit(1)
     else:
         print(f"\nAll {len(results)} scrapers completed successfully.")
+
+    # Run geocoder as final non-fatal step
+    print(f"\n{'='*60}")
+    print("Running geocoder (non-fatal)...")
+    print(f"{'='*60}")
+    try:
+        geo_result = subprocess.run(
+            [sys.executable, "geocode_properties.py"],
+            capture_output=True,
+            text=True,
+            timeout=1800,  # 30 min max
+        )
+        if geo_result.returncode == 0:
+            print("  Geocoder: OK")
+            if args.verbose and geo_result.stdout:
+                print(geo_result.stdout)
+        else:
+            print(f"  Geocoder: FAILED (exit {geo_result.returncode})")
+            if geo_result.stderr:
+                print(geo_result.stderr, file=sys.stderr)
+    except subprocess.TimeoutExpired:
+        print("  Geocoder: TIMEOUT (30 min)")
+    except Exception as exc:
+        print(f"  Geocoder: ERROR ({exc})")
 
 
 if __name__ == "__main__":

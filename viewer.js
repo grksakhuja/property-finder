@@ -73,30 +73,9 @@ function translateFloor(jp) {
   return jp.replace(/(\d+)階/, '$1F');
 }
 
-function translateRoomName(jp) {
-  if (!jp) return '';
-  return jp.replace(/号棟/g, ' Bldg').replace(/号室/g, '').replace(/-/g, '-');
-}
-
 // =====================================================================
 // Priority scoring
 // =====================================================================
-const AREA_PRIORITY = {
-  'Kawaguchi': 95, 'Wako': 95,
-  'Urawa': 85, 'Ichikawa': 85,
-  'Omiya': 80, 'Saitama Minami-ku': 80, 'Funabashi': 80, 'Nakahara-ku': 80,
-  'Asaka': 75, 'Saitama Chuo-ku': 75, 'Urayasu': 75,
-  'Kawagoe': 70, 'Toda': 70, 'Warabi': 70, 'Niiza': 70,
-  'Kawasaki-ku': 70, 'Saiwai-ku': 70, 'Kawasaki': 70,
-  'Matsudo': 65, 'Takatsu-ku': 65, 'Kita-ku': 65, 'Itabashi-ku': 65,
-  'Yokohama Nishi-ku': 60, 'Yokohama Naka-ku': 60, 'Yokohama': 60,
-  'Yokohama Kohoku-ku': 60, 'Yokohama Tsuzuki-ku': 60, 'Nerima-ku': 60,
-  'Yokohama Kanagawa-ku': 55, 'Yokohama Aoba-ku': 55, 'Yokohama Tsurumi-ku': 55,
-  'Yokohama Konan-ku': 55, 'Yokohama Hodogaya-ku': 50, 'Yokohama Minami-ku': 50,
-  'Adachi-ku': 55, 'Edogawa-ku': 55,
-  'Kamakura': 45, 'Fujisawa': 45, 'Chigasaki': 45,
-};
-
 const BRIEF = {
   commute: {
     known: {
@@ -189,14 +168,6 @@ function getPrefecture(areaName) {
 
 function normalizeArea(area) {
   return area.replace(/\s*\(.*\)$/, '').trim();
-}
-
-function getAreaPriority(areaName) {
-  if (AREA_PRIORITY[areaName] !== undefined) return AREA_PRIORITY[areaName];
-  for (const [key, val] of Object.entries(AREA_PRIORITY)) {
-    if (areaName.includes(key)) return val;
-  }
-  return 40;
 }
 
 function parseSize(s) {
@@ -397,16 +368,12 @@ const COLUMNS = [
   { key: 'area',     label: 'Area',      sortFn: (a, b) => a.area.localeCompare(b.area) },
   { key: 'property', label: 'Property / Access', sortFn: (a, b) => a.property.localeCompare(b.property) },
   { key: 'type',     label: 'Type',      sortFn: (a, b) => (a.room_type||'').localeCompare(b.room_type||'') },
-  { key: 'size',     label: 'Size',      sortFn: (a, b) => parseSize(b.floorspace||b.size) - parseSize(a.floorspace||a.size) },
+  { key: 'size',     label: 'Size',      sortFn: (a, b) => (b._sqm || 0) - (a._sqm || 0) },
   { key: 'floor',    label: 'Floor',     sortFn: (a, b) => parseFloor(b.floor) - parseFloor(a.floor) },
   { key: 'walk',     label: 'Walk',     sortFn: (a, b) => (a._walkMin < 0 ? 999 : a._walkMin) - (b._walkMin < 0 ? 999 : b._walkMin) },
   { key: 'rent',     label: 'Rent',      sortFn: (a, b) => (a.rent_value || 9999999) - (b.rent_value || 9999999) },
   { key: 'total',    label: 'Total',     sortFn: (a, b) => (a.total_value || 9999999) - (b.total_value || 9999999) },
-  { key: 'yensqm',   label: '¥/㎡',     sortFn: (a, b) => {
-    const va = a.total_value && parseSize(a.floorspace||a.size) ? a.total_value / parseSize(a.floorspace||a.size) : 99999;
-    const vb = b.total_value && parseSize(b.floorspace||b.size) ? b.total_value / parseSize(b.floorspace||b.size) : 99999;
-    return va - vb;
-  }},
+  { key: 'yensqm',   label: '¥/㎡',     sortFn: (a, b) => (a._yenPerSqm || 99999) - (b._yenPerSqm || 99999) },
   { key: 'movein',   label: 'Move-in',   sortFn: (a, b) => (a.move_in_cost || 9999999) - (b.move_in_cost || 9999999) },
   { key: 'age',      label: 'Age',       sortFn: (a, b) => (a.building_age_years < 0 ? 999 : a.building_age_years) - (b.building_age_years < 0 ? 999 : b.building_age_years) },
   { key: 'deposit',  label: 'Deposit',   sortFn: null },
@@ -435,112 +402,50 @@ function toggleSort(key) {
 // =====================================================================
 let allRooms = [];
 
-function loadURData(data) {
-  const rooms = [];
-  for (const [areaName, properties] of Object.entries(data.areas)) {
-    for (const prop of properties) {
-      for (const room of prop.rooms) {
-        rooms.push({
-          source: 'ur',
-          area: areaName,
-          prefecture: getPrefecture(areaName),
-          property: prop.name,
-          access: prop.access,
-          room_name: room.room_name,
-          room_type: room.room_type,
-          floorspace: room.floorspace,
-          size: room.floorspace,
-          floor: room.floor,
-          rent: room.rent,
-          rent_value: room.rent_value,
-          commonfee: room.commonfee,
-          commonfee_value: room.commonfee_value,
-          total_value: room.total_value,
-          shikikin: room.shikikin,
-          deposit_value: 0,
-          key_money_value: 0,
-          move_in_cost: 0,
-          building_age_years: -1,
-          building_age: '',
-          url: room.url,
-          score: 0,
-        });
-      }
-    }
-  }
-  return rooms;
-}
+const SOURCE_FIELDS = {
+  ur:           { layout: 'room_type', size: 'floorspace', url: 'url', fee: 'commonfee', feeVal: 'commonfee_value', deposit: 'shikikin', roomName: 'room_name', hasAge: false, hasMoveIn: false },
+  suumo:        { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true },
+  rej:          { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
+  best_estate:  { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
+  gaijinpot:    { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
+  wagaya:       { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: false, hasMoveIn: true, fallbackFee: true },
+  villagehouse: { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: false, hasMoveIn: true, fallbackFee: true },
+};
 
-function loadSuumoData(data) {
+function loadSourceData(data, source) {
+  const f = SOURCE_FIELDS[source];
   const rooms = [];
   for (const [areaName, properties] of Object.entries(data.areas)) {
     for (const prop of properties) {
       for (const room of prop.rooms) {
-        const depositVal = room.deposit_value || 0;
-        const keyVal = room.key_money_value || 0;
-        const moveIn = (room.rent_value || 0) + depositVal + keyVal;
+        const sizeVal = room[f.size];
+        const depositVal = f.hasMoveIn ? (room.deposit_value || 0) : 0;
+        const keyVal = f.hasMoveIn ? (room.key_money_value || 0) : 0;
+        const moveIn = f.hasMoveIn ? (room.rent_value || 0) + depositVal + keyVal : 0;
         rooms.push({
-          source: 'suumo',
+          source,
           area: areaName,
           prefecture: getPrefecture(areaName),
           property: prop.name,
+          address: prop.address || '',
           access: prop.access,
-          room_name: '',
-          room_type: room.layout,
-          floorspace: room.size,
-          size: room.size,
+          room_name: f.roomName ? (room[f.roomName] || '') : '',
+          room_type: room[f.layout],
+          floorspace: sizeVal,
+          size: sizeVal,
           floor: room.floor,
           rent: room.rent,
           rent_value: room.rent_value,
-          commonfee: room.admin_fee,
-          commonfee_value: room.admin_fee_value,
+          commonfee: f.fallbackFee ? (room[f.fee] || '') : room[f.fee],
+          commonfee_value: f.fallbackFee ? (room[f.feeVal] || 0) : room[f.feeVal],
           total_value: room.total_value,
-          shikikin: room.deposit,
+          shikikin: f.fallbackFee ? (room[f.deposit] || '') : room[f.deposit],
           deposit_value: depositVal,
           key_money_value: keyVal,
           move_in_cost: moveIn,
-          building_age_years: prop.building_age_years != null ? prop.building_age_years : -1,
-          building_age: prop.building_age || '',
-          url: room.detail_url,
-          score: 0,
-        });
-      }
-    }
-  }
-  return rooms;
-}
-
-function loadREJData(data) {
-  const rooms = [];
-  for (const [areaName, properties] of Object.entries(data.areas)) {
-    for (const prop of properties) {
-      for (const room of prop.rooms) {
-        const depositVal = room.deposit_value || 0;
-        const keyVal = room.key_money_value || 0;
-        const moveIn = (room.rent_value || 0) + depositVal + keyVal;
-        rooms.push({
-          source: 'rej',
-          area: areaName,
-          prefecture: getPrefecture(areaName),
-          property: prop.name,
-          access: prop.access,
-          room_name: '',
-          room_type: room.layout,
-          floorspace: room.size,
-          size: room.size,
-          floor: room.floor,
-          rent: room.rent,
-          rent_value: room.rent_value,
-          commonfee: room.admin_fee || '',
-          commonfee_value: room.admin_fee_value || 0,
-          total_value: room.total_value,
-          shikikin: room.deposit || '',
-          deposit_value: depositVal,
-          key_money_value: keyVal,
-          move_in_cost: moveIn,
-          building_age_years: prop.building_age_years != null ? prop.building_age_years : -1,
-          building_age: prop.building_age || '',
-          url: room.detail_url,
+          building_age_years: f.hasAge ? (prop.building_age_years != null ? prop.building_age_years : -1) : -1,
+          building_age: f.hasAge ? (prop.building_age || '') : '',
+          url: room[f.url],
           score: 0,
         });
       }
@@ -555,10 +460,12 @@ function loadREJData(data) {
 function precomputeTranslations() {
   for (const r of allRooms) {
     const accessFirst = r.access ? r.access.split(' / ')[0] : '';
-    r._accessEn = r.source === 'rej' ? accessFirst : translateAccess(accessFirst);
-    r._floorEn = r.source === 'rej' ? (r.floor || '') : translateFloor(r.floor);
+    const englishSources = ['rej', 'gaijinpot', 'wagaya', 'villagehouse'];
+    r._accessEn = englishSources.includes(r.source) ? accessFirst : translateAccess(accessFirst);
+    r._floorEn = englishSources.includes(r.source) ? (r.floor || '') : translateFloor(r.floor);
     r._favKey = getFavKey(r);
     r._walkMin = parseWalkTime(r);
+    r._sqm = parseSize(r.floorspace || r.size);
 
     // Pre-compute deposit display
     if (r.source === 'ur') {
@@ -610,25 +517,34 @@ function populateAreaDropdown() {
 
 async function loadData() {
   const sources = [
-    { file: 'results.json',              loader: loadURData,    label: 'UR' },
-    { file: 'results_suumo.json',        loader: loadSuumoData, label: 'SUUMO' },
-    { file: 'results_realestate_jp.json', loader: loadREJData,   label: 'REJ' },
+    { file: 'results.json',              source: 'ur',           label: 'UR' },
+    { file: 'results_suumo.json',        source: 'suumo',        label: 'SUUMO' },
+    { file: 'results_realestate_jp.json', source: 'rej',          label: 'REJ' },
+    { file: 'results_best_estate.json',  source: 'best_estate',  label: 'BestEstate' },
+    { file: 'results_gaijinpot.json',    source: 'gaijinpot',    label: 'GaijinPot' },
+    { file: 'results_wagaya.json',       source: 'wagaya',       label: 'Wagaya' },
+    { file: 'results_villagehouse.json', source: 'villagehouse',  label: 'VillageHouse' },
   ];
 
   allRooms = [];
   const loaded = [];
 
-  for (const src of sources) {
+  const results = await Promise.all(sources.map(async (src) => {
     try {
       const resp = await fetch(src.file);
-      if (!resp.ok) continue;
+      if (!resp.ok) return null;
       const data = await resp.json();
-      const rooms = src.loader(data);
-      allRooms.push(...rooms);
-      loaded.push(`${src.label}: ${rooms.length}`);
+      return { src, data };
     } catch (e) {
-      // Source not available — skip silently
+      return null; // Source not available — skip silently
     }
+  }));
+
+  for (const result of results) {
+    if (!result) continue;
+    const rooms = loadSourceData(result.data, result.src.source);
+    allRooms.push(...rooms);
+    loaded.push(`${result.src.label}: ${rooms.length}`);
   }
 
   if (allRooms.length === 0) {
@@ -656,19 +572,63 @@ async function loadData() {
   }
 
   precomputeTranslations();
-  allRooms.forEach(r => { const s = computeScore(r); r.score = s.total; r._breakdown = s.breakdown; });
+  allRooms.forEach((r, i) => {
+    const s = computeScore(r);
+    r.score = s.total;
+    r._breakdown = s.breakdown;
+    r._grade = getGrade(r.score);
+    r._idx = i;
+    r._yenPerSqm = r.total_value && r._sqm ? Math.round(r.total_value / r._sqm) : null;
+  });
   populateAreaDropdown();
   updateFavButton();
 
-  // Load POI data for map
-  poiData = await loadPOIData();
+  // Load POI data and geocoded addresses for map
+  [poiData, geocodedData] = await Promise.all([loadPOIData(), loadGeocodedData()]);
 
   document.getElementById('subtitle').textContent =
     `Loaded: ${loaded.join(' | ')} (${allRooms.length} total rooms)`;
 
+  // Build table header once (sort arrows updated in render())
+  buildTableHeader();
+
   // Restore state from URL hash before first render
   restoreHashState();
   render();
+}
+
+let tableHeaderListenerAdded = false;
+
+function buildTableHeader() {
+  const head = document.getElementById('tableHead');
+  head.innerHTML = COLUMNS.map(col => {
+    const cls = col.sortFn ? 'sortable' : '';
+    return `<th class="${cls}" data-sort-key="${col.key}">${col.label}<span class="sort-arrow"></span></th>`;
+  }).join('');
+  // Event delegation for sort clicks (attach only once — survives innerHTML rebuilds)
+  if (!tableHeaderListenerAdded) {
+    head.addEventListener('click', (e) => {
+      const th = e.target.closest('th[data-sort-key]');
+      if (th) toggleSort(th.dataset.sortKey);
+    });
+    tableHeaderListenerAdded = true;
+  }
+}
+
+function updateSortArrows() {
+  const ths = document.getElementById('tableHead').querySelectorAll('th[data-sort-key]');
+  for (const th of ths) {
+    const key = th.dataset.sortKey;
+    const col = COLUMNS.find(c => c.key === key);
+    const arrow = th.querySelector('.sort-arrow');
+    if (key === sortCol && col && col.sortFn) {
+      th.classList.add('sorted');
+      arrow.innerHTML = sortAsc ? '&#9650;' : '&#9660;';
+    } else {
+      th.classList.remove('sorted');
+      arrow.innerHTML = col && col.sortFn ? '&#9650;' : '';
+    }
+  }
 }
 
 function getFiltered() {
@@ -689,7 +649,7 @@ function getFiltered() {
     if (area && r.area !== area) return false;
     if (type && !(r.room_type || '').includes(type)) return false;
     if (maxRent && r.total_value > maxRent && r.total_value > 0) return false;
-    if (minSize && parseSize(r.floorspace || r.size) < minSize) return false;
+    if (minSize && r._sqm < minSize) return false;
     if (maxAge && r.building_age_years >= 0 && r.building_age_years > maxAge) return false;
     if (maxWalk && r._walkMin > 0 && r._walkMin > maxWalk) return false;
     if (minGrade && r.score < minGrade) return false;
@@ -713,9 +673,9 @@ function getSorted(rooms) {
 // =====================================================================
 // Render
 // =====================================================================
-const SOURCE_LABELS = { ur: 'UR', suumo: 'SUUMO', rej: 'REJ' };
+const SOURCE_LABELS = { ur: 'UR', suumo: 'SUUMO', rej: 'REJ', best_estate: 'BestEstate', gaijinpot: 'GaijinPot', wagaya: 'Wagaya', villagehouse: 'VillageH' };
 
-function render() {
+function render(paginationOnly = false) {
   const filtered = getFiltered();
   const sorted = getSorted(filtered);
 
@@ -731,9 +691,9 @@ function render() {
   const statsEl = document.getElementById('stats');
   const withRent = filtered.filter(r => r.total_value > 0);
   const avgRent = withRent.length ? Math.round(withRent.reduce((s, r) => s + r.total_value, 0) / withRent.length) : 0;
-  const avgSize = withRent.length ? Math.round(withRent.reduce((s, r) => s + parseSize(r.floorspace||r.size), 0) / withRent.length) : 0;
-  const minRent = withRent.length ? Math.min(...withRent.map(r => r.total_value)) : 0;
-  const maxSize = withRent.length ? Math.max(...withRent.map(r => parseSize(r.floorspace||r.size))) : 0;
+  const avgSize = withRent.length ? Math.round(withRent.reduce((s, r) => s + r._sqm, 0) / withRent.length) : 0;
+  const minRent = withRent.length ? withRent.reduce((m, r) => Math.min(m, r.total_value), Infinity) : 0;
+  const maxSize = withRent.length ? withRent.reduce((m, r) => Math.max(m, r._sqm), 0) : 0;
 
   const srcCounts = {};
   filtered.forEach(r => { srcCounts[r.source] = (srcCounts[r.source] || 0) + 1; });
@@ -753,17 +713,8 @@ function render() {
 
   // Stat card click handlers are bound once via event delegation (see below render())
 
-  // Table head
-  const head = document.getElementById('tableHead');
-  head.innerHTML = COLUMNS.map(col => {
-    const isSorted = sortCol === col.key;
-    const arrow = col.sortFn
-      ? (isSorted ? (sortAsc ? '&#9650;' : '&#9660;') : '&#9650;')
-      : '';
-    const cls = isSorted ? 'sorted' : '';
-    const onclick = col.sortFn ? `onclick="toggleSort('${col.key}')"` : '';
-    return `<th class="${cls}" ${onclick}>${col.label}${arrow ? `<span class="sort-arrow">${arrow}</span>` : ''}</th>`;
-  }).join('');
+  // Update sort arrows (header built once in loadData)
+  updateSortArrows();
 
   // Table body — only render current page slice (Step 2)
   const body = document.getElementById('tableBody');
@@ -779,11 +730,10 @@ function render() {
   body.innerHTML = pageSlice.map(r => {
     const prefClass = `pref-${r.prefecture}`;
     const sourceClass = `source-${r.source}`;
-    const grade = getGrade(r.score);
+    const grade = r._grade;
     const scoreClass = r.score >= 80 ? 'score-high' : r.score >= 65 ? 'score-med' : 'score-low';
     const scorePct = Math.min(100, r.score);
-    const sqm = parseSize(r.floorspace || r.size);
-    const yenPerSqm = r.total_value && sqm ? Math.round(r.total_value / sqm) : null;
+    const yenPerSqm = r._yenPerSqm;
     const roomType = r.room_type || r.layout || '';
     const sizeDisplay = r.floorspace || r.size || '';
     const isFav = favourites.has(r._favKey);
@@ -803,12 +753,12 @@ function render() {
     if (r.building_age_years >= 0) {
       ageDisplay = `${r.building_age_years}y`;
     } else if (r.building_age) {
-      ageDisplay = r.building_age;
+      ageDisplay = escHtml(r.building_age);
     }
 
     return `<tr class="${isFav ? 'fav-row' : ''}">
       <td><span class="fav-star ${isFav ? 'starred' : ''}" data-favkey="${escHtml(r._favKey)}">${isFav ? '\u2605' : '\u2606'}</span></td>
-      <td class="score-cell" data-room-idx="${allRooms.indexOf(r)}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
+      <td class="score-cell" data-room-idx="${r._idx}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
       <td><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || escHtml(r.source)}</span></td>
       <td><span class="area-tag ${prefClass}">${escHtml(r.area)}</span></td>
       <td><div class="prop-name">${escHtml(r.property)}</div><div class="prop-access" title="${escHtml(r.access || '')}">${escHtml(r._accessEn)}</div></td>
@@ -838,9 +788,13 @@ function render() {
     paginationEl.style.display = 'none';
   }
 
-  // Update map & area cards
-  renderAreaCards();
-  syncMapToFilters();
+  // Update map & area cards (skip on pagination-only renders)
+  if (!paginationOnly) {
+    const areaStats = getAreaStats(filtered);
+    renderAreaCards(areaStats);
+    syncMapToFilters(areaStats);
+    syncPropertyMarkersToFilters(filtered);
+  }
 }
 
 // =====================================================================
@@ -915,7 +869,7 @@ function showBreakdown(idx) {
   const r = allRooms[idx];
   if (!r || !r._breakdown) return;
   const b = r._breakdown;
-  const grade = getGrade(r.score);
+  const grade = r._grade;
 
   const dims = [
     { key: 'area', label: 'Area', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}` },
@@ -1067,19 +1021,25 @@ document.getElementById('btnReset').addEventListener('click', () => {
 
 // Pagination buttons
 document.getElementById('btnPrev').addEventListener('click', () => {
-  if (currentPage > 0) { currentPage--; render(); pushHashState(); window.scrollTo(0, 0); }
+  if (currentPage > 0) { currentPage--; render(true); pushHashState(); window.scrollTo(0, 0); }
 });
 document.getElementById('btnNext').addEventListener('click', () => {
-  currentPage++; render(); pushHashState(); window.scrollTo(0, 0);
+  currentPage++; render(true); pushHashState(); window.scrollTo(0, 0);
 });
 
 // =====================================================================
 // Area POI data & Interactive Map
 // =====================================================================
 let poiData = null;
+let geocodedData = null;
 let leafletMap = null;
 let mapInitialized = false;
 let areaMarkers = {}; // area name → marker
+let propertyClusterGroup = null;
+let propertyMarkersMap = {}; // address → marker
+let currentFilteredAddresses = new Set();
+let poiLayerGroup = null;
+const POI_ZOOM_THRESHOLD = 12;
 
 const PREF_COLORS = {
   saitama:  '#4ade80',
@@ -1110,8 +1070,23 @@ async function loadPOIData() {
   }
 }
 
-function getAreaStats() {
-  const filtered = getFiltered();
+async function loadGeocodedData() {
+  try {
+    const resp = await fetch('geocoded_addresses.json');
+    if (!resp.ok) return null;
+    return await resp.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+function isValidLatLng(lat, lng) {
+  return typeof lat === 'number' && isFinite(lat) &&
+         typeof lng === 'number' && isFinite(lng) &&
+         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+}
+
+function getAreaStats(filtered) {
   const byArea = {};
   for (const r of filtered) {
     if (!byArea[r.area]) byArea[r.area] = [];
@@ -1122,8 +1097,8 @@ function getAreaStats() {
     const withRent = rooms.filter(r => r.total_value > 0);
     const avgScore = rooms.length ? Math.round(rooms.reduce((s, r) => s + r.score, 0) / rooms.length) : 0;
     const avgRent = withRent.length ? Math.round(withRent.reduce((s, r) => s + r.total_value, 0) / withRent.length) : 0;
-    const avgSize = withRent.length ? Math.round(withRent.reduce((s, r) => s + parseSize(r.floorspace || r.size), 0) / withRent.length) : 0;
-    const grade = getGrade(avgScore);
+    const avgSize = withRent.length ? Math.round(withRent.reduce((s, r) => s + r._sqm, 0) / withRent.length) : 0;
+    const grade = getGrade(avgScore); // area avg score — not precomputed per room
     const pref = rooms[0].prefecture;
     const commData = BRIEF.commute.known[normalizeArea(area)] || BRIEF.commute.prefectureDefault[pref] || { min: 55, transfers: 1 };
     stats[area] = {
@@ -1154,19 +1129,21 @@ function initMap() {
 
   // Office marker (red)
   const office = poiData.office;
-  L.circleMarker([office.lat, office.lng], {
-    radius: 9, color: '#f87171', fillColor: '#f87171', fillOpacity: 0.9, weight: 2,
-  }).addTo(leafletMap).bindPopup(`<div class="map-popup-title">${office.name}</div><div class="map-popup-pref">${office.note || ''}</div>`);
+  if (office) {
+    L.circleMarker([office.lat, office.lng], {
+      radius: 9, color: '#f87171', fillColor: '#f87171', fillOpacity: 0.9, weight: 2,
+    }).addTo(leafletMap).bindPopup(`<div class="map-popup-title">${escHtml(office.name)}</div><div class="map-popup-pref">${escHtml(office.note || '')}</div>`);
+  }
 
   // Hub markers (purple)
   for (const hub of poiData.hubs || []) {
     L.circleMarker([hub.lat, hub.lng], {
       radius: 7, color: '#c084fc', fillColor: '#c084fc', fillOpacity: 0.7, weight: 2,
-    }).addTo(leafletMap).bindPopup(`<div class="map-popup-title">${hub.name}</div><div class="map-popup-pref">Entertainment Hub</div>`);
+    }).addTo(leafletMap).bindPopup(`<div class="map-popup-title">${escHtml(hub.name)}</div><div class="map-popup-pref">Entertainment Hub</div>`);
   }
 
   // Area markers — POI keys are bare names, stats keys are full names with JP
-  const areaStats = getAreaStats();
+  const areaStats = getAreaStats(getFiltered());
   function findStats(bareName) {
     return Object.entries(areaStats).find(([k]) => normalizeArea(k) === bareName)?.[1] || null;
   }
@@ -1185,7 +1162,7 @@ function initMap() {
     }).addTo(leafletMap);
 
     marker.on('click', () => {
-      const freshStats = getAreaStats();
+      const freshStats = getAreaStats(getFiltered());
       const s = Object.entries(freshStats).find(([k]) => normalizeArea(k) === areaName)?.[1] || null;
       marker.unbindPopup();
       marker.bindPopup(buildAreaPopup(areaName, areaInfo, pref, s), { maxWidth: 320 }).openPopup();
@@ -1193,6 +1170,15 @@ function initMap() {
 
     areaMarkers[areaName] = marker;
   }
+
+  // Property markers (clustered)
+  initPropertyMarkers();
+
+  // POI markers (zoom-dependent)
+  initPOIMarkers();
+
+  // Map legend
+  addMapLegend();
 }
 
 function buildAreaPopup(areaName, areaInfo, pref, stats) {
@@ -1239,6 +1225,162 @@ function buildAreaPopup(areaName, areaInfo, pref, stats) {
     <a class="map-popup-filter" data-filter-area="${escHtml(areaName)}">Filter to this area &rarr;</a>`;
 }
 
+// =====================================================================
+// Property popup builder — XSS hardened
+// =====================================================================
+function buildPropertyPopup(rooms) {
+  return rooms.slice(0, 3).map(r => {
+    const grade = r._grade;
+    const total = r.total_value > 0 ? `¥${r.total_value.toLocaleString()}` : 'Inquiry';
+    const validUrl = safeUrl(r.url);
+    const link = validUrl
+      ? `<a href="${escHtml(validUrl)}" target="_blank" rel="noopener noreferrer"
+          class="map-popup-filter">View listing &rarr;</a>` : '';
+    return `<div class="map-popup-title">${escHtml(r.property)}</div>
+      <div class="map-popup-pref">${escHtml(r.area)} · ${escHtml(SOURCE_LABELS[r.source] || r.source)}</div>
+      <div class="map-popup-stats">
+        <span class="grade-badge ${grade.cls}" style="width:18px;height:18px;line-height:18px;font-size:0.65rem;margin-right:4px">${grade.letter}</span>
+        ${escHtml(total)}/mo · ${escHtml(r.floorspace || r.size || 'N/A')} · ${escHtml(r.room_type || '')}
+      </div>
+      ${r._accessEn ? `<div style="font-size:0.75rem;color:var(--text-dim)">${escHtml(r._accessEn)}</div>` : ''}
+      ${link}`;
+  }).join('<hr style="border-color:var(--border);margin:8px 0">')
+  + (rooms.length > 3 ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:6px">+${rooms.length - 3} more rooms</div>` : '');
+}
+
+// =====================================================================
+// Property markers with clustering
+// =====================================================================
+function initPropertyMarkers() {
+  if (!geocodedData || !leafletMap) return;
+
+  propertyClusterGroup = L.markerClusterGroup({
+    maxClusterRadius: 40,
+    disableClusteringAtZoom: 14,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    iconCreateFunction: function(cluster) {
+      const count = cluster.getChildCount();
+      const size = count < 10 ? 'small' : count < 50 ? 'medium' : 'large';
+      return L.divIcon({
+        html: `<div class="marker-cluster-prop marker-cluster-prop-${size}"><span>${count}</span></div>`,
+        className: '',
+        iconSize: L.point(40, 40),
+      });
+    }
+  });
+
+  // Group rooms by address (many rooms share one building)
+  const byAddress = {};
+  for (const room of allRooms) {
+    if (!room.address) continue;
+    const geo = geocodedData[room.address];
+    if (!geo || !isValidLatLng(geo.lat, geo.lng)) continue;
+    if (!byAddress[room.address]) byAddress[room.address] = { lat: geo.lat, lng: geo.lng, rooms: [] };
+    byAddress[room.address].rooms.push(room);
+  }
+
+  for (const [address, info] of Object.entries(byAddress)) {
+    const marker = L.circleMarker([info.lat, info.lng], {
+      radius: 6, color: '#22d3ee', fillColor: '#22d3ee', fillOpacity: 0.6, weight: 1.5,
+    });
+    marker.on('click', () => {
+      const filtered = info.rooms.filter(r => currentFilteredAddresses.has(r.address));
+      const rooms = filtered.length > 0 ? filtered : info.rooms;
+      marker.unbindPopup();
+      marker.bindPopup(buildPropertyPopup(rooms), { maxWidth: 280, maxHeight: 320 }).openPopup();
+    });
+    marker._address = address;
+    propertyMarkersMap[address] = marker;
+    propertyClusterGroup.addLayer(marker);
+  }
+  leafletMap.addLayer(propertyClusterGroup);
+}
+
+// =====================================================================
+// POI markers (zoom-dependent)
+// =====================================================================
+function makePOIIcon(category) {
+  const emoji = POI_ICONS[category] || '\u{1F4CD}';
+  const catClass = `poi-icon-${category}`;
+  return L.divIcon({
+    html: `<div class="poi-icon ${catClass}">${emoji}</div>`,
+    className: '',
+    iconSize: L.point(28, 28),
+    iconAnchor: L.point(14, 14),
+    popupAnchor: L.point(0, -14),
+  });
+}
+
+function initPOIMarkers() {
+  if (!poiData || !leafletMap) return;
+  poiLayerGroup = L.layerGroup();
+
+  for (const [areaName, areaInfo] of Object.entries(poiData.areas)) {
+    for (const station of (areaInfo.stations || [])) {
+      if (!isValidLatLng(station.lat, station.lng)) continue;
+      L.marker([station.lat, station.lng], { icon: makePOIIcon('station') })
+        .bindPopup(`<div class="map-popup-title">${escHtml(station.name)} Stn</div>
+          <div class="map-popup-pref">${escHtml((station.lines || []).join(', '))}</div>`)
+        .addTo(poiLayerGroup);
+    }
+    for (const poi of (areaInfo.pois || [])) {
+      if (!isValidLatLng(poi.lat, poi.lng)) continue;
+      L.marker([poi.lat, poi.lng], { icon: makePOIIcon(poi.cat) })
+        .bindPopup(`<div class="map-popup-title">${escHtml(poi.name)}</div>
+          ${poi.note ? `<div class="map-popup-pref">${escHtml(poi.note)}</div>` : ''}`)
+        .addTo(poiLayerGroup);
+    }
+  }
+
+  leafletMap.on('zoomend', updatePOIVisibility);
+  updatePOIVisibility();
+}
+
+function updatePOIVisibility() {
+  if (!poiLayerGroup || !leafletMap) return;
+  const zoom = leafletMap.getZoom();
+  if (zoom >= POI_ZOOM_THRESHOLD && !leafletMap.hasLayer(poiLayerGroup)) {
+    leafletMap.addLayer(poiLayerGroup);
+  } else if (zoom < POI_ZOOM_THRESHOLD && leafletMap.hasLayer(poiLayerGroup)) {
+    leafletMap.removeLayer(poiLayerGroup);
+  }
+}
+
+// =====================================================================
+// Filter sync for property markers
+// =====================================================================
+function syncPropertyMarkersToFilters(filtered) {
+  if (!propertyClusterGroup || !geocodedData) return;
+  currentFilteredAddresses = new Set(filtered.map(r => r.address).filter(Boolean));
+  for (const [address, marker] of Object.entries(propertyMarkersMap)) {
+    const visible = currentFilteredAddresses.has(address);
+    if (visible && !propertyClusterGroup.hasLayer(marker)) propertyClusterGroup.addLayer(marker);
+    else if (!visible && propertyClusterGroup.hasLayer(marker)) propertyClusterGroup.removeLayer(marker);
+  }
+}
+
+// =====================================================================
+// Map legend
+// =====================================================================
+function addMapLegend() {
+  if (!leafletMap) return;
+  const legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function() {
+    const div = L.DomUtil.create('div', 'map-legend');
+    div.innerHTML = `
+      <div class="map-legend-title">Map Legend</div>
+      <div class="map-legend-item"><span class="map-legend-dot" style="background:#f87171"></span> Office</div>
+      <div class="map-legend-item"><span class="map-legend-dot" style="background:#c084fc"></span> Hubs</div>
+      <div class="map-legend-item"><span class="map-legend-dot" style="background:#4ade80"></span> Area centres</div>
+      <div class="map-legend-item"><span class="map-legend-dot" style="background:#22d3ee"></span> Properties</div>
+      <div class="map-legend-item" style="margin-top:4px;font-size:0.68rem">POIs visible at zoom ${POI_ZOOM_THRESHOLD}+</div>
+    `;
+    return div;
+  };
+  legend.addTo(leafletMap);
+}
+
 function filterToArea(areaName) {
   const pref = getPrefecture(areaName);
   document.getElementById('filterPref').value = pref;
@@ -1261,19 +1403,18 @@ function filterToArea(areaName) {
   if (leafletMap) leafletMap.closePopup();
 }
 
-function syncMapToFilters() {
+function syncMapToFilters(areaStats) {
   if (!leafletMap || !mapInitialized) return;
   const pref = document.getElementById('filterPref').value;
   const area = document.getElementById('filterArea').value;
   const normArea = area ? normalizeArea(area) : '';
-  const allStats = getAreaStats(); // compute once outside loop
 
   for (const [areaName, marker] of Object.entries(areaMarkers)) {
     const areaPref = getPrefecture(areaName);
     let opacity = 0.7;
     let radius = 5;
     // Match POI area key (bare) against viewer area key (full) via normalize
-    const s = Object.entries(allStats).find(([k]) => normalizeArea(k) === areaName)?.[1];
+    const s = Object.entries(areaStats).find(([k]) => normalizeArea(k) === areaName)?.[1];
     if (s) radius = Math.min(10, 5 + Math.log2(s.count + 1));
 
     if (normArea) {
@@ -1288,12 +1429,11 @@ function syncMapToFilters() {
   }
 }
 
-function renderAreaCards() {
+function renderAreaCards(areaStats) {
   const container = document.getElementById('areaCards');
   if (!poiData) { container.innerHTML = ''; return; }
 
   const currentArea = document.getElementById('filterArea').value;
-  const areaStats = getAreaStats();
 
   if (currentArea && areaStats[currentArea]) {
     // Single active area card
@@ -1339,7 +1479,7 @@ function renderAreaCards() {
       const norm = normalizeArea(areaName);
       const prefLabel = s.pref.charAt(0).toUpperCase() + s.pref.slice(1);
       const commData = BRIEF.commute.known[norm] || BRIEF.commute.prefectureDefault[s.pref] || { min: '?', transfers: '?' };
-      const color = PREF_COLORS[s.pref] || '#8b8fa3';
+      const color = escHtml(PREF_COLORS[s.pref] || '#8b8fa3');
       const info = poiData.areas[norm];
 
       let highlight = '';
@@ -1375,5 +1515,111 @@ document.getElementById('btnToggleMap').addEventListener('click', () => {
     setTimeout(() => leafletMap && leafletMap.invalidateSize(), 100);
   }
 });
+
+// =====================================================================
+// Scraper control panel
+// =====================================================================
+(function initScraperPanel() {
+  const toggle = document.getElementById('btnScraperToggle');
+  const body = document.getElementById('scraperPanelBody');
+  const runBtn = document.getElementById('btnRunScrapers');
+  let pollTimer = null;
+
+  toggle.addEventListener('click', () => {
+    const visible = body.style.display !== 'none';
+    body.style.display = visible ? 'none' : 'block';
+    toggle.classList.toggle('active', !visible);
+    toggle.textContent = visible ? 'Run Scrapers' : 'Hide Scraper Panel';
+  });
+
+  // Fetch registry and populate groups
+  fetch('/api/scrapers').then(r => r.json()).then(registry => {
+    const groups = {
+      foreigner_friendly: document.getElementById('scraperGroupForeignerFriendly'),
+      japanese_only: document.getElementById('scraperGroupJapaneseOnly'),
+      utility: document.getElementById('scraperGroupUtility'),
+    };
+    for (const [key, info] of Object.entries(registry)) {
+      const container = groups[info.category];
+      if (!container) continue;
+      const checked = info.category === 'utility' ? ' checked' : '';
+      container.insertAdjacentHTML('beforeend',
+        `<label class="scraper-item">
+          <input type="checkbox" name="scraper" value="${escHtml(key)}"${checked}>
+          <span>${escHtml(info.name)}</span>
+          <span class="scraper-badge status-idle" id="badge-${escHtml(key)}">idle</span>
+        </label>`);
+    }
+  }).catch(() => { /* API unavailable — panel stays empty, viewer still works */ });
+
+  // Select helpers
+  document.getElementById('scraperSelectAll').addEventListener('click', e => {
+    e.preventDefault();
+    body.querySelectorAll('input[name="scraper"]').forEach(cb => cb.checked = true);
+  });
+  document.getElementById('scraperSelectNone').addEventListener('click', e => {
+    e.preventDefault();
+    body.querySelectorAll('input[name="scraper"]').forEach(cb => cb.checked = false);
+  });
+
+  function getSelectedScrapers() {
+    return Array.from(body.querySelectorAll('input[name="scraper"]:checked')).map(cb => cb.value);
+  }
+
+  const VALID_STATUSES = new Set(['idle', 'pending', 'running', 'done', 'failed']);
+  function updateBadges(scrapers) {
+    for (const [key, status] of Object.entries(scrapers)) {
+      const badge = document.getElementById('badge-' + key);
+      if (!badge) continue;
+      const safeStatus = VALID_STATUSES.has(status) ? status : 'idle';
+      badge.className = 'scraper-badge status-' + safeStatus;
+      badge.textContent = safeStatus;
+    }
+  }
+
+  function pollStatus() {
+    fetch('/api/scrape/status').then(r => r.json()).then(data => {
+      updateBadges(data.scrapers);
+      if (!data.running) {
+        clearInterval(pollTimer);
+        pollTimer = null;
+        runBtn.disabled = false;
+        runBtn.textContent = 'Run Selected Scrapers';
+        // Reload data to show fresh results
+        loadData();
+      }
+    }).catch(() => {
+      clearInterval(pollTimer);
+      pollTimer = null;
+      runBtn.disabled = false;
+      runBtn.textContent = 'Run Selected Scrapers';
+    });
+  }
+
+  runBtn.addEventListener('click', () => {
+    const selected = getSelectedScrapers();
+    if (selected.length === 0) return;
+
+    runBtn.disabled = true;
+    runBtn.textContent = 'Running...';
+
+    fetch('/api/scrape', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scrapers: selected }),
+    }).then(r => {
+      if (r.status === 409) {
+        runBtn.textContent = 'Job already running...';
+        if (!pollTimer) pollTimer = setInterval(pollStatus, 2000);
+        return;
+      }
+      if (!r.ok) throw new Error('Failed to start');
+      if (!pollTimer) pollTimer = setInterval(pollStatus, 2000);
+    }).catch(() => {
+      runBtn.disabled = false;
+      runBtn.textContent = 'Run Selected Scrapers';
+    });
+  });
+})();
 
 loadData();
