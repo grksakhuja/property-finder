@@ -15,6 +15,12 @@ test-output.xml
 *.jpg
 *.jpeg
 
+# Timestamped result backups (from safe_write_json)
+results*.2*T*.json
+
+# Best estate checkpoint (crash recovery)
+results_best_estate_checkpoint.json
+
 # Tool state
 .playwright-mcp/
 .backup/
