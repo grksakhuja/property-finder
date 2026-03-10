@@ -1,5 +1,6 @@
 """Unified parsing utilities for yen amounts, building age, and size."""
 
+import datetime
 import re
 from typing import Optional
 
@@ -55,3 +56,35 @@ def parse_size_sqm(text: Optional[str]) -> float:
         return 0.0
     m = re.search(r"([\d.]+)", text)
     return float(m.group(1)) if m else 0.0
+
+
+def parse_year_to_age(text: Optional[str]) -> int:
+    """Extract a 4-digit year from text and return building age in years.
+
+    Handles:
+      - "2010年 9月" → age based on current year
+      - "Built in 2010" → age based on current year
+      - "2015" → age based on current year
+      - "" / None → -1 (unknown)
+    """
+    if not text:
+        return -1
+    m = re.search(r"(\d{4})", text)
+    if m:
+        return max(0, datetime.datetime.now().year - int(m.group(1)))
+    return -1
+
+
+def parse_digits_as_yen(text: Optional[str]) -> int:
+    """Strip non-digits and return integer yen.
+
+    Handles:
+      - "￥50,000" → 50000
+      - "¥80,000" → 80000
+      - "Monthly Costs ¥150,490" → 150490
+      - "-" / "None" / "N/A" / "free" / "" → 0
+    """
+    if not text or text.strip().lower() in ("none", "n/a", "-", "free", ""):
+        return 0
+    digits = re.sub(r"[^\d]", "", text)
+    return int(digits) if digits else 0

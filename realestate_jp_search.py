@@ -383,10 +383,6 @@ def main():
             logger.info("[DRY RUN] %s", build_url(area))
         return
 
-    session = create_session(extra_headers={
-        "Accept-Language": "en-US,en;q=0.9",
-    })
-
     all_areas: dict[str, list[Room]] = {}
     area_lookup: dict[str, dict] = {}
     max_workers = args.workers if args.workers is not None else DEFAULT_WORKERS
@@ -396,13 +392,21 @@ def main():
         area_lookup[area.name] = area
 
     def _search_one(area):
+        thread_session = create_session(extra_headers={
+            "Accept-Language": "en-US,en;q=0.9",
+        })
         logger.info("[%s] Searching...", area.name)
-        return area, search_area(area, session, max_pages=max_pages, delay=delay)
+        return area, search_area(area, thread_session, max_pages=max_pages, delay=delay)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_search_one, area): area for area in areas}
         for future in as_completed(futures):
-            area, rooms = future.result()
+            try:
+                area, rooms = future.result()
+            except Exception as e:
+                area = futures[future]
+                logger.error("[%s] Unexpected error: %s", area.name, e)
+                continue
             all_areas[area.name] = rooms
             if rooms:
                 logger.info("[%s] Total: %d listings", area.name, len(rooms))

@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Optional, List
@@ -40,6 +41,17 @@ class Area:
     villagehouse_region: Optional[str] = None      # e.g. "kanto"
     villagehouse_prefecture: Optional[str] = None   # e.g. "kanagawa"
     villagehouse_city: Optional[str] = None          # e.g. "kawasaki"
+
+    @property
+    def en_name(self) -> str:
+        """English name: 'Kawaguchi (川口市)' → 'Kawaguchi'"""
+        return self.name.split("(")[0].strip()
+
+    @property
+    def jp_name(self) -> str:
+        """Japanese name: 'Kawaguchi (川口市)' → '川口市'"""
+        m = re.search(r"\((.+?)\)", self.name)
+        return m.group(1) if m else ""
 
 
 @lru_cache(maxsize=1)
@@ -217,7 +229,7 @@ AREAS = [
          suumo_code="sc_yokohamashihodogaya",
          gaijinpot_prefecture_id="14", wagaya_prefecture="kanagawa",
          villagehouse_region="kanto", villagehouse_prefecture="kanagawa", villagehouse_city="yokohama"),
-    Area("Yokohama Isogo-ku (磯子区)", "kanagawa", 35.398, 139.591,
+    Area("Yokohama Isogo-ku (磯子区)", "kanagawa", 35.400, 139.621,
          ur_block="kanto", ur_tdfk="14", ur_skcs="107",
          gaijinpot_prefecture_id="14", wagaya_prefecture="kanagawa",
          villagehouse_region="kanto", villagehouse_prefecture="kanagawa", villagehouse_city="yokohama"),
@@ -227,7 +239,7 @@ AREAS = [
          suumo_code="sc_yokohamashitsurumi",
          gaijinpot_prefecture_id="14", wagaya_prefecture="kanagawa",
          villagehouse_region="kanto", villagehouse_prefecture="kanagawa", villagehouse_city="yokohama"),
-    Area("Yokohama Konan-ku (港南区)", "kanagawa", 35.398, 139.591,
+    Area("Yokohama Konan-ku (港南区)", "kanagawa", 35.381, 139.598,
          suumo_code="sc_yokohamashikonan",
          gaijinpot_prefecture_id="14", wagaya_prefecture="kanagawa",
          villagehouse_region="kanto", villagehouse_prefecture="kanagawa", villagehouse_city="yokohama"),

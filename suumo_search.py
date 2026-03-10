@@ -368,21 +368,25 @@ def main():
             logger.info("[DRY RUN] %s", build_url(area))
         return
 
-    session = create_session(extra_headers={
-        "Accept-Language": "ja,en;q=0.9",
-    })
-
     all_properties: list[Property] = []
     max_workers = args.workers if args.workers is not None else DEFAULT_WORKERS
 
     def _search_one(area):
+        thread_session = create_session(extra_headers={
+            "Accept-Language": "ja,en;q=0.9",
+        })
         logger.info("[%s] Searching...", area.name)
-        return area, search_area(area, session, max_pages=max_pages, delay=delay)
+        return area, search_area(area, thread_session, max_pages=max_pages, delay=delay)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_search_one, area): area for area in areas}
         for future in as_completed(futures):
-            area, props = future.result()
+            try:
+                area, props = future.result()
+            except Exception as e:
+                area = futures[future]
+                logger.error("[%s] Unexpected error: %s", area.name, e)
+                continue
             if props:
                 room_count = sum(len(p.rooms) for p in props)
                 logger.info("[%s] Total: %d buildings with %d units", area.name, len(props), room_count)

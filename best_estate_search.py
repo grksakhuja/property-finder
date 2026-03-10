@@ -14,7 +14,6 @@ so we do ONE nationwide paginated search and match to target areas by address.
 See BEST_ESTATE_FILTER_INVESTIGATION.md for full details.
 """
 
-import datetime
 import json
 import os
 import re
@@ -31,8 +30,8 @@ from shared.cli import build_arg_parser, filter_areas
 from shared.config import AREAS, Area, get_target_room_types
 from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
-from shared.parsers import parse_yen, parse_building_age, parse_size_sqm
-from shared.scraper_template import BaseScraper, StandardProperty, StandardRoom
+from shared.parsers import parse_yen, parse_year_to_age
+from shared.scraper_template import BaseScraper, StandardProperty, StandardRoom, safe_write_json
 
 BASE_URL = "https://www.best-estate.jp"
 ALLOWED_HOSTS = {"www.best-estate.jp", "best-estate.jp"}
@@ -126,10 +125,10 @@ class BestEstateScraper(BaseScraper):
         """
         entries = []
         for area in areas:
-            m = re.search(r"\((.+?)\)", area.name)
-            if m:
+            jp_name = area.jp_name
+            if jp_name:
                 pref_jp = self.PREFECTURE_JP.get(area.prefecture, "")
-                entries.append((m.group(1), pref_jp, area))
+                entries.append((jp_name, pref_jp, area))
         return entries
 
     def _match_area(self, address: str,
@@ -157,8 +156,9 @@ class BestEstateScraper(BaseScraper):
                 cp = json.load(f)
             properties = []
             for p in cp.get("properties", []):
-                rooms = [StandardRoom(**r) for r in p.pop("rooms", [])]
-                properties.append(StandardProperty(**p, rooms=rooms))
+                rooms = [StandardRoom(**r) for r in p.get("rooms", [])]
+                prop_data = {k: v for k, v in p.items() if k != "rooms"}
+                properties.append(StandardProperty(**prop_data, rooms=rooms))
             next_page = cp.get("next_page", 1)
             self.logger.info("Resuming from checkpoint: %d properties, page %d",
                              len(properties), next_page)
@@ -186,8 +186,7 @@ class BestEstateScraper(BaseScraper):
                 "rooms": [asdict(r) for r in prop.rooms],
             }
             data["properties"].append(pd)
-        with open(CHECKPOINT_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False)
+        safe_write_json(data, CHECKPOINT_FILE)
 
     def _delete_checkpoint(self) -> None:
         """Remove checkpoint file after successful completion."""
@@ -245,6 +244,9 @@ class BestEstateScraper(BaseScraper):
         unmatched_count = 0
         stop = False
         workers = PARALLEL_WORKERS
+
+        # Note: self.REQUEST_DELAY is set above before the ThreadPoolExecutor
+        # starts, so workers always see the final value.
 
         def _fetch_page(page_num: int, worker_idx: int):
             """Fetch and parse a single page. Returns (page_num, properties) or raises."""
@@ -327,8 +329,9 @@ class BestEstateScraper(BaseScraper):
                     stop = True
                     break
 
-            # Advance page counter and checkpoint
-            page_num += len(batch_pages)
+            # Advance page counter only for pages actually processed
+            pages_processed = sum(1 for bp in batch_pages if bp in results)
+            page_num += pages_processed
             self._save_checkpoint(all_properties, page_num)
 
         total_rooms = sum(len(p.rooms) for p in all_properties)
@@ -460,7 +463,7 @@ class BestEstateScraper(BaseScraper):
                     address = text
 
         access = " / ".join(access_lines)
-        building_age_years = self._parse_built_date(building_age_text)
+        building_age_years = parse_year_to_age(building_age_text)
 
         # --- Room-level data ---
         rooms = []
@@ -581,21 +584,6 @@ class BestEstateScraper(BaseScraper):
                 result[label] = text
                 label = None
         return result
-
-    def _parse_built_date(self, text: str) -> int:
-        """Parse '2010年 9月' into building age in years.
-
-        Returns age in years, or -1 if unparseable.
-        """
-        if not text:
-            return -1
-        m = re.search(r"(\d{4})年", text)
-        if m:
-            built_year = int(m.group(1))
-            current_year = datetime.datetime.now().year
-            return max(0, current_year - built_year)
-        return -1
-
 
 if __name__ == "__main__":
     BestEstateScraper().run()

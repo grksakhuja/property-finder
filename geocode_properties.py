@@ -10,6 +10,7 @@ Usage:
     python geocode_properties.py --retry-failed # re-attempt previously failed lookups
     python geocode_properties.py --dry-run      # show what would be geocoded
 """
+from __future__ import annotations
 
 import argparse
 import fcntl
