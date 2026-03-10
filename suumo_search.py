@@ -35,9 +35,17 @@ REQUEST_DELAY = 0.5  # seconds between page fetches
 MAX_PAGES_PER_AREA = 5  # cap at 250 listings per area (50/page)
 DEFAULT_WORKERS = 3  # parallel workers for area scraping
 
-# Room type codes for SUUMO md parameter
-# md=07 → 2LDK, md=08 → 3K, md=09 → 3DK, md=10 → 3LDK
-ROOM_TYPE_CODES = ["07", "08", "09", "10"]
+# Site-specific SUUMO md codes for each room type
+SUUMO_MD_CODES = {
+    "1LDK": "05", "1SLDK": "06",
+    "2LDK": "07", "2SLDK": "07",   # SUUMO groups 2SLDK under 2LDK
+    "3K": "08", "3DK": "09",
+    "3LDK": "10", "3SLDK": "10",   # SUUMO groups 3SLDK under 3LDK
+}
+# Derive active codes from scoring_config.json
+ROOM_TYPE_CODES = sorted(set(
+    SUUMO_MD_CODES[rt] for rt in get_target_room_types() if rt in SUUMO_MD_CODES
+))
 ROOM_TYPE_FILTER = get_target_room_types()
 
 SOURCE_AREAS = get_areas_for_source("suumo")
