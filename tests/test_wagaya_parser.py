@@ -2,14 +2,12 @@
 
 import os
 from shared.config import Area, AREAS
+from shared.parsers import parse_digits_as_yen
 
 from wagaya_search import WagayaScraper
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 AREA = Area("Saitama Test", "saitama", wagaya_prefecture="saitama")
-
-scraper = WagayaScraper()
-
 
 def _load_fixture():
     with open(os.path.join(FIXTURE_DIR, "wagaya_page.html"), encoding="utf-8") as f:
@@ -18,8 +16,9 @@ def _load_fixture():
 
 class TestWagayaParser:
     def setup_method(self):
+        self.scraper = WagayaScraper()
         html = _load_fixture()
-        self.props = scraper.parse_page(html, AREA)
+        self.props = self.scraper.parse_page(html, AREA)
 
     def test_returns_properties(self):
         assert len(self.props) >= 1
@@ -108,16 +107,44 @@ class TestWagayaAddressMatching:
 
 class TestWagayaPriceParser:
     def test_yen_with_symbol(self):
-        assert scraper._parse_wagaya_price("￥50,000") == 50000
+        assert parse_digits_as_yen("￥50,000") == 50000
 
     def test_plain_number(self):
-        assert scraper._parse_wagaya_price("50000") == 50000
+        assert parse_digits_as_yen("50000") == 50000
 
     def test_dash_returns_zero(self):
-        assert scraper._parse_wagaya_price("-") == 0
+        assert parse_digits_as_yen("-") == 0
 
     def test_empty_returns_zero(self):
-        assert scraper._parse_wagaya_price("") == 0
+        assert parse_digits_as_yen("") == 0
 
     def test_zero_returns_zero(self):
-        assert scraper._parse_wagaya_price("0") == 0
+        assert parse_digits_as_yen("0") == 0
+
+
+class TestWagayaJpNameFallback:
+    """Test Japanese name fallback in address matching."""
+
+    def setup_method(self):
+        self.entries = WagayaScraper._build_area_entries(AREAS)
+
+    def test_jp_name_matches(self):
+        match = WagayaScraper._match_area(
+            "川口市 some address", self.entries)
+        assert match is not None
+        assert "Kawaguchi" in match.name
+
+
+class TestWagayaBuildUrl:
+    def setup_method(self):
+        self.scraper = WagayaScraper()
+
+    def test_url_has_prefecture(self):
+        area = Area("Test", "saitama", wagaya_prefecture="saitama")
+        url = self.scraper.build_url(area)
+        assert "/saitama/list/" in url
+
+    def test_url_defaults_to_tokyo(self):
+        area = Area("Test", "tokyo")
+        url = self.scraper.build_url(area)
+        assert "/tokyo/list/" in url
