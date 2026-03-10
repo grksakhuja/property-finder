@@ -339,7 +339,12 @@ def main():
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_search_one, area): area for area in areas}
         for future in as_completed(futures):
-            area, props = future.result()
+            try:
+                area, props = future.result()
+            except Exception as e:
+                area = futures[future]
+                logger.error("[%s] Unexpected error: %s", area.name, e)
+                continue
             if props:
                 room_count = sum(len(p.rooms) for p in props)
                 logger.info("[%s] Found %d properties with %d vacant rooms", area.name, len(props), room_count)

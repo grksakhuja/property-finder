@@ -3,7 +3,9 @@
 import os
 from shared.config import Area
 
-from suumo_search import parse_page
+from bs4 import BeautifulSoup
+
+from suumo_search import parse_page, get_total_count, build_url
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -17,48 +19,67 @@ def _load_fixture():
 
 
 class TestSuumoParser:
-    def test_returns_properties(self):
+    def setup_method(self):
         html = _load_fixture()
-        props = parse_page(html, AREA)
-        assert len(props) == 2
+        self.props = parse_page(html, AREA)
+
+    def test_returns_properties(self):
+        assert len(self.props) == 2
 
     def test_property_names(self):
-        html = _load_fixture()
-        props = parse_page(html, AREA)
-        names = [p.name for p in props]
+        names = [p.name for p in self.props]
         assert "グランドメゾン川口" in names
         assert "サンライズ戸田" in names
 
     def test_room_count(self):
-        html = _load_fixture()
-        props = parse_page(html, AREA)
-        total_rooms = sum(len(p.rooms) for p in props)
+        total_rooms = sum(len(p.rooms) for p in self.props)
         assert total_rooms == 3
 
     def test_rent_values_positive(self):
-        html = _load_fixture()
-        props = parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.rent_value > 0
 
     def test_layout_types(self):
-        html = _load_fixture()
-        props = parse_page(html, AREA)
-        layouts = [room.layout for prop in props for room in prop.rooms]
+        layouts = [room.layout for prop in self.props for room in prop.rooms]
         assert "2LDK" in layouts
         assert "3LDK" in layouts
 
     def test_building_age(self):
-        html = _load_fixture()
-        props = parse_page(html, AREA)
-        ages = {p.name: p.building_age_years for p in props}
+        ages = {p.name: p.building_age_years for p in self.props}
         assert ages["グランドメゾン川口"] == 20
         assert ages["サンライズ戸田"] == 0  # 新築
 
     def test_detail_urls(self):
-        html = _load_fixture()
-        props = parse_page(html, AREA)
-        for prop in props:
+        for prop in self.props:
             for room in prop.rooms:
                 assert room.detail_url.startswith("https://suumo.jp/")
+
+
+class TestGetTotalCount:
+    def test_with_hit_element(self):
+        html = '<div class="paginate_set-hit">7,492件</div>'
+        soup = BeautifulSoup(html, "html.parser")
+        assert get_total_count(soup) == 7492
+
+    def test_without_hit_element(self):
+        html = '<div class="other">nothing</div>'
+        soup = BeautifulSoup(html, "html.parser")
+        assert get_total_count(soup) == 0
+
+    def test_empty_hit_element(self):
+        html = '<div class="paginate_set-hit"></div>'
+        soup = BeautifulSoup(html, "html.parser")
+        assert get_total_count(soup) == 0
+
+
+class TestSuumoBuildUrl:
+    def test_first_page(self):
+        url = build_url(AREA, page=1)
+        assert "page=" not in url
+        assert "sc_kawaguchi" in url
+        assert "saitama" in url
+
+    def test_second_page(self):
+        url = build_url(AREA, page=2)
+        assert "page=2" in url

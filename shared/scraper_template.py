@@ -241,21 +241,27 @@ class BaseScraper(ABC):
                 self.logger.info("[DRY RUN] %s", self.build_url(area))
             return
 
-        session = create_session(extra_headers=self.EXTRA_HEADERS or {
-            "Accept-Language": "ja,en;q=0.9",
-        })
-
         all_properties: List[StandardProperty] = []
         max_workers = args.workers if args.workers is not None else self.DEFAULT_WORKERS
 
+        # Note: self.REQUEST_DELAY is set above (line 228) before the
+        # ThreadPoolExecutor starts, so workers always see the final value.
+        extra_headers = self.EXTRA_HEADERS or {"Accept-Language": "ja,en;q=0.9"}
+
         def _search_one(area):
+            thread_session = create_session(extra_headers=extra_headers)
             self.logger.info("[%s] Searching...", area.name)
-            return area, self.search_area(area, session, max_pages)
+            return area, self.search_area(area, thread_session, max_pages)
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {executor.submit(_search_one, area): area for area in areas}
             for future in as_completed(futures):
-                area, props = future.result()
+                try:
+                    area, props = future.result()
+                except Exception as e:
+                    area = futures[future]
+                    self.logger.error("[%s] Unexpected error: %s", area.name, e)
+                    continue
                 if props:
                     room_count = sum(len(p.rooms) for p in props)
                     self.logger.info("[%s] Total: %d buildings with %d units",

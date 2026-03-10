@@ -8,9 +8,6 @@ from gaijinpot_search import GaijinPotScraper
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 AREA = Area("Nationwide", "all")
 
-scraper = GaijinPotScraper()
-
-
 def _load_fixture():
     with open(os.path.join(FIXTURE_DIR, "gaijinpot_page.html"), encoding="utf-8") as f:
         return f.read()
@@ -18,8 +15,9 @@ def _load_fixture():
 
 class TestGaijinPotParser:
     def setup_method(self):
+        self.scraper = GaijinPotScraper()
         html = _load_fixture()
-        self.props = scraper.parse_page(html, AREA)
+        self.props = self.scraper.parse_page(html, AREA)
 
     def test_returns_properties(self):
         assert len(self.props) >= 1
@@ -109,3 +107,28 @@ class TestGaijinPotAddressMatching:
     def test_none_address_no_match(self):
         match = GaijinPotScraper._match_area(None, self.entries)
         assert match is None
+
+    def test_japanese_name_fallback(self):
+        """Japanese name in address should match when English doesn't."""
+        match = GaijinPotScraper._match_area(
+            "川口市 some address, Saitama", self.entries)
+        assert match is not None
+        assert "Kawaguchi" in match.name
+
+
+class TestGaijinPotBuildUrl:
+    def setup_method(self):
+        self.scraper = GaijinPotScraper()
+
+    def test_first_page_no_page_param(self):
+        url = self.scraper.build_url(page=1)
+        assert "page=" not in url
+
+    def test_second_page_has_page_param(self):
+        url = self.scraper.build_url(page=2)
+        assert "page=2" in url
+
+    def test_url_has_price_range(self):
+        url = self.scraper.build_url(page=1)
+        assert "min_price=50000" in url
+        assert "max_price=200000" in url
