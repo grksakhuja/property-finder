@@ -1,20 +1,27 @@
 # Tokyo Rental Property Finder
 
-Multi-source scraper and interactive viewer for rental properties in the greater Tokyo region. Aggregates listings from three Japanese property sources and displays them in a browser-based viewer with maps, scoring, and filtering.
+Multi-source scraper and interactive viewer for rental properties in the greater Tokyo region. Aggregates listings from seven property sources — including foreigner-friendly sites — and displays them in a browser-based viewer with maps, scoring, and filtering.
 
 ## Quick Start
 
 ```bash
 pip install -r requirements.txt
 
-# Run scrapers (each produces a JSON results file)
+# Run all scrapers in parallel
+python run_all.py
+
+# Or run individual scrapers
 python ur_rental_search.py
 python suumo_search.py
 python realestate_jp_search.py
+python best_estate_search.py
+python gaijinpot_search.py
+python wagaya_search.py
+python villagehouse_search.py
 
 # Serve the viewer
-python -m http.server 8000
-# Open http://localhost:8000/viewer.html
+python server.py
+# Open http://localhost:5000
 ```
 
 ## Data Sources
@@ -24,38 +31,74 @@ python -m http.server 8000
 | `ur_rental_search.py` | [UR公団](https://www.ur-net.go.jp/chintai/) | Public housing API. No key money, no agent fees, no guarantor needed. |
 | `suumo_search.py` | [SUUMO](https://suumo.jp/) | HTML scraper for Japan's largest property listing site. |
 | `realestate_jp_search.py` | [RealEstate.co.jp](https://realestate.co.jp/) | English-language listings for the Tokyo area. |
+| `best_estate_search.py` | [Best Estate](https://www.best-estate.jp/en/) | Foreigner-friendly. Room-type filtering, nationwide search. |
+| `gaijinpot_search.py` | [GaijinPot Apartments](https://apartments.gaijinpot.com/) | 100% English, foreigner-focused listings. |
+| `wagaya_search.py` | [Wagaya Japan](https://wagaya-japan.com/) | Foreigner-friendly. Extracts embedded JSON from page source. |
+| `villagehouse_search.py` | [Village House](https://www.villagehouse.jp/en/) | Renovated older buildings. Zero deposit, zero key money. |
 
-Each scraper writes a JSON file (`results.json`, `results_suumo.json`, `results_realestate_jp.json`) that the viewer loads.
+Each scraper writes a JSON file (`results.json`, `results_suumo.json`, etc.) that the viewer loads.
+
+### Scraper Architecture
+
+The newer scrapers (Best Estate, GaijinPot, Wagaya, Village House) extend `BaseScraper` from `shared/scraper_template.py`, which provides:
+
+- Parallel area fetching via `ThreadPoolExecutor`
+- Atomic JSON writes with timestamped backups
+- Standardised `StandardProperty` / `StandardRoom` dataclasses
+- Built-in pagination, error handling, and CLI integration
+
+The original scrapers (UR, SUUMO, RealEstate.co.jp) are standalone but follow the same patterns.
 
 ## Viewer
 
-`viewer.html` is a standalone browser-based interface that loads all scraper results. Features:
+`viewer.html` is a browser-based single-page interface served by `server.py`. Features:
 
-- **Map** — Leaflet.js map with area markers and office/hub location markers
-- **Scoring** — 7-dimension scoring system (budget, commute, size, walk time, room type, building age, prefecture) with A/B/C/D grades
-- **Filtering** — 9 filter dimensions + text search
+- **Map** — Leaflet.js with marker clustering, area zones, and POI markers (stations, supermarkets, parks, hospitals)
+- **Scoring** — 7-dimension scoring system (commute, budget, size, walk time, room type, building age, move-in cost) with A/B/C/D grades
+- **Filtering** — Source, prefecture, area, room type, rent range, size, walk time, building age, and text search
+- **Preferences panel** — Interactive sliders for all scoring weights and thresholds
+- **Profiles** — Save/load scoring preference profiles to localStorage
 - **Favourites** — Save listings to localStorage
 - **Bookmarking** — URL hash state for sharing filter configurations
-- **Area cards** — Expandable cards with POI highlights per area
+- **Scraper controls** — Trigger scraper runs from the UI with status polling
+
+## Server
+
+`server.py` is a Flask backend that serves the viewer and provides an API for triggering scrapers:
+
+- `GET /` — Serves the viewer
+- `GET /api/scrapers` — Lists available scrapers with categories (foreigner-friendly, japanese-only, utility)
+- `POST /api/scrape` — Starts scraper jobs (up to 4 in parallel, with CSRF origin validation)
+- `GET /api/scrape/status` — Polls scraper job progress
+- Static file serving with allowlist (prevents directory traversal)
+
+## Utilities
+
+| Script | Purpose |
+|---|---|
+| `run_all.py` | Orchestrator — runs all scrapers + POI builder in parallel with timeout guards |
+| `build_pois.py` | Fetches POIs (stations, supermarkets, parks, etc.) from Overpass API in a single batched query |
+| `geocode_properties.py` | Geocodes addresses via Nominatim with caching, rate limiting, and incremental saves |
 
 ## Configuration
 
 ### CLI Arguments
 
-All three scrapers share a common CLI interface:
+All scrapers share a common CLI interface:
 
 ```
 --areas NAME [NAME ...]   Filter to specific area names (partial match)
 --max-pages N             Override max pages per area
 --delay SECONDS           Override request delay
 --output FILE             Override output JSON filename
+--workers N               Parallel workers (template-based scrapers)
 -v, --verbose             Enable debug logging
 --dry-run                 Show URLs without fetching
 ```
 
 ### Area Definitions
 
-Areas are defined in `shared/config.py`. Each area includes coordinates, prefecture, and source-specific codes (UR, SUUMO, REJ) so a single area list drives all three scrapers.
+Areas are defined in `shared/config.py`. Each area includes coordinates, prefecture, and source-specific codes so a single area list drives all seven scrapers.
 
 ### Scoring Configuration
 
@@ -101,23 +144,41 @@ Currently searches 40 areas across 4 prefectures:
 ├── ur_rental_search.py          # UR scraper
 ├── suumo_search.py              # SUUMO scraper
 ├── realestate_jp_search.py      # RealEstate.co.jp scraper
-├── build_pois.py                # POI builder for map marker data
+├── best_estate_search.py        # Best Estate scraper
+├── gaijinpot_search.py          # GaijinPot scraper
+├── wagaya_search.py             # Wagaya Japan scraper
+├── villagehouse_search.py       # Village House scraper
+├── run_all.py                   # Orchestrator (parallel execution)
+├── server.py                    # Flask backend for viewer
+├── build_pois.py                # POI builder (Overpass API)
+├── geocode_properties.py        # Address geocoder (Nominatim)
 ├── viewer.html                  # Interactive browser-based viewer
+├── viewer.js                    # Viewer application logic
+├── viewer.css                   # Viewer styles
 ├── scoring_config.json          # Scoring overrides
 ├── shared/                      # Shared modules package
 │   ├── config.py                #   Area definitions (single source of truth)
+│   ├── scraper_template.py      #   BaseScraper class + StandardProperty/Room
 │   ├── cli.py                   #   Common CLI argument parser
 │   ├── http_client.py           #   HTTP client with retries and delays
-│   ├── parsers.py               #   Shared parsing utilities
+│   ├── parsers.py               #   Shared parsing utilities (yen, age, size)
 │   └── logging_setup.py         #   Logging configuration
 ├── tests/                       # Test suite
 │   ├── test_ur_parser.py
 │   ├── test_suumo_parser.py
 │   ├── test_realestate_parser.py
+│   ├── test_best_estate_parser.py
+│   ├── test_gaijinpot_parser.py
+│   ├── test_wagaya_parser.py
+│   ├── test_villagehouse_parser.py
 │   ├── test_parsers.py
-│   └── test_http_client.py
+│   ├── test_cli.py
+│   ├── test_config.py
+│   ├── test_http_client.py
+│   └── fixtures/                # HTML/JSON test fixtures (one per source)
 ├── requirements.txt
-└── .github/workflows/ci.yml    # CI pipeline
+├── .github/workflows/ci.yml     # CI pipeline
+└── .githooks/pre-push           # Pre-push test hook
 ```
 
 ---
@@ -292,9 +353,10 @@ GitHub Actions runs the test suite on every push to master and on all PRs target
 
 ## Dependencies
 
+- `flask` — Web server for viewer backend
 - `requests` — HTTP client
 - `tabulate` — Console table formatting
-- `beautifulsoup4` — HTML parsing (SUUMO and RealEstate.co.jp scrapers)
+- `beautifulsoup4` — HTML parsing (SUUMO, RealEstate.co.jp, Best Estate, GaijinPot, Wagaya, Village House)
 - `pytest` — Test runner (dev)
 - `responses` — HTTP mocking for tests (dev)
 
