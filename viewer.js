@@ -124,11 +124,13 @@ const BRIEF = {
   budget: { idealMin: 100000, idealMax: 150000, hardMax: 200000, moveInMax: 600000 },
   size: { idealMin: 55, idealMax: 65, okMin: 50, okMax: 75 },
   walk: { great: 5, good: 10, ok: 15, max: 20 },
-  roomType: { '2LDK': 1.0, '2SLDK': 0.95, '3LDK': 0.7, '3DK': 0.4, '3K': 0.3 },
+  roomType: { '2LDK': 1.0, '2SLDK': 0.95, '3LDK': 0.7, '3SLDK': 0.25, '3DK': 0.4, '3K': 0.3 },
   prefScores: { saitama: 8.0, chiba: 6.4, kanagawa: 6.25, tokyo: 6.6 },
   buildingAge: { ideal: 15, ok: 25, old: 35 },
   weights: { area: 25, budget: 25, size: 15, roomType: 10, walkTime: 10, moveIn: 8, buildAge: 7 },
 };
+const BRIEF_DEFAULTS = JSON.parse(JSON.stringify(BRIEF));
+let scoringConfigOverrides = null;
 
 function escHtml(s) {
   if (!s) return '';
@@ -558,6 +560,7 @@ async function loadData() {
     const cfgResp = await fetch('scoring_config.json');
     if (cfgResp.ok) {
       const cfg = await cfgResp.json();
+      scoringConfigOverrides = cfg;
       deepMerge(BRIEF, cfg);
       console.log('Scoring config loaded from scoring_config.json');
     } else {
@@ -595,6 +598,10 @@ async function loadData() {
   // Restore state from URL hash before first render
   restoreHashState();
   render();
+
+  // Sync preferences panel after config is loaded
+  syncFormToBrief();
+  populatePrefsProfileDropdown();
 }
 
 let tableHeaderListenerAdded = false;
@@ -794,6 +801,7 @@ function render(paginationOnly = false) {
     renderAreaCards(areaStats);
     syncMapToFilters(areaStats);
     syncPropertyMarkersToFilters(filtered);
+    updateMarkerColours(filtered);
   }
 }
 
@@ -1373,7 +1381,10 @@ function addMapLegend() {
       <div class="map-legend-item"><span class="map-legend-dot" style="background:#f87171"></span> Office</div>
       <div class="map-legend-item"><span class="map-legend-dot" style="background:#c084fc"></span> Hubs</div>
       <div class="map-legend-item"><span class="map-legend-dot" style="background:#4ade80"></span> Area centres</div>
-      <div class="map-legend-item"><span class="map-legend-dot" style="background:#22d3ee"></span> Properties</div>
+      <div class="map-legend-item" style="margin-top:6px"><span class="map-legend-dot" style="background:#4ade80"></span> A grade (80+)</div>
+      <div class="map-legend-item"><span class="map-legend-dot" style="background:#6c9cfc"></span> B grade (65-79)</div>
+      <div class="map-legend-item"><span class="map-legend-dot" style="background:#fbbf24"></span> C grade (50-64)</div>
+      <div class="map-legend-item"><span class="map-legend-dot" style="background:#f87171"></span> D grade (&lt;50)</div>
       <div class="map-legend-item" style="margin-top:4px;font-size:0.68rem">POIs visible at zoom ${POI_ZOOM_THRESHOLD}+</div>
     `;
     return div;
@@ -1622,4 +1633,357 @@ document.getElementById('btnToggleMap').addEventListener('click', () => {
   });
 })();
 
+// =====================================================================
+// Scoring preferences panel
+// =====================================================================
+
+function getMarkerColour(gradeLetter) {
+  switch (gradeLetter) {
+    case 'A': return '#4ade80';
+    case 'B': return '#6c9cfc';
+    case 'C': return '#fbbf24';
+    case 'D': return '#f87171';
+    default:  return '#22d3ee';
+  }
+}
+
+function updateMarkerColours(filtered) {
+  if (!propertyClusterGroup || !geocodedData) return;
+  const bestByAddress = {};
+  for (const r of filtered) {
+    if (!r.address) continue;
+    const cur = bestByAddress[r.address];
+    if (!cur || r.score > cur.score) bestByAddress[r.address] = r;
+  }
+  for (const [address, marker] of Object.entries(propertyMarkersMap)) {
+    const best = bestByAddress[address];
+    if (best) {
+      const c = getMarkerColour(best._grade.letter);
+      marker.setStyle({ color: c, fillColor: c, fillOpacity: 0.6 });
+    }
+  }
+}
+
+function rescoreAll() {
+  allRooms.forEach(r => {
+    const s = computeScore(r);
+    r.score = s.total;
+    r._breakdown = s.breakdown;
+    r._grade = getGrade(r.score);
+    r._yenPerSqm = r.total_value && r._sqm ? Math.round(r.total_value / r._sqm) : null;
+  });
+  render();
+}
+
+const debouncedRescore = debounce(() => {
+  rescoreAll();
+  pushHashState();
+}, 250);
+
+// Normalise weights so they sum to 100
+function normaliseWeights(w) {
+  const total = Object.values(w).reduce((s, v) => s + v, 0);
+  if (total === 0) return w;
+  const result = {};
+  for (const [k, v] of Object.entries(w)) {
+    result[k] = Math.round((v / total) * 100 * 10) / 10;
+  }
+  // Fix rounding to exactly 100
+  const sum = Object.values(result).reduce((s, v) => s + v, 0);
+  const diff = 100 - sum;
+  if (diff !== 0) {
+    const maxKey = Object.entries(result).reduce((a, b) => b[1] > a[1] ? b : a)[0];
+    result[maxKey] = Math.round((result[maxKey] + diff) * 10) / 10;
+  }
+  return result;
+}
+
+// Profile management
+function loadProfiles() {
+  try {
+    return JSON.parse(localStorage.getItem('tokyoRental_profiles')) || [];
+  } catch { return []; }
+}
+
+function saveProfiles(profiles) {
+  localStorage.setItem('tokyoRental_profiles', JSON.stringify(profiles));
+}
+
+function generateProfileTitle(prefs) {
+  const maxBudget = prefs.budget ? prefs.budget.idealMax : BRIEF.budget.idealMax;
+  let tier = 'Mid-range';
+  if (maxBudget < 100000) tier = 'Budget';
+  else if (maxBudget <= 150000) tier = 'Mid-range';
+  else if (maxBudget <= 200000) tier = 'Premium';
+  else tier = 'Luxury';
+
+  const roomTypes = prefs.roomType || BRIEF.roomType;
+  const topTypes = Object.entries(roomTypes)
+    .filter(([, v]) => v >= 0.7)
+    .map(([k]) => k)
+    .slice(0, 2);
+  const typePart = topTypes.length > 0 ? topTypes.join('/') : '';
+
+  const prefScores = prefs.prefScores || BRIEF.prefScores;
+  const topPref = Object.entries(prefScores)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 1)
+    .map(([k]) => k.charAt(0).toUpperCase() + k.slice(1));
+  const prefPart = topPref.length > 0 ? topPref[0] + ' focus' : '';
+
+  const parts = [tier, typePart, prefPart].filter(Boolean);
+  return parts.join(', ');
+}
+
+function resetBriefToDefaults() {
+  const keys = Object.keys(BRIEF_DEFAULTS);
+  for (const k of keys) {
+    BRIEF[k] = JSON.parse(JSON.stringify(BRIEF_DEFAULTS[k]));
+  }
+  if (scoringConfigOverrides) deepMerge(BRIEF, scoringConfigOverrides);
+}
+
+function applyProfile(profile) {
+  resetBriefToDefaults();
+  if (profile && profile.preferences) {
+    deepMerge(BRIEF, profile.preferences);
+  }
+  syncFormToBrief();
+  rescoreAll();
+}
+
+function populatePrefsProfileDropdown() {
+  const sel = document.getElementById('prefsProfileSelect');
+  if (!sel) return;
+  const profiles = loadProfiles();
+  sel.innerHTML = '<option value="">-- Default --</option>' +
+    profiles.map(p => `<option value="${escHtml(p.id)}">${escHtml(p.title)}</option>`).join('');
+}
+
+// Map BRIEF fields to form inputs
+const PREFS_FIELDS = [
+  { id: 'prefBudgetIdealMin', path: ['budget', 'idealMin'] },
+  { id: 'prefBudgetIdealMax', path: ['budget', 'idealMax'] },
+  { id: 'prefBudgetHardMax', path: ['budget', 'hardMax'] },
+  { id: 'prefBudgetMoveInMax', path: ['budget', 'moveInMax'] },
+  { id: 'prefSizeIdealMin', path: ['size', 'idealMin'] },
+  { id: 'prefSizeIdealMax', path: ['size', 'idealMax'] },
+  { id: 'prefSizeOkMin', path: ['size', 'okMin'] },
+  { id: 'prefSizeOkMax', path: ['size', 'okMax'] },
+  { id: 'prefWalkGreat', path: ['walk', 'great'] },
+  { id: 'prefWalkGood', path: ['walk', 'good'] },
+  { id: 'prefWalkOk', path: ['walk', 'ok'] },
+  { id: 'prefWalkMax', path: ['walk', 'max'] },
+  { id: 'prefAgeIdeal', path: ['buildingAge', 'ideal'] },
+  { id: 'prefAgeOk', path: ['buildingAge', 'ok'] },
+  { id: 'prefAgeOld', path: ['buildingAge', 'old'] },
+];
+
+const PREFS_ROOM_TYPES = ['2LDK', '2SLDK', '3LDK', '3DK', '3K', '3SLDK'];
+const PREFS_PREFECTURES = ['saitama', 'chiba', 'kanagawa', 'tokyo'];
+const PREFS_WEIGHT_KEYS = ['area', 'budget', 'size', 'roomType', 'walkTime', 'moveIn', 'buildAge'];
+const PREFS_WEIGHT_LABELS = { area: 'Area/Commute', budget: 'Budget', size: 'Size', roomType: 'Room Type', walkTime: 'Walk Time', moveIn: 'Move-in Cost', buildAge: 'Building Age' };
+
+function syncFormToBrief() {
+  for (const f of PREFS_FIELDS) {
+    const el = document.getElementById(f.id);
+    if (el) el.value = BRIEF[f.path[0]][f.path[1]];
+  }
+  for (const rt of PREFS_ROOM_TYPES) {
+    const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
+    if (el) {
+      el.value = BRIEF.roomType[rt] !== undefined ? BRIEF.roomType[rt] : 0;
+      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
+      if (label) label.textContent = parseFloat(el.value).toFixed(2);
+    }
+  }
+  for (const pref of PREFS_PREFECTURES) {
+    const el = document.getElementById('prefPS_' + pref);
+    if (el) {
+      el.value = BRIEF.prefScores[pref] !== undefined ? BRIEF.prefScores[pref] : 5;
+      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
+      if (label) label.textContent = parseFloat(el.value).toFixed(1);
+    }
+  }
+  for (const wk of PREFS_WEIGHT_KEYS) {
+    const el = document.getElementById('prefW_' + wk);
+    if (el) el.value = BRIEF.weights[wk] !== undefined ? BRIEF.weights[wk] : 0;
+  }
+  updateWeightTotal();
+}
+
+function updateWeightTotal() {
+  const raw = {};
+  let rawTotal = 0;
+  for (const wk of PREFS_WEIGHT_KEYS) {
+    const el = document.getElementById('prefW_' + wk);
+    const val = el ? parseFloat(el.value) || 0 : 0;
+    raw[wk] = val;
+    rawTotal += val;
+  }
+  const totalEl = document.getElementById('prefsWeightTotal');
+  if (totalEl) {
+    const norm = normaliseWeights(raw);
+    totalEl.textContent = rawTotal === 0 ? '0' : '100';
+    totalEl.className = 'prefs-weight-total' + (rawTotal === 0 ? ' invalid' : '');
+    for (const wk of PREFS_WEIGHT_KEYS) {
+      const normLabel = document.getElementById('prefWNorm_' + wk);
+      if (normLabel) normLabel.textContent = rawTotal === 0 ? '0' : norm[wk].toFixed(1);
+    }
+  }
+}
+
+function readBriefFromForm() {
+  for (const f of PREFS_FIELDS) {
+    const el = document.getElementById(f.id);
+    if (el) BRIEF[f.path[0]][f.path[1]] = parseFloat(el.value) || 0;
+  }
+  for (const rt of PREFS_ROOM_TYPES) {
+    const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
+    if (el) BRIEF.roomType[rt] = parseFloat(el.value) || 0;
+  }
+  for (const pref of PREFS_PREFECTURES) {
+    const el = document.getElementById('prefPS_' + pref);
+    if (el) BRIEF.prefScores[pref] = parseFloat(el.value) || 0;
+  }
+  const raw = {};
+  for (const wk of PREFS_WEIGHT_KEYS) {
+    const el = document.getElementById('prefW_' + wk);
+    raw[wk] = el ? parseFloat(el.value) || 0 : 0;
+  }
+  BRIEF.weights = normaliseWeights(raw);
+}
+
+function initPrefsPanel() {
+  const toggle = document.getElementById('btnPrefsToggle');
+  const body = document.getElementById('prefsPanelBody');
+  if (!toggle || !body) return;
+
+  toggle.addEventListener('click', () => {
+    const visible = body.style.display !== 'none';
+    body.style.display = visible ? 'none' : 'block';
+    toggle.classList.toggle('active', !visible);
+    toggle.textContent = visible ? 'Scoring Preferences' : 'Hide Preferences';
+  });
+
+  // Bind all number inputs
+  for (const f of PREFS_FIELDS) {
+    const el = document.getElementById(f.id);
+    if (el) el.addEventListener('input', () => { readBriefFromForm(); debouncedRescore(); });
+  }
+
+  // Bind room type sliders
+  for (const rt of PREFS_ROOM_TYPES) {
+    const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
+    if (el) el.addEventListener('input', () => {
+      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
+      if (label) label.textContent = parseFloat(el.value).toFixed(2);
+      readBriefFromForm();
+      debouncedRescore();
+    });
+  }
+
+  // Bind prefecture score sliders
+  for (const pref of PREFS_PREFECTURES) {
+    const el = document.getElementById('prefPS_' + pref);
+    if (el) el.addEventListener('input', () => {
+      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
+      if (label) label.textContent = parseFloat(el.value).toFixed(1);
+      readBriefFromForm();
+      debouncedRescore();
+    });
+  }
+
+  // Bind weight sliders
+  for (const wk of PREFS_WEIGHT_KEYS) {
+    const el = document.getElementById('prefW_' + wk);
+    if (el) el.addEventListener('input', () => {
+      updateWeightTotal();
+      readBriefFromForm();
+      debouncedRescore();
+    });
+  }
+
+  // Profile dropdown
+  const profileSel = document.getElementById('prefsProfileSelect');
+  if (profileSel) profileSel.addEventListener('change', () => {
+    const id = profileSel.value;
+    if (!id) {
+      resetBriefToDefaults();
+      syncFormToBrief();
+      rescoreAll();
+      return;
+    }
+    const profiles = loadProfiles();
+    const profile = profiles.find(p => p.id === id);
+    if (profile) applyProfile(profile);
+  });
+
+  // Save button
+  const saveBtn = document.getElementById('btnPrefsSave');
+  if (saveBtn) saveBtn.addEventListener('click', () => {
+    readBriefFromForm();
+    const prefs = {
+      budget: JSON.parse(JSON.stringify(BRIEF.budget)),
+      size: JSON.parse(JSON.stringify(BRIEF.size)),
+      walk: JSON.parse(JSON.stringify(BRIEF.walk)),
+      buildingAge: JSON.parse(JSON.stringify(BRIEF.buildingAge)),
+      roomType: JSON.parse(JSON.stringify(BRIEF.roomType)),
+      prefScores: JSON.parse(JSON.stringify(BRIEF.prefScores)),
+      weights: JSON.parse(JSON.stringify(BRIEF.weights)),
+    };
+    const titleInput = document.getElementById('prefsProfileTitle');
+    const title = (titleInput && titleInput.value.trim()) || generateProfileTitle(prefs);
+    const profiles = loadProfiles();
+    const profile = {
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
+      title: title,
+      created: new Date().toISOString(),
+      preferences: prefs,
+    };
+    profiles.push(profile);
+    saveProfiles(profiles);
+    populatePrefsProfileDropdown();
+    profileSel.value = profile.id;
+    if (titleInput) titleInput.value = '';
+  });
+
+  // Delete button
+  const delBtn = document.getElementById('prefsProfileDelete');
+  if (delBtn) delBtn.addEventListener('click', () => {
+    const id = profileSel.value;
+    if (!id) return;
+    const profiles = loadProfiles();
+    const profile = profiles.find(p => p.id === id);
+    if (!profile || !confirm('Delete profile "' + profile.title + '"?')) return;
+    saveProfiles(profiles.filter(p => p.id !== id));
+    populatePrefsProfileDropdown();
+    resetBriefToDefaults();
+    syncFormToBrief();
+    rescoreAll();
+  });
+
+  // Reset button
+  const resetBtn = document.getElementById('btnPrefsReset');
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    resetBriefToDefaults();
+    syncFormToBrief();
+    rescoreAll();
+    if (profileSel) profileSel.value = '';
+  });
+
+  // Auto-generate title button
+  const genBtn = document.getElementById('btnPrefsGenTitle');
+  if (genBtn) genBtn.addEventListener('click', () => {
+    readBriefFromForm();
+    const titleInput = document.getElementById('prefsProfileTitle');
+    if (titleInput) titleInput.value = generateProfileTitle(BRIEF);
+  });
+
+  // Populate on init
+  populatePrefsProfileDropdown();
+  syncFormToBrief();
+}
+
 loadData();
+initPrefsPanel();

@@ -53,6 +53,99 @@
   <span><span class="grade-badge grade-D">D</span> Below 50</span>
 </div>
 
+<div class="prefs-panel">
+  <button class="btn-prefs-toggle" id="btnPrefsToggle">Scoring Preferences</button>
+  <div class="prefs-panel-body" id="prefsPanelBody" style="display:none">
+
+    <div class="prefs-profile-bar">
+      <select id="prefsProfileSelect"><option value="">-- Default --</option></select>
+      <input type="text" id="prefsProfileTitle" placeholder="Profile name (or auto-generate)" class="prefs-profile-title">
+      <button class="btn-prefs-action" id="btnPrefsGenTitle" title="Auto-generate title">Auto</button>
+      <button class="btn-prefs-action btn-prefs-save" id="btnPrefsSave">Save</button>
+      <button class="btn-prefs-action btn-prefs-delete" id="prefsProfileDelete">Delete</button>
+      <button class="btn-prefs-action" id="btnPrefsReset">Reset</button>
+    </div>
+
+    <div class="prefs-grid">
+
+      <div class="prefs-section">
+        <div class="prefs-section-title">Budget (yen/mo)</div>
+        <div class="prefs-row">
+          <label>Ideal Min<input type="number" id="prefBudgetIdealMin" step="10000" class="prefs-input"></label>
+          <label>Ideal Max<input type="number" id="prefBudgetIdealMax" step="10000" class="prefs-input"></label>
+        </div>
+        <div class="prefs-row">
+          <label>Hard Max<input type="number" id="prefBudgetHardMax" step="10000" class="prefs-input"></label>
+          <label>Move-in Max<input type="number" id="prefBudgetMoveInMax" step="10000" class="prefs-input"></label>
+        </div>
+      </div>
+
+      <div class="prefs-section">
+        <div class="prefs-section-title">Size (sqm)</div>
+        <div class="prefs-row">
+          <label>Ideal Min<input type="number" id="prefSizeIdealMin" step="5" class="prefs-input"></label>
+          <label>Ideal Max<input type="number" id="prefSizeIdealMax" step="5" class="prefs-input"></label>
+        </div>
+        <div class="prefs-row">
+          <label>OK Min<input type="number" id="prefSizeOkMin" step="5" class="prefs-input"></label>
+          <label>OK Max<input type="number" id="prefSizeOkMax" step="5" class="prefs-input"></label>
+        </div>
+      </div>
+
+      <div class="prefs-section prefs-section-half">
+        <div class="prefs-section-title">Walk to Station (min)</div>
+        <div class="prefs-row">
+          <label>Great<input type="number" id="prefWalkGreat" step="1" class="prefs-input"></label>
+          <label>Good<input type="number" id="prefWalkGood" step="1" class="prefs-input"></label>
+          <label>OK<input type="number" id="prefWalkOk" step="1" class="prefs-input"></label>
+          <label>Max<input type="number" id="prefWalkMax" step="1" class="prefs-input"></label>
+        </div>
+      </div>
+
+      <div class="prefs-section prefs-section-half">
+        <div class="prefs-section-title">Building Age (years)</div>
+        <div class="prefs-row">
+          <label>Ideal<input type="number" id="prefAgeIdeal" step="5" class="prefs-input"></label>
+          <label>OK<input type="number" id="prefAgeOk" step="5" class="prefs-input"></label>
+          <label>Old<input type="number" id="prefAgeOld" step="5" class="prefs-input"></label>
+        </div>
+      </div>
+
+      <div class="prefs-section prefs-section-half">
+        <div class="prefs-section-title">Room Type Multipliers</div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">2LDK</span><input type="range" id="prefRT_2LDK" min="0" max="1" step="0.05" class="prefs-slider"><span class="prefs-slider-val">1.00</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">2SLDK</span><input type="range" id="prefRT_2SLDK" min="0" max="1" step="0.05" class="prefs-slider"><span class="prefs-slider-val">0.95</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">3LDK</span><input type="range" id="prefRT_3LDK" min="0" max="1" step="0.05" class="prefs-slider"><span class="prefs-slider-val">0.70</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">3DK</span><input type="range" id="prefRT_3DK" min="0" max="1" step="0.05" class="prefs-slider"><span class="prefs-slider-val">0.40</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">3K</span><input type="range" id="prefRT_3K" min="0" max="1" step="0.05" class="prefs-slider"><span class="prefs-slider-val">0.30</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">3SLDK</span><input type="range" id="prefRT_3SLDK" min="0" max="1" step="0.05" class="prefs-slider"><span class="prefs-slider-val">0.25</span></div>
+      </div>
+
+      <div class="prefs-section prefs-section-half">
+        <div class="prefs-section-title">Prefecture Scores</div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">Saitama</span><input type="range" id="prefPS_saitama" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">8.0</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">Chiba</span><input type="range" id="prefPS_chiba" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">6.4</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">Kanagawa</span><input type="range" id="prefPS_kanagawa" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">6.3</span></div>
+        <div class="prefs-slider-row"><span class="prefs-slider-label">Tokyo</span><input type="range" id="prefPS_tokyo" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">6.6</span></div>
+      </div>
+
+      <div class="prefs-section prefs-section-wide">
+        <div class="prefs-section-title">Scoring Weights <span class="prefs-weight-total" id="prefsWeightTotal">100</span></div>
+        <div class="prefs-weights-grid">
+          <div class="prefs-weight-row"><span class="prefs-weight-label">Area/Commute</span><input type="range" id="prefW_area" min="0" max="50" step="1" class="prefs-slider"><span class="prefs-weight-norm" id="prefWNorm_area">25.0</span></div>
+          <div class="prefs-weight-row"><span class="prefs-weight-label">Budget</span><input type="range" id="prefW_budget" min="0" max="50" step="1" class="prefs-slider"><span class="prefs-weight-norm" id="prefWNorm_budget">25.0</span></div>
+          <div class="prefs-weight-row"><span class="prefs-weight-label">Size</span><input type="range" id="prefW_size" min="0" max="50" step="1" class="prefs-slider"><span class="prefs-weight-norm" id="prefWNorm_size">15.0</span></div>
+          <div class="prefs-weight-row"><span class="prefs-weight-label">Room Type</span><input type="range" id="prefW_roomType" min="0" max="50" step="1" class="prefs-slider"><span class="prefs-weight-norm" id="prefWNorm_roomType">10.0</span></div>
+          <div class="prefs-weight-row"><span class="prefs-weight-label">Walk Time</span><input type="range" id="prefW_walkTime" min="0" max="50" step="1" class="prefs-slider"><span class="prefs-weight-norm" id="prefWNorm_walkTime">10.0</span></div>
+          <div class="prefs-weight-row"><span class="prefs-weight-label">Move-in Cost</span><input type="range" id="prefW_moveIn" min="0" max="50" step="1" class="prefs-slider"><span class="prefs-weight-norm" id="prefWNorm_moveIn">8.0</span></div>
+          <div class="prefs-weight-row"><span class="prefs-weight-label">Building Age</span><input type="range" id="prefW_buildAge" min="0" max="50" step="1" class="prefs-slider"><span class="prefs-weight-norm" id="prefWNorm_buildAge">7.0</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <div class="controls">
   <div class="control-group">
     <label>Source</label>
