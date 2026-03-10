@@ -40,6 +40,7 @@ ALLOWED_HOSTS = {"www.best-estate.jp", "best-estate.jp"}
 # Maps room type names (from scoring_config.json) to the {amount, type_code}
 # format that best-estate.jp expects. Verified individually via testing.
 LAYOUT_TYPE_CODES: Dict[str, Dict[str, int]] = {
+    "1LDK":  {"amount": 1, "type_code": 7},
     "2LDK":  {"amount": 2, "type_code": 7},
     "2SLDK": {"amount": 2, "type_code": 8},
     "3LDK":  {"amount": 3, "type_code": 7},

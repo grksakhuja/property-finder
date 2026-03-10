@@ -37,12 +37,11 @@ REQUEST_DELAY = 1  # seconds between page fetches
 MAX_PAGES_PER_AREA = 5  # cap at 75 listings per area (15/page)
 DEFAULT_WORKERS = 3  # parallel workers for area scraping
 
-# rooms=30 means ≥2LDK (includes 2LDK, 2SLDK, 3K, 3DK, 3LDK, 3SLDK, etc.).
-# REJ uses a numeric threshold rather than discrete room types, so we don't
-# use get_target_room_types() here — the threshold is already consistent
-# with the types defined in scoring_config.json.
+# rooms=20 means ≥1LDK (includes 1LDK, 1SLDK, 2K, 2DK, 2LDK, 3LDK, etc.).
+# REJ uses a numeric threshold rather than discrete room types. Extra types
+# like 2K/2DK that aren't in scoring_config.json will score low automatically.
 DEFAULT_PARAMS = {
-    "rooms": "30",
+    "rooms": "20",
     "min_price": "60000",
     "max_price": "200000",
     "building_type": "mansion-apartment",

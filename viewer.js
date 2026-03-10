@@ -599,6 +599,10 @@ async function loadData() {
   restoreHashState();
   render();
 
+  // Populate dynamic UI elements from config
+  populateRoomTypeDropdown();
+  buildRoomTypeSliders();
+
   // Sync preferences panel after config is loaded
   syncFormToBrief();
   populatePrefsProfileDropdown();
@@ -1748,6 +1752,7 @@ function applyProfile(profile) {
   if (profile && profile.preferences) {
     deepMerge(BRIEF, profile.preferences);
   }
+  buildRoomTypeSliders();
   syncFormToBrief();
   rescoreAll();
 }
@@ -1779,7 +1784,45 @@ const PREFS_FIELDS = [
   { id: 'prefAgeOld', path: ['buildingAge', 'old'] },
 ];
 
-const PREFS_ROOM_TYPES = ['2LDK', '2SLDK', '3LDK', '3DK', '3K', '3SLDK'];
+function getPrefsRoomTypes() { return Object.keys(BRIEF.roomType); }
+
+function populateRoomTypeDropdown() {
+  const sel = document.getElementById('filterType');
+  if (!sel) return;
+  // Keep "All Types" option, remove the rest
+  sel.innerHTML = '<option value="">All Types</option>';
+  for (const rt of getPrefsRoomTypes()) {
+    const opt = document.createElement('option');
+    opt.value = rt;
+    opt.textContent = rt;
+    sel.appendChild(opt);
+  }
+}
+
+function buildRoomTypeSliders() {
+  const container = document.getElementById('roomTypeSliders');
+  if (!container) return;
+  container.innerHTML = '';
+  for (const rt of getPrefsRoomTypes()) {
+    const val = BRIEF.roomType[rt] !== undefined ? BRIEF.roomType[rt] : 0;
+    const row = document.createElement('div');
+    row.className = 'prefs-slider-row';
+    row.innerHTML =
+      `<span class="prefs-slider-label">${rt}</span>` +
+      `<input type="range" id="prefRT_${rt.replace(/\s+/g, '_')}" min="0" max="1" step="0.05" class="prefs-slider" value="${val}">` +
+      `<span class="prefs-slider-val">${parseFloat(val).toFixed(2)}</span>`;
+    container.appendChild(row);
+    // Bind event
+    const slider = row.querySelector('input[type="range"]');
+    slider.addEventListener('input', () => {
+      const label = row.querySelector('.prefs-slider-val');
+      if (label) label.textContent = parseFloat(slider.value).toFixed(2);
+      readBriefFromForm();
+      debouncedRescore();
+    });
+  }
+}
+
 const PREFS_PREFECTURES = ['saitama', 'chiba', 'kanagawa', 'tokyo'];
 const PREFS_WEIGHT_KEYS = ['area', 'budget', 'size', 'roomType', 'walkTime', 'moveIn', 'buildAge'];
 const PREFS_WEIGHT_LABELS = { area: 'Area/Commute', budget: 'Budget', size: 'Size', roomType: 'Room Type', walkTime: 'Walk Time', moveIn: 'Move-in Cost', buildAge: 'Building Age' };
@@ -1789,7 +1832,7 @@ function syncFormToBrief() {
     const el = document.getElementById(f.id);
     if (el) el.value = BRIEF[f.path[0]][f.path[1]];
   }
-  for (const rt of PREFS_ROOM_TYPES) {
+  for (const rt of getPrefsRoomTypes()) {
     const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
     if (el) {
       el.value = BRIEF.roomType[rt] !== undefined ? BRIEF.roomType[rt] : 0;
@@ -1838,7 +1881,7 @@ function readBriefFromForm() {
     const el = document.getElementById(f.id);
     if (el) BRIEF[f.path[0]][f.path[1]] = parseFloat(el.value) || 0;
   }
-  for (const rt of PREFS_ROOM_TYPES) {
+  for (const rt of getPrefsRoomTypes()) {
     const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
     if (el) BRIEF.roomType[rt] = parseFloat(el.value) || 0;
   }
@@ -1872,16 +1915,7 @@ function initPrefsPanel() {
     if (el) el.addEventListener('input', () => { readBriefFromForm(); debouncedRescore(); });
   }
 
-  // Bind room type sliders
-  for (const rt of PREFS_ROOM_TYPES) {
-    const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
-    if (el) el.addEventListener('input', () => {
-      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
-      if (label) label.textContent = parseFloat(el.value).toFixed(2);
-      readBriefFromForm();
-      debouncedRescore();
-    });
-  }
+  // Room type sliders are built dynamically by buildRoomTypeSliders()
 
   // Bind prefecture score sliders
   for (const pref of PREFS_PREFECTURES) {
@@ -1910,6 +1944,7 @@ function initPrefsPanel() {
     const id = profileSel.value;
     if (!id) {
       resetBriefToDefaults();
+      buildRoomTypeSliders();
       syncFormToBrief();
       rescoreAll();
       return;
@@ -1959,6 +1994,7 @@ function initPrefsPanel() {
     saveProfiles(profiles.filter(p => p.id !== id));
     populatePrefsProfileDropdown();
     resetBriefToDefaults();
+    buildRoomTypeSliders();
     syncFormToBrief();
     rescoreAll();
   });
@@ -1967,6 +2003,7 @@ function initPrefsPanel() {
   const resetBtn = document.getElementById('btnPrefsReset');
   if (resetBtn) resetBtn.addEventListener('click', () => {
     resetBriefToDefaults();
+    buildRoomTypeSliders();
     syncFormToBrief();
     rescoreAll();
     if (profileSel) profileSel.value = '';
