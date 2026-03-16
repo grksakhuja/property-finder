@@ -8,7 +8,10 @@ import pytest
 
 from geocode_properties import (
     _guess_prefecture,
+    _is_japanese_address,
+    _simplify_japanese_address,
     geocode_address,
+    geocode_address_csis,
     is_path_safe,
     load_cache,
     normalize_address_for_geocoding,
@@ -43,6 +46,16 @@ class TestValidateAddress:
         # Control chars stripped, then remaining valid text returned
         result = validate_address("Kawaguchi\x00 City")
         assert result == "Kawaguchi City"
+
+    def test_carriage_return_replaced_with_space(self):
+        # Wagaya addresses contain \r between city and street
+        result = validate_address("Saitama Prefecture\rWakasa 4-chome")
+        assert result == "Saitama Prefecture Wakasa 4-chome"
+
+    def test_multiple_control_chars_collapsed(self):
+        # \r\n should become a single space, not double
+        result = validate_address("City\r\nStreet")
+        assert result == "City Street"
 
     def test_script_tag_returns_none(self):
         assert validate_address("<script>alert(1)</script>") is None
@@ -199,3 +212,129 @@ class TestSaveCache:
                     save_cache({"a": 1})
         # No files should remain
         assert len(list(tmp_path.iterdir())) == 0
+
+
+# ---------------------------------------------------------------------------
+# _is_japanese_address
+# ---------------------------------------------------------------------------
+
+class TestIsJapaneseAddress:
+    def test_kanji_address_is_japanese(self):
+        assert _is_japanese_address("東京都北区赤羽") is True
+
+    def test_english_address_is_not_japanese(self):
+        assert _is_japanese_address("Kawaguchi, Saitama, Japan") is False
+
+    def test_romaji_address_is_not_japanese(self):
+        assert _is_japanese_address("Kanagawa-ken, Hadano-shi") is False
+
+    def test_mixed_still_japanese(self):
+        assert _is_japanese_address("埼玉県川口市 1-2-3") is True
+
+
+# ---------------------------------------------------------------------------
+# _simplify_japanese_address
+# ---------------------------------------------------------------------------
+
+class TestSimplifyJapaneseAddress:
+    def test_strips_trailing_number(self):
+        result = _simplify_japanese_address("東京都板橋区大山金井町48")
+        assert result == "東京都板橋区大山金井町"
+
+    def test_strips_undetermined_suffix(self):
+        result = _simplify_japanese_address("東京都板橋区大山金井町48-(未定)")
+        assert result == "東京都板橋区大山金井町"
+
+    def test_strips_ban_go_suffix(self):
+        result = _simplify_japanese_address("東京都北区赤羽5番8号")
+        assert result == "東京都北区赤羽"
+
+    def test_returns_none_when_no_change(self):
+        assert _simplify_japanese_address("東京都北区赤羽") is None
+
+    def test_returns_none_when_empty_result(self):
+        assert _simplify_japanese_address("123") is None
+
+
+# ---------------------------------------------------------------------------
+# geocode_address_csis
+# ---------------------------------------------------------------------------
+
+class TestGeocodeAddressCsis:
+    VALID_XML = """<?xml version="1.0" encoding="UTF-8"?>
+    <results>
+      <candidate>
+        <latitude>35.8069</latitude>
+        <longitude>139.7210</longitude>
+      </candidate>
+    </results>"""
+
+    EMPTY_XML = """<?xml version="1.0" encoding="UTF-8"?>
+    <results></results>"""
+
+    OUTSIDE_JAPAN_XML = """<?xml version="1.0" encoding="UTF-8"?>
+    <results>
+      <candidate>
+        <latitude>48.8566</latitude>
+        <longitude>2.3522</longitude>
+      </candidate>
+    </results>"""
+
+    def _mock_session(self, text, status_code=200):
+        session = MagicMock()
+        resp = MagicMock()
+        resp.text = text
+        resp.raise_for_status.return_value = None
+        resp.status_code = status_code
+        session.get.return_value = resp
+        return session
+
+    def test_valid_csis_response_returns_coords(self):
+        session = self._mock_session(self.VALID_XML)
+        last_time = [0.0]
+
+        with patch("geocode_properties.time.sleep"):
+            result = geocode_address_csis(session, "東京都北区赤羽", last_time)
+
+        assert result is not None
+        lat, lng = result
+        assert abs(lat - 35.8069) < 0.001
+        assert abs(lng - 139.7210) < 0.001
+
+    def test_empty_csis_response_returns_none(self):
+        session = self._mock_session(self.EMPTY_XML)
+        last_time = [0.0]
+
+        with patch("geocode_properties.time.sleep"):
+            result = geocode_address_csis(session, "存在しない住所", last_time)
+
+        assert result is None
+
+    def test_outside_japan_csis_returns_none(self):
+        session = self._mock_session(self.OUTSIDE_JAPAN_XML)
+        last_time = [0.0]
+
+        with patch("geocode_properties.time.sleep"):
+            result = geocode_address_csis(session, "パリ", last_time)
+
+        assert result is None
+
+    def test_csis_network_error_returns_none(self):
+        session = MagicMock()
+        import requests as req
+        session.get.side_effect = req.RequestException("timeout")
+        last_time = [0.0]
+
+        with patch("geocode_properties.time.sleep"):
+            result = geocode_address_csis(session, "東京都北区赤羽", last_time)
+
+        assert result is None
+
+    def test_csis_invalid_xml_returns_none(self):
+        session = self._mock_session("not xml at all")
+        last_time = [0.0]
+
+        with patch("geocode_properties.time.sleep"):
+            result = geocode_address_csis(session, "東京都北区赤羽", last_time)
+
+        assert result is None

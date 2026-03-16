@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-geocode_properties.py — Geocode property addresses via Nominatim.
+geocode_properties.py — Geocode property addresses via CSIS + Nominatim.
 
 Reads all results*.json files, extracts unique addresses, geocodes via
-OpenStreetMap Nominatim, and caches results in geocoded_addresses.json.
+U-Tokyo CSIS (Japanese addresses) or OpenStreetMap Nominatim (English),
+and caches results in geocoded_addresses.json.
 
 Usage:
     python geocode_properties.py               # geocode new addresses only
@@ -24,6 +25,8 @@ import time
 import unicodedata
 from pathlib import Path
 
+import xml.etree.ElementTree as ET
+
 import requests
 
 # ---------------------------------------------------------------------------
@@ -33,7 +36,13 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 CACHE_FILE = os.path.join(PROJECT_ROOT, "geocoded_addresses.json")
 
 # ---------------------------------------------------------------------------
-# Nominatim config — ToS compliance
+# U-Tokyo CSIS geocoder config (primary for Japanese addresses)
+# ---------------------------------------------------------------------------
+CSIS_URL = "https://geocode.csis.u-tokyo.ac.jp/cgi-bin/simple_geocode.cgi"
+CSIS_MIN_DELAY = 0.5  # conservative — no documented rate limit
+
+# ---------------------------------------------------------------------------
+# Nominatim config — ToS compliance (primary for English, fallback for JP)
 # ---------------------------------------------------------------------------
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 NOMINATIM_USER_AGENT = "finding-property-tokyo/1.0 (local-dev)"
@@ -76,8 +85,8 @@ def validate_address(address: str) -> str | None:
         return None
     address = unicodedata.normalize("NFC", address)
     # Strip control characters
-    address = "".join(c for c in address if unicodedata.category(c) != "Cc")
-    address = address.strip()
+    address = "".join(" " if unicodedata.category(c) == "Cc" else c for c in address)
+    address = " ".join(address.split())
     if not address or len(address) > MAX_ADDRESS_LEN:
         return None
     if not _VALID_ADDRESS_RE.match(address):
@@ -208,6 +217,75 @@ def _guess_prefecture(area_name: str) -> str:
     return ''
 
 
+def _is_japanese_address(query: str) -> bool:
+    """True if address contains Japanese script (kanji/kana)."""
+    return any('\u3000' <= c <= '\u9FFF' or '\uF900' <= c <= '\uFAFF' for c in query)
+
+
+def _simplify_japanese_address(query: str) -> str | None:
+    """Strip building number suffixes for a broader geocode attempt.
+
+    Returns simplified address or None if nothing meaningful remains.
+    """
+    simplified = re.sub(
+        r'[\d\-]+[\(（].*?[\)）]$|[\d\-]+番.*$|[\d\-]+号.*$|[\d\-]+$',
+        '', query,
+    ).rstrip()
+    # Only return if we actually shortened it and something remains
+    if simplified and simplified != query:
+        return simplified
+    return None
+
+
+def geocode_address_csis(session: requests.Session, query: str,
+                         last_csis_time: list) -> tuple | None:
+    """Geocode a Japanese address via U-Tokyo CSIS.
+
+    Returns (lat, lng) or None. Updates last_csis_time[0] in-place.
+    """
+    now = time.monotonic()
+    elapsed = now - last_csis_time[0]
+    if elapsed < CSIS_MIN_DELAY:
+        time.sleep(CSIS_MIN_DELAY - elapsed)
+    last_csis_time[0] = time.monotonic()
+
+    try:
+        resp = session.get(CSIS_URL, params={"addr": query}, timeout=10)
+        resp.raise_for_status()
+    except requests.RequestException as e:
+        logger.warning("CSIS request failed for %r: %s", query[:60], e)
+        return None
+
+    try:
+        root = ET.fromstring(resp.text)
+    except ET.ParseError:
+        logger.warning("CSIS returned invalid XML for %r", query[:60])
+        return None
+
+    candidate = root.find(".//candidate")
+    if candidate is None:
+        return None
+
+    lat_el = candidate.find("latitude")
+    lng_el = candidate.find("longitude")
+    if lat_el is None or lng_el is None or lat_el.text is None or lng_el.text is None:
+        return None
+
+    try:
+        lat = float(lat_el.text)
+        lng = float(lng_el.text)
+    except (ValueError, TypeError):
+        return None
+
+    if not (JAPAN_LAT_MIN <= lat <= JAPAN_LAT_MAX and
+            JAPAN_LNG_MIN <= lng <= JAPAN_LNG_MAX):
+        logger.warning("CSIS coords outside Japan for %r: (%.4f, %.4f)",
+                        query[:60], lat, lng)
+        return None
+
+    return (lat, lng)
+
+
 def geocode_address(session: requests.Session, query: str,
                     last_request_time: list) -> tuple | None:
     """Geocode a single address via Nominatim with rate limiting.
@@ -265,7 +343,7 @@ def geocode_address(session: requests.Session, query: str,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Geocode property addresses via Nominatim")
+        description="Geocode property addresses via CSIS + Nominatim")
     parser.add_argument("--retry-failed", action="store_true",
                         help="Re-attempt previously failed lookups (null entries)")
     parser.add_argument("--dry-run", action="store_true",
@@ -324,17 +402,22 @@ def main():
             logger.info("[DRY RUN] %s → query: %s", raw_addr[:60], query)
         return
 
-    # Create a plain session (no 429 retry — we respect Nominatim's rate limits)
+    # Create a plain session (no 429 retry — we respect rate limits)
     session = requests.Session()
     session.headers.update({"User-Agent": NOMINATIM_USER_AGENT})
 
-    last_request_time = [0.0]
+    last_request_time = [0.0]   # Nominatim rate-limit tracker
+    last_csis_time = [0.0]      # CSIS rate-limit tracker
     geocoded_count = 0
     failed_count = 0
 
-    estimated_time = len(to_geocode) * NOMINATIM_MIN_DELAY
-    logger.info("Estimated time: %.0f seconds (%.1f minutes)",
-                estimated_time, estimated_time / 60)
+    # Estimate: JP addresses use CSIS (0.5s), EN use Nominatim (1.1s)
+    jp_count = sum(1 for _, m in to_geocode
+                   if m["source"] not in {"rej", "gaijinpot", "wagaya", "villagehouse"})
+    en_count = len(to_geocode) - jp_count
+    estimated_time = jp_count * CSIS_MIN_DELAY + en_count * NOMINATIM_MIN_DELAY
+    logger.info("Estimated time: %.0f seconds (%.1f minutes) — %d JP (CSIS), %d EN (Nominatim)",
+                estimated_time, estimated_time / 60, jp_count, en_count)
 
     for i, (raw_addr, meta) in enumerate(to_geocode, 1):
         query = normalize_address_for_geocoding(
@@ -346,14 +429,30 @@ def main():
             failed_count += 1
             continue
 
-        result = geocode_address(session, query, last_request_time)
+        # Route: CSIS primary for Japanese, Nominatim for English
+        if _is_japanese_address(query):
+            result = geocode_address_csis(session, query, last_csis_time)
+            provider = "csis"
+            # If CSIS fails, try simplified address (strip building number)
+            if not result:
+                simplified = _simplify_japanese_address(query)
+                if simplified:
+                    logger.debug("CSIS retry with simplified: %s", simplified[:60])
+                    result = geocode_address_csis(session, simplified, last_csis_time)
+            # Nominatim fallback if CSIS still failed
+            if not result:
+                result = geocode_address(session, query, last_request_time)
+                provider = "nominatim"
+        else:
+            result = geocode_address(session, query, last_request_time)
+            provider = "nominatim"
 
         if result:
             lat, lng = result
-            cache[raw_addr] = {"lat": lat, "lng": lng, "q": query}
+            cache[raw_addr] = {"lat": lat, "lng": lng, "q": query, "provider": provider}
             geocoded_count += 1
-            logger.debug("[%d/%d] OK: %s → (%.4f, %.4f)",
-                         i, len(to_geocode), raw_addr[:50], lat, lng)
+            logger.debug("[%d/%d] OK (%s): %s → (%.4f, %.4f)",
+                         i, len(to_geocode), provider, raw_addr[:50], lat, lng)
         else:
             cache[raw_addr] = None
             failed_count += 1

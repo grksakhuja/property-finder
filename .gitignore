@@ -4,6 +4,8 @@ __pycache__/
 !scoring_config.json
 !tests/fixtures/*.json
 .claude/
+CLAUDE.md
+CLAUDE-*.md
 
 # Personal documents — never commit
 brief.md
