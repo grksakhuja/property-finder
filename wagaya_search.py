@@ -23,6 +23,7 @@ from bs4 import BeautifulSoup
 from shared.config import AREAS, Area
 from shared.cli import build_arg_parser, filter_areas
 from shared.http_client import create_session, fetch_page
+from shared.parsers import parse_digits_as_yen
 from shared.scraper_template import BaseScraper, StandardProperty, StandardRoom
 
 BASE_URL = "https://wagaya-japan.com"
@@ -117,12 +118,12 @@ class WagayaScraper(BaseScraper):
         listing_id = item.get("icd", "") or item.get("id", "")
 
         # Parse rent: "￥50,000" or "50,000" → 50000
-        rent_value = self._parse_wagaya_price(price_text)
+        rent_value = parse_digits_as_yen(price_text)
         if rent_value <= 0:
             return None
 
         # Parse admin fee
-        admin_fee_value = self._parse_wagaya_price(admin_fee_text)
+        admin_fee_value = parse_digits_as_yen(admin_fee_text)
 
         total_value = rent_value + admin_fee_value
 
@@ -161,13 +162,6 @@ class WagayaScraper(BaseScraper):
             rooms=[room],
         )
 
-    def _parse_wagaya_price(self, text: str) -> int:
-        """Parse Wagaya price formats: '￥50,000', '50,000円', etc."""
-        if not text or text.strip() in ("-", "", "0"):
-            return 0
-        digits = re.sub(r"[^\d]", "", text)
-        return int(digits) if digits else 0
-
     def _parse_size(self, text: str) -> str:
         """Parse size text into clean format: '16m²'."""
         if not text:
@@ -192,10 +186,7 @@ class WagayaScraper(BaseScraper):
         """
         entries = []
         for a in areas:
-            en_name = a.name.split("(")[0].strip()
-            jp_m = re.search(r"\((.+?)\)", a.name)
-            jp_name = jp_m.group(1) if jp_m else ""
-            entries.append((en_name, jp_name, a))
+            entries.append((a.en_name, a.jp_name, a))
         return entries
 
     @staticmethod
@@ -246,6 +237,9 @@ class WagayaScraper(BaseScraper):
         if args.delay is not None:
             self.REQUEST_DELAY = args.delay
         output_file = args.output or self.OUTPUT_FILE
+
+        # Note: self.REQUEST_DELAY is set above before any fetching starts,
+        # so all requests see the final value.
 
         # Get all target areas for address matching
         target_areas = filter_areas(AREAS, args.areas)

@@ -176,11 +176,15 @@ ALLOWED_STATIC_EXTENSIONS = {".json"}
 
 
 def _is_allowed_static(filepath: str) -> bool:
-    """Check if a filepath is allowed to be served."""
-    name = Path(filepath).name
+    """Check if a filepath is allowed to be served (flat files only)."""
+    p = Path(filepath)
+    # Reject any path with directory components
+    if p.parent != Path("."):
+        return False
+    name = p.name
     if name in ALLOWED_STATIC_FILES:
         return True
-    ext = Path(filepath).suffix
+    ext = p.suffix
     if ext in ALLOWED_STATIC_EXTENSIONS:
         if any(name.startswith(prefix) for prefix in ALLOWED_STATIC_PREFIXES):
             return True

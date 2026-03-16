@@ -4,9 +4,14 @@ __pycache__/
 !scoring_config.json
 !tests/fixtures/*.json
 .claude/
+CLAUDE.md
+CLAUDE-*.md
 
 # Personal documents — never commit
 brief.md
+tokyo_budget.md
+docs/
+BEST_ESTATE_FILTER_INVESTIGATION.md
 
 # Build/test artifacts
 test-output.xml

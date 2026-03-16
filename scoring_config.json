@@ -51,8 +51,8 @@
   "budget": { "idealMin": 100000, "idealMax": 150000, "hardMax": 200000, "moveInMax": 600000 },
   "size": { "idealMin": 55, "idealMax": 65, "okMin": 50, "okMax": 75 },
   "walk": { "great": 5, "good": 10, "ok": 15, "max": 20 },
-  "roomType": { "2LDK": 1.0, "2SLDK": 0.95, "3LDK": 0.7, "3DK": 0.4, "3K": 0.3, "3SLDK": 0.25 },
-  "prefScores": { "saitama": 8.0, "chiba": 6.4, "kanagawa": 6.25, "tokyo": 6.6 },
+  "roomType": { "1LDK": 0.7, "2LDK": 1.0, "2SLDK": 0.95, "3LDK": 0.7, "3DK": 0.4, "3K": 0.3, "3SLDK": 0.25 },
+  "prefScores": { "saitama": 8.0, "chiba": 6.5, "kanagawa": 6.5, "tokyo": 6.5 },
   "buildingAge": { "ideal": 15, "ok": 25, "old": 35 },
   "weights": { "area": 25, "budget": 25, "size": 15, "roomType": 10, "walkTime": 10, "moveIn": 8, "buildAge": 7 }
 }

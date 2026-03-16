@@ -35,9 +35,17 @@ REQUEST_DELAY = 0.5  # seconds between page fetches
 MAX_PAGES_PER_AREA = 5  # cap at 250 listings per area (50/page)
 DEFAULT_WORKERS = 3  # parallel workers for area scraping
 
-# Room type codes for SUUMO md parameter
-# md=07 → 2LDK, md=08 → 3K, md=09 → 3DK, md=10 → 3LDK
-ROOM_TYPE_CODES = ["07", "08", "09", "10"]
+# Site-specific SUUMO md codes for each room type
+SUUMO_MD_CODES = {
+    "1LDK": "05", "1SLDK": "06",
+    "2LDK": "07", "2SLDK": "07",   # SUUMO groups 2SLDK under 2LDK
+    "3K": "08", "3DK": "09",
+    "3LDK": "10", "3SLDK": "10",   # SUUMO groups 3SLDK under 3LDK
+}
+# Derive active codes from scoring_config.json
+ROOM_TYPE_CODES = sorted(set(
+    SUUMO_MD_CODES[rt] for rt in get_target_room_types() if rt in SUUMO_MD_CODES
+))
 ROOM_TYPE_FILTER = get_target_room_types()
 
 SOURCE_AREAS = get_areas_for_source("suumo")
@@ -368,21 +376,25 @@ def main():
             logger.info("[DRY RUN] %s", build_url(area))
         return
 
-    session = create_session(extra_headers={
-        "Accept-Language": "ja,en;q=0.9",
-    })
-
     all_properties: list[Property] = []
     max_workers = args.workers if args.workers is not None else DEFAULT_WORKERS
 
     def _search_one(area):
+        thread_session = create_session(extra_headers={
+            "Accept-Language": "ja,en;q=0.9",
+        })
         logger.info("[%s] Searching...", area.name)
-        return area, search_area(area, session, max_pages=max_pages, delay=delay)
+        return area, search_area(area, thread_session, max_pages=max_pages, delay=delay)
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = {executor.submit(_search_one, area): area for area in areas}
         for future in as_completed(futures):
-            area, props = future.result()
+            try:
+                area, props = future.result()
+            except Exception as e:
+                area = futures[future]
+                logger.error("[%s] Unexpected error: %s", area.name, e)
+                continue
             if props:
                 room_count = sum(len(p.rooms) for p in props)
                 logger.info("[%s] Total: %d buildings with %d units", area.name, len(props), room_count)

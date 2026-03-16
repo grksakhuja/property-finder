@@ -23,6 +23,7 @@ from bs4 import BeautifulSoup
 from shared.config import Area, get_areas_for_source
 from shared.cli import build_arg_parser, filter_areas
 from shared.http_client import create_session, fetch_page
+from shared.parsers import parse_digits_as_yen
 from shared.scraper_template import BaseScraper, StandardProperty, StandardRoom
 
 BASE_URL = "https://www.villagehouse.jp"
@@ -165,7 +166,7 @@ class VillageHouseScraper(BaseScraper):
             dd = rent_dl.find("dd")
             if dd:
                 rent_text = dd.get_text(strip=True)
-                rent_value = self._parse_price(rent_text)
+                rent_value = parse_digits_as_yen(rent_text)
 
         if rent_value <= 0:
             return None
@@ -218,14 +219,6 @@ class VillageHouseScraper(BaseScraper):
             size=size_text,
             detail_url=detail_url,
         )
-
-    @staticmethod
-    def _parse_price(text: str) -> int:
-        """Parse Village House price: '¥79,000' → 79000."""
-        if not text:
-            return 0
-        digits = re.sub(r"[^\d]", "", text)
-        return int(digits) if digits else 0
 
     # ------------------------------------------------------------------
     # Override to search at prefecture level (not city)

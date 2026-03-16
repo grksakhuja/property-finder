@@ -18,8 +18,6 @@ HTML structure:
 - Details: div.listing-info > div.listing-right-col > div.listing-item with span.text-strong labels
 """
 
-import datetime
-import re
 from typing import List, Optional
 from urllib.parse import urlparse
 
@@ -28,6 +26,7 @@ from bs4 import BeautifulSoup
 from shared.config import AREAS, Area
 from shared.cli import build_arg_parser, filter_areas
 from shared.http_client import create_session, fetch_page
+from shared.parsers import parse_digits_as_yen, parse_year_to_age
 from shared.scraper_template import BaseScraper, StandardProperty, StandardRoom
 
 BASE_URL = "https://apartments.gaijinpot.com"
@@ -175,15 +174,15 @@ class GaijinPotScraper(BaseScraper):
                         station_text = value
 
         # --- Parse values ---
-        rent_value = self._parse_yen(rent_text)
+        rent_value = parse_digits_as_yen(rent_text)
         if rent_value <= 0:
             return None
 
-        deposit_value = self._parse_yen(deposit_text)
-        key_money_value = self._parse_yen(key_money_text)
+        deposit_value = parse_digits_as_yen(deposit_text)
+        key_money_value = parse_digits_as_yen(key_money_text)
         total_value = rent_value  # GaijinPot "Monthly Costs" often includes admin fee
 
-        building_age_years = self._parse_year_built(year_built_text)
+        building_age_years = parse_year_to_age(year_built_text)
 
         # Clean layout: "1K Apartment" → "1K"
         clean_layout = layout
@@ -218,26 +217,6 @@ class GaijinPotScraper(BaseScraper):
             rooms=[room],
         )
 
-    @staticmethod
-    def _parse_yen(text: str) -> int:
-        """Parse yen: '¥80,000', 'Monthly Costs ¥150,490', '¥0', 'None', etc."""
-        if not text or text.strip().lower() in ("none", "n/a", "-", "free"):
-            return 0
-        digits = re.sub(r"[^\d]", "", text)
-        return int(digits) if digits else 0
-
-    @staticmethod
-    def _parse_year_built(text: str) -> int:
-        """Parse year built: '2010', 'Built in 2010'. Returns age in years."""
-        if not text:
-            return -1
-        m = re.search(r"(\d{4})", text)
-        if m:
-            built_year = int(m.group(1))
-            current_year = datetime.datetime.now().year
-            return max(0, current_year - built_year)
-        return -1
-
     # ------------------------------------------------------------------
     # English address matching
     # ------------------------------------------------------------------
@@ -253,12 +232,7 @@ class GaijinPotScraper(BaseScraper):
         """
         entries = []
         for a in areas:
-            # English name: "Kawaguchi (川口市)" → "Kawaguchi"
-            en_name = a.name.split("(")[0].strip()
-            # Japanese name from parentheses
-            jp_m = re.search(r"\((.+?)\)", a.name)
-            jp_name = jp_m.group(1) if jp_m else ""
-            entries.append((en_name, jp_name, a.prefecture, a))
+            entries.append((a.en_name, a.jp_name, a.prefecture, a))
         return entries
 
     @staticmethod

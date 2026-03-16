@@ -2,15 +2,13 @@
 
 import os
 from shared.config import Area, AREAS
+from shared.parsers import parse_digits_as_yen
 
 from villagehouse_search import VillageHouseScraper
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 AREA = Area("Kanagawa Test", "kanagawa",
             villagehouse_region="kanto", villagehouse_prefecture="kanagawa")
-
-scraper = VillageHouseScraper()
-
 
 def _load_fixture():
     with open(os.path.join(FIXTURE_DIR, "villagehouse_page.html"), encoding="utf-8") as f:
@@ -19,8 +17,9 @@ def _load_fixture():
 
 class TestVillageHouseParser:
     def setup_method(self):
+        self.scraper = VillageHouseScraper()
         html = _load_fixture()
-        self.props = scraper.parse_page(html, AREA)
+        self.props = self.scraper.parse_page(html, AREA)
 
     def test_returns_properties(self):
         assert len(self.props) >= 1
@@ -86,13 +85,13 @@ class TestVillageHouseParser:
 
 class TestVillageHousePriceParser:
     def test_yen_with_symbol(self):
-        assert VillageHouseScraper._parse_price("¥79,000") == 79000
+        assert parse_digits_as_yen("¥79,000") == 79000
 
     def test_plain_number(self):
-        assert VillageHouseScraper._parse_price("41000") == 41000
+        assert parse_digits_as_yen("41000") == 41000
 
     def test_empty_returns_zero(self):
-        assert VillageHouseScraper._parse_price("") == 0
+        assert parse_digits_as_yen("") == 0
 
 
 class TestVillageHouseAreaMatching:
@@ -113,3 +112,17 @@ class TestVillageHouseAreaMatching:
         areas = [a for a in AREAS if a.villagehouse_city]
         result = VillageHouseScraper._match_area_name("", areas)
         assert result is None
+
+
+class TestVillageHouseBuildUrl:
+    def setup_method(self):
+        self.scraper = VillageHouseScraper()
+
+    def test_first_page_no_page_param(self):
+        url = self.scraper.build_url(AREA, page=1)
+        assert "page=" not in url
+        assert "/kanto/kanagawa/" in url
+
+    def test_second_page_has_page_param(self):
+        url = self.scraper.build_url(AREA, page=2)
+        assert "page=2" in url
