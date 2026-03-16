@@ -347,7 +347,7 @@ class BestEstateScraper(BaseScraper):
     def parse_page(self, html: str, area: Area) -> List[StandardProperty]:
         """Parse a Best Estate search results page into StandardProperty objects.
 
-        Page structure (Next.js SSR):
+        Page structure (Next.js SSR with React Server Component streaming):
         - Property cards: div with class containing 'lg:border-t-4'
           - Building info: div.bg-beu-gray-light3 with <h4> name, <p> address/access/built
           - Room rows: div with class 'border-y-[1px] border-beu-border'
@@ -356,14 +356,20 @@ class BestEstateScraper(BaseScraper):
             - Fees grid: div.grid-rows-3 (管理費, 敷金, 礼金)
             - Layout/size summary: p.my-2 ("2LDK / 55.5㎡ / 3階")
         - Detail URLs: in hidden div[id^=S:] swapped into template[id^=P:] via $RS scripts
-        - Some rooms are rendered via React streaming outside card wrappers
-          (orphan rows) — these have room data but no building name.
+        - Room data for most cards is streamed via React SC and lives in hidden
+          divs — templates inside cards act as placeholders. We resolve these
+          before parsing to reconstruct the complete card content.
         """
         soup = BeautifulSoup(html, "html.parser")
         properties = []
 
-        # Build template→URL mapping for detail links
+        # Build $RS template→hidden-div mapping and detail URL mapping
+        rs_map = self._build_rs_map(soup)
         detail_url_map = self._build_detail_url_map(soup)
+
+        # Resolve streamed content: replace <template id="P:X"> with
+        # the corresponding hidden <div id="S:X"> children
+        self._resolve_templates(soup, rs_map)
 
         # Track which room rows we've already processed (via property cards)
         processed_rows = set()
@@ -399,6 +405,44 @@ class BestEstateScraper(BaseScraper):
                 "will be discarded during area matching)", len(orphan_rooms))
 
         return properties
+
+    def _build_rs_map(self, soup: BeautifulSoup) -> dict:
+        """Build mapping from template P:X → hidden div S:X id via $RS scripts."""
+        rs_map = {}
+        for script in soup.find_all("script"):
+            text = script.string or ""
+            for match in re.finditer(r'\$RS\("(S:\w+)","(P:\w+)"\)', text):
+                s_id, p_id = match.group(1), match.group(2)
+                rs_map[p_id] = s_id
+        return rs_map
+
+    def _resolve_templates(self, soup: BeautifulSoup, rs_map: dict) -> None:
+        """Replace <template id="P:X"> placeholders with hidden div content.
+
+        React Server Components stream room data into hidden divs and use
+        $RS scripts to swap them into template placeholders at runtime.
+        We simulate this by moving the hidden div's children into the
+        template's parent, replacing the template element.
+        """
+        for template in soup.find_all("template"):
+            t_id = template.get("id", "")
+            s_id = rs_map.get(t_id)
+            if not s_id:
+                continue
+            hidden_div = soup.find("div", id=s_id)
+            if not hidden_div:
+                continue
+            # Check if the hidden div has room-row data (not just a detail link)
+            if not hidden_div.find("div", class_=re.compile(
+                    r"border-y-\[1px\]")):
+                continue
+            # Insert hidden div children before the template, then remove it
+            parent = template.parent
+            if not parent:
+                continue
+            for child in list(hidden_div.children):
+                template.insert_before(child.extract())
+            template.decompose()
 
     def _build_detail_url_map(self, soup: BeautifulSoup) -> dict:
         """Build mapping from template P:X ID → property detail URL.
