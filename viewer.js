@@ -122,12 +122,12 @@ const BRIEF = {
     prefectureDefault: { saitama: { min: 45, transfers: 1 }, chiba: { min: 45, transfers: 1 }, kanagawa: { min: 50, transfers: 1 }, tokyo: { min: 25, transfers: 1 } },
   },
   budget: { idealMin: 100000, idealMax: 150000, hardMax: 200000, moveInMax: 600000 },
-  size: { idealMin: 55, idealMax: 65, okMin: 50, okMax: 75 },
+  size: { idealMin: 38, idealMax: 48, okMin: 33, okMax: 55 },
   walk: { great: 5, good: 10, ok: 15, max: 20 },
-  roomType: { '1LDK': 0.7, '2LDK': 1.0, '2SLDK': 0.95, '3LDK': 0.7, '3SLDK': 0.25, '3DK': 0.4, '3K': 0.3 },
+  roomType: { '1LDK': 1.0, '2LDK': 0.7, '2SLDK': 0.65, '3LDK': 0.5, '3SLDK': 0.2, '3DK': 0.3, '3K': 0.2 },
   prefScores: { saitama: 8.0, chiba: 6.5, kanagawa: 6.5, tokyo: 6.5 },
   buildingAge: { ideal: 15, ok: 25, old: 35 },
-  weights: { area: 25, budget: 25, size: 15, roomType: 10, walkTime: 10, moveIn: 8, buildAge: 7 },
+  weights: { area: 18, budget: 18, size: 11, roomType: 32, walkTime: 8, moveIn: 7, buildAge: 6, amenities: 0 },
 };
 const BRIEF_DEFAULTS = JSON.parse(JSON.stringify(BRIEF));
 let scoringConfigOverrides = null;
@@ -211,7 +211,7 @@ function computeScore(room) {
 
   // 1. Area/Commute (25pts)
   const commData = BRIEF.commute.known[normalizeArea(room.area)] || BRIEF.commute.prefectureDefault[room.prefecture] || { min: 55, transfers: 1 };
-  const commuteMin = commData.min;
+  const commuteMin = (room._commute && room._commute.estimated_door_to_door != null) ? room._commute.estimated_door_to_door : commData.min;
   let commuteRatio;
   if (commuteMin <= 20) commuteRatio = 1.0;
   else if (commuteMin <= 30) commuteRatio = 1.0 - (commuteMin - 20) * 0.015;
@@ -270,7 +270,8 @@ function computeScore(room) {
   breakdown.roomType = { score: typeScore, max: W.roomType, type: rt };
 
   // 5. Walk Time (10pts)
-  const walkMin = room._walkMin != null ? room._walkMin : parseWalkTime(room);
+  let walkMin = room._walkMin != null ? room._walkMin : parseWalkTime(room);
+  if (walkMin < 0 && room._walkMinClaimed != null && room._walkMinClaimed > 0) walkMin = room._walkMinClaimed;
   let walkRatio = 0.3; // unknown default
   if (walkMin > 0) {
     if (walkMin <= BRIEF.walk.great) walkRatio = 1.0;
@@ -313,7 +314,26 @@ function computeScore(room) {
   const ageScore = round1(ageRatio * W.buildAge);
   breakdown.buildAge = { score: ageScore, max: W.buildAge, years: room.building_age_years };
 
-  const total = Math.round(areaScore + budgetScore + sizeScore + typeScore + walkScore + moveInScore + ageScore);
+  // 8. Amenities / Convenience
+  let amenitiesRatio = 0.5; // neutral default when no data
+  if (room._amenities && room._amenities.convenience_score != null) {
+    amenitiesRatio = Math.min(1, Math.max(0, room._amenities.convenience_score / 10));
+  }
+  const amenitiesWeight = W.amenities || 0;
+  const amenitiesScore = round1(amenitiesRatio * amenitiesWeight);
+  breakdown.amenities = { score: amenitiesScore, max: amenitiesWeight, convScore: room._amenities ? room._amenities.convenience_score : null };
+
+  // Hazard penalty
+  let hazardPenalty = 0;
+  if (room._hazard && room._hazard.data_available) {
+    const high = ['flood_risk', 'liquefaction_risk', 'landslide_risk'].some(k => room._hazard[k] === 'high');
+    const moderate = ['flood_risk', 'liquefaction_risk', 'landslide_risk'].some(k => room._hazard[k] === 'moderate');
+    if (high) hazardPenalty = -15;
+    else if (moderate) hazardPenalty = -5;
+  }
+  breakdown.hazardPenalty = hazardPenalty;
+
+  const total = Math.max(0, Math.min(100, Math.round(areaScore + budgetScore + sizeScore + typeScore + walkScore + moveInScore + ageScore + amenitiesScore + hazardPenalty)));
   return { total, breakdown };
 }
 
@@ -403,6 +423,8 @@ function toggleSort(key) {
 // Data loading — multi-source
 // =====================================================================
 let allRooms = [];
+let dataFromPipeline = false;  // cosmetic: tracks data source for subtitle
+let neighbourhoodProfiles = {};  // loaded from neighbourhood_profiles.json
 
 const SOURCE_FIELDS = {
   ur:           { layout: 'room_type', size: 'floorspace', url: 'url', fee: 'commonfee', feeVal: 'commonfee_value', deposit: 'shikikin', roomName: 'room_name', hasAge: false, hasMoveIn: false },
@@ -410,7 +432,7 @@ const SOURCE_FIELDS = {
   rej:          { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
   best_estate:  { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
   gaijinpot:    { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
-  wagaya:       { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: false, hasMoveIn: true, fallbackFee: true },
+  wagaya:       { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
   villagehouse: { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: false, hasMoveIn: true, fallbackFee: true },
 };
 
@@ -517,36 +539,108 @@ function populateAreaDropdown() {
   }
 }
 
-async function loadData() {
-  const sources = [
-    { file: 'results.json',              source: 'ur',           label: 'UR' },
-    { file: 'results_suumo.json',        source: 'suumo',        label: 'SUUMO' },
-    { file: 'results_realestate_jp.json', source: 'rej',          label: 'REJ' },
-    { file: 'results_best_estate.json',  source: 'best_estate',  label: 'BestEstate' },
-    { file: 'results_gaijinpot.json',    source: 'gaijinpot',    label: 'GaijinPot' },
-    { file: 'results_wagaya.json',       source: 'wagaya',       label: 'Wagaya' },
-    { file: 'results_villagehouse.json', source: 'villagehouse',  label: 'VillageHouse' },
-  ];
+function mapToViewerFormat(listing) {
+  return {
+    source: listing.source,
+    area: listing.area_name,
+    prefecture: listing.prefecture,
+    property: listing.building_name,
+    address: listing.address,
+    access: listing.access,
+    room_name: listing.room_name || '',
+    room_type: listing.room_type,
+    layout: listing.room_type,
+    floorspace: listing.size_sqm != null ? listing.size_sqm + '㎡' : '',
+    size: listing.size_sqm != null ? listing.size_sqm + '㎡' : '',
+    floor: listing.floor,
+    rent: listing.rent_value ? '¥' + listing.rent_value.toLocaleString() : '-',
+    rent_value: listing.rent_value,
+    commonfee: listing.admin_fee_value ? '¥' + listing.admin_fee_value.toLocaleString() : '-',
+    commonfee_value: listing.admin_fee_value || 0,
+    total_value: listing.total_monthly,
+    shikikin: listing.deposit_value ? '¥' + listing.deposit_value.toLocaleString() : '-',
+    deposit_value: listing.deposit_value || 0,
+    key_money_value: listing.key_money_value || 0,
+    move_in_cost: listing.move_in_cost || 0,
+    building_age_years: listing.building_age_years != null ? listing.building_age_years : -1,
+    building_age: listing.building_age_years != null ? listing.building_age_years + '年' : '',
+    url: listing.url,
+    detail_url: listing.url,
+    _walkMinClaimed: listing.walk_minutes_claimed,
+    _pipelineScores: listing.scores,
+    _pipelineGrade: listing.grade,
+    _commute: listing.commute,
+    _amenities: listing.amenities,
+    _hazard: listing.hazard,
+    _geocode: listing.geocode,
+    score: 0,
+  };
+}
 
-  allRooms = [];
+async function loadPipelineData() {
+  try {
+    const resp = await fetch('data/scored_listings.json');
+    if (!resp.ok) return null;
+    const listings = await resp.json();
+    if (!Array.isArray(listings) || listings.length === 0) return null;
+    return listings;
+  } catch (e) {
+    return null;
+  }
+}
+
+async function loadNeighbourhoodProfiles() {
+  try {
+    const resp = await fetch('data/neighbourhood_profiles.json');
+    if (!resp.ok) return {};
+    return await resp.json();
+  } catch (e) {
+    return {};
+  }
+}
+
+async function loadData() {
+  // Try pipeline data first
+  const pipelineListings = await loadPipelineData();
   const loaded = [];
 
-  const results = await Promise.all(sources.map(async (src) => {
-    try {
-      const resp = await fetch(src.file);
-      if (!resp.ok) return null;
-      const data = await resp.json();
-      return { src, data };
-    } catch (e) {
-      return null; // Source not available — skip silently
-    }
-  }));
+  if (pipelineListings) {
+    dataFromPipeline = true;
+    allRooms = pipelineListings.map(mapToViewerFormat);
+    loaded.push(`Pipeline: ${allRooms.length} listings`);
+    console.log('Loaded data from scored_listings.json (enrichment data available)');
+  } else {
+    // Fallback: load individual results files
+    dataFromPipeline = false;
+    const sources = [
+      { file: 'results.json',              source: 'ur',           label: 'UR' },
+      { file: 'results_suumo.json',        source: 'suumo',        label: 'SUUMO' },
+      { file: 'results_realestate_jp.json', source: 'rej',          label: 'REJ' },
+      { file: 'results_best_estate.json',  source: 'best_estate',  label: 'BestEstate' },
+      { file: 'results_gaijinpot.json',    source: 'gaijinpot',    label: 'GaijinPot' },
+      { file: 'results_wagaya.json',       source: 'wagaya',       label: 'Wagaya' },
+      { file: 'results_villagehouse.json', source: 'villagehouse',  label: 'VillageHouse' },
+    ];
 
-  for (const result of results) {
-    if (!result) continue;
-    const rooms = loadSourceData(result.data, result.src.source);
-    allRooms.push(...rooms);
-    loaded.push(`${result.src.label}: ${rooms.length}`);
+    allRooms = [];
+    const results = await Promise.all(sources.map(async (src) => {
+      try {
+        const resp = await fetch(src.file);
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        return { src, data };
+      } catch (e) {
+        return null;
+      }
+    }));
+
+    for (const result of results) {
+      if (!result) continue;
+      const rooms = loadSourceData(result.data, result.src.source);
+      allRooms.push(...rooms);
+      loaded.push(`${result.src.label}: ${rooms.length}`);
+    }
+    console.log('Loaded data from individual results files (fallback mode)');
   }
 
   if (allRooms.length === 0) {
@@ -574,6 +668,9 @@ async function loadData() {
     }
   }
 
+  // Load neighbourhood profiles (non-blocking)
+  neighbourhoodProfiles = await loadNeighbourhoodProfiles();
+
   precomputeTranslations();
   allRooms.forEach((r, i) => {
     const s = computeScore(r);
@@ -599,9 +696,14 @@ async function loadData() {
   restoreHashState();
   render();
 
+  // Init map now that POI data is available
+  initMap();
+  setTimeout(() => leafletMap && leafletMap.invalidateSize(), 100);
+
   // Populate dynamic UI elements from config
   populateRoomTypeDropdown();
   buildRoomTypeSliders();
+  buildWeightSliders();
 
   // Sync preferences panel after config is loaded
   syncFormToBrief();
@@ -767,12 +869,27 @@ function render(paginationOnly = false) {
       ageDisplay = escHtml(r.building_age);
     }
 
+    // Pipeline display enhancements
+    const commuteDisplay = r._commute && r._commute.estimated_door_to_door
+      ? `<span class="commute-badge">${r._commute.estimated_door_to_door}min</span>`
+      : '';
+    const amenityDisplay = r._amenities && r._amenities.konbini_500m > 0
+      ? `<span class="amenity-badge" title="Konbini within 500m">${r._amenities.konbini_500m}</span>`
+      : '';
+    const hazardWarn = r._hazard && r._hazard.data_available &&
+      (r._hazard.flood_risk === 'high' || r._hazard.liquefaction_risk === 'high')
+      ? '<span class="hazard-warn" title="High hazard risk">!</span>'
+      : '';
+    const completeness = r._pipelineScores
+      ? `<span class="completeness">${r._pipelineScores.scored_dimensions}/${r._pipelineScores.total_dimensions}</span>`
+      : '';
+
     return `<tr class="${isFav ? 'fav-row' : ''}">
       <td><span class="fav-star ${isFav ? 'starred' : ''}" data-favkey="${escHtml(r._favKey)}">${isFav ? '\u2605' : '\u2606'}</span></td>
-      <td class="score-cell" data-room-idx="${r._idx}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
+      <td class="score-cell" data-room-idx="${r._idx}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span>${hazardWarn}${completeness}<div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
       <td><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || escHtml(r.source)}</span></td>
       <td><span class="area-tag ${prefClass}">${escHtml(r.area)}</span></td>
-      <td><div class="prop-name">${escHtml(r.property)}</div><div class="prop-access" title="${escHtml(r.access || '')}">${escHtml(r._accessEn)}</div></td>
+      <td><div class="prop-name">${escHtml(r.property)}</div><div class="prop-access" title="${escHtml(r.access || '')}">${escHtml(r._accessEn)}${commuteDisplay ? ' ' + commuteDisplay : ''}${amenityDisplay ? ' ' + amenityDisplay : ''}</div></td>
       <td>${escHtml(roomType)}</td>
       <td class="size-cell">${escHtml(sizeDisplay)}</td>
       <td>${escHtml(r._floorEn)}</td>
@@ -883,14 +1000,16 @@ function showBreakdown(idx) {
   const b = r._breakdown;
   const grade = r._grade;
 
+  const amenitiesDetail = b.amenities.convScore != null ? `Score: ${b.amenities.convScore}/10` : 'No data (neutral)';
   const dims = [
-    { key: 'area', label: 'Area', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}` },
+    { key: 'area', label: 'Area', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}${r._commute && r._commute.estimated_door_to_door != null ? ' (enriched)' : ''}` },
     { key: 'budget', label: 'Budget', detail: b.budget.rent > 0 ? `¥${b.budget.rent.toLocaleString()}/mo` : 'Unknown' },
     { key: 'size', label: 'Size', detail: b.size.sqm > 0 ? `${b.size.sqm}㎡` : 'Unknown' },
     { key: 'roomType', label: 'Type', detail: b.roomType.type || 'Unknown' },
     { key: 'walkTime', label: 'Walk', detail: b.walkTime.walkMin > 0 ? `${b.walkTime.walkMin} min to station` : 'Unknown' },
     { key: 'moveIn', label: 'Move-in', detail: b.moveIn.cost > 0 ? `¥${b.moveIn.cost.toLocaleString()}` : (r.source === 'ur' ? 'UR (low cost)' : 'Unknown') },
     { key: 'buildAge', label: 'Age', detail: b.buildAge.years >= 0 ? `${b.buildAge.years} years` : 'Unknown' },
+    { key: 'amenities', label: 'Convenience', detail: amenitiesDetail },
   ];
 
   const barColor = (score, max) => {
@@ -901,7 +1020,7 @@ function showBreakdown(idx) {
     return 'var(--red)';
   };
 
-  const rowsHtml = dims.map(d => {
+  let rowsHtml = dims.map(d => {
     const dim = b[d.key];
     const pct = dim.max > 0 ? Math.round(dim.score / dim.max * 100) : 0;
     return `<div class="breakdown-row">
@@ -911,6 +1030,15 @@ function showBreakdown(idx) {
     </div>
     <div class="breakdown-detail">${escHtml(d.detail)}</div>`;
   }).join('');
+
+  // Add hazard penalty row if applicable
+  if (b.hazardPenalty && b.hazardPenalty < 0) {
+    rowsHtml += `<div class="breakdown-row">
+      <div class="breakdown-label">Hazard</div>
+      <div class="breakdown-bar-wrap"></div>
+      <div class="breakdown-score" style="color:var(--red)">${b.hazardPenalty}</div>
+    </div>`;
+  }
 
   const overlay = document.createElement('div');
   overlay.className = 'score-popup-overlay';
@@ -923,10 +1051,93 @@ function showBreakdown(idx) {
       <div><div class="popup-total-num">${r.score}<span style="font-size:0.8rem;color:var(--text-dim)">/100</span></div><div class="popup-total-label">${grade.label}</div></div>
     </div>
     ${rowsHtml}
-    <button class="popup-close" onclick="this.closest('.score-popup-overlay').remove()">Close</button>
+    <button class="popup-close">Close</button>
   </div>`;
   document.body.appendChild(overlay);
+  overlay.querySelector('.popup-close').addEventListener('click', () => overlay.remove());
 }
+
+// =====================================================================
+// Neighbourhood profile popup
+// =====================================================================
+const PROFILE_DIMS = [
+  { key: 'safety', label: 'Safety' },
+  { key: 'foreigner_friendliness', label: 'Foreigner Friendliness' },
+  { key: 'daily_convenience', label: 'Daily Convenience' },
+  { key: 'noise_atmosphere', label: 'Noise & Atmosphere' },
+  { key: 'local_character', label: 'Local Character' },
+  { key: 'transport_connectivity', label: 'Transport Connectivity' },
+];
+
+function showNeighbourhoodProfile(areaName) {
+  // Try exact match, then normalizeArea match against profile keys
+  let profile = neighbourhoodProfiles[areaName];
+  if (!profile) {
+    const norm = normalizeArea(areaName);
+    const match = Object.keys(neighbourhoodProfiles).find(k => normalizeArea(k) === norm);
+    if (match) profile = neighbourhoodProfiles[match];
+  }
+  if (!profile) return;
+
+  document.getElementById('profileTitle').textContent = areaName;
+  document.getElementById('profileSummary').textContent = profile.summary || '';
+
+  // Build dimension bars
+  let dimsHtml = '';
+  const dims = profile.dimensions || {};
+  for (const d of PROFILE_DIMS) {
+    const val = dims[d.key];
+    if (!val) continue;
+    const rating = val.rating || 0;
+    const narrative = val.narrative || '';
+
+    // Build 5-segment bar
+    let segmentsHtml = '';
+    for (let i = 1; i <= 5; i++) {
+      let cls = '';
+      if (i <= rating) {
+        if (rating >= 4) cls = 'filled';
+        else if (rating >= 3) cls = 'filled-yellow';
+        else cls = 'filled-red';
+      }
+      segmentsHtml += `<div class="profile-dim-bar-segment ${cls}"></div>`;
+    }
+
+    const ratingColor = rating >= 4 ? 'var(--green)' : rating >= 3 ? 'var(--yellow)' : 'var(--red)';
+    dimsHtml += `<div class="profile-dim-row">
+      <div class="profile-dim-label">${escHtml(d.label)}</div>
+      <div class="profile-dim-bar-wrap">${segmentsHtml}</div>
+      <div class="profile-dim-rating" style="color:${ratingColor}">${rating}</div>
+    </div>`;
+    if (narrative) {
+      dimsHtml += `<div class="profile-dim-narrative">${escHtml(narrative)}</div>`;
+    }
+  }
+  document.getElementById('profileDimensions').innerHTML = dimsHtml;
+
+  // Build notable points
+  const notable = profile.notable || [];
+  const notableEl = document.getElementById('profileNotable');
+  if (notable.length > 0) {
+    notableEl.innerHTML = notable.map(n => `<li>${escHtml(n)}</li>`).join('');
+    notableEl.style.display = '';
+  } else {
+    notableEl.innerHTML = '';
+    notableEl.style.display = 'none';
+  }
+
+  document.getElementById('profilePopupOverlay').style.display = 'flex';
+}
+
+// Close profile popup
+document.getElementById('profileClose').addEventListener('click', () => {
+  document.getElementById('profilePopupOverlay').style.display = 'none';
+});
+document.getElementById('profilePopupOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('profilePopupOverlay')) {
+    document.getElementById('profilePopupOverlay').style.display = 'none';
+  }
+});
 
 // =====================================================================
 // Debounce (Step 3)
@@ -957,8 +1168,10 @@ document.getElementById('tableBody').addEventListener('click', (e) => {
   if (scoreCell) { showBreakdown(parseInt(scoreCell.dataset.roomIdx)); return; }
 });
 
-// Map popup & area card clicks — event delegation for filterToArea
+// Map popup & area card clicks — event delegation for filterToArea + profile links
 document.addEventListener('click', (e) => {
+  const profileLink = e.target.closest('[data-profile-area]');
+  if (profileLink) { e.preventDefault(); e.stopPropagation(); showNeighbourhoodProfile(profileLink.dataset.profileArea); return; }
   const filterLink = e.target.closest('[data-filter-area]');
   if (filterLink) { filterToArea(filterLink.dataset.filterArea); return; }
 });
@@ -1050,8 +1263,20 @@ let areaMarkers = {}; // area name → marker
 let propertyClusterGroup = null;
 let propertyMarkersMap = {}; // address → marker
 let currentFilteredAddresses = new Set();
-let poiLayerGroup = null;
+let poiLayerGroups = {};  // category → L.layerGroup
+let poiLayerPrefs = {};   // category → boolean (enabled/disabled)
 const POI_ZOOM_THRESHOLD = 12;
+const POI_CATEGORIES = [
+  { key: 'station', label: 'Stations' },
+  { key: 'supermarket', label: 'Supermarkets' },
+  { key: 'shopping', label: 'Shopping' },
+  { key: 'park', label: 'Parks' },
+  { key: 'hospital', label: 'Medical' },
+  { key: 'expat', label: 'Expat Services' },
+  { key: 'dining', label: 'Dining' },
+  { key: 'culture', label: 'Culture' },
+  { key: 'transit', label: 'Transit' },
+];
 
 const PREF_COLORS = {
   saitama:  '#4ade80',
@@ -1324,9 +1549,30 @@ function makePOIIcon(category) {
   });
 }
 
+function loadPOILayerPrefs() {
+  try {
+    const stored = localStorage.getItem('mapLayerPrefs');
+    if (stored) return JSON.parse(stored);
+  } catch (e) { /* ignore */ }
+  // Default: all enabled
+  const defaults = {};
+  for (const cat of POI_CATEGORIES) defaults[cat.key] = true;
+  return defaults;
+}
+
+function savePOILayerPrefs() {
+  try {
+    localStorage.setItem('mapLayerPrefs', JSON.stringify(poiLayerPrefs));
+  } catch (e) { /* ignore */ }
+}
+
 function initPOIMarkers() {
   if (!poiData || !leafletMap) return;
-  poiLayerGroup = L.layerGroup();
+
+  // Create per-category layer groups
+  for (const cat of POI_CATEGORIES) {
+    poiLayerGroups[cat.key] = L.layerGroup();
+  }
 
   for (const [areaName, areaInfo] of Object.entries(poiData.areas)) {
     for (const station of (areaInfo.stations || [])) {
@@ -1334,29 +1580,85 @@ function initPOIMarkers() {
       L.marker([station.lat, station.lng], { icon: makePOIIcon('station') })
         .bindPopup(`<div class="map-popup-title">${escHtml(station.name)} Stn</div>
           <div class="map-popup-pref">${escHtml((station.lines || []).join(', '))}</div>`)
-        .addTo(poiLayerGroup);
+        .addTo(poiLayerGroups['station']);
     }
     for (const poi of (areaInfo.pois || [])) {
       if (!isValidLatLng(poi.lat, poi.lng)) continue;
+      const cat = poi.cat || 'shopping';
+      const group = poiLayerGroups[cat] || poiLayerGroups['shopping'];
       L.marker([poi.lat, poi.lng], { icon: makePOIIcon(poi.cat) })
         .bindPopup(`<div class="map-popup-title">${escHtml(poi.name)}</div>
           ${poi.note ? `<div class="map-popup-pref">${escHtml(poi.note)}</div>` : ''}`)
-        .addTo(poiLayerGroup);
+        .addTo(group);
     }
   }
 
+  // Load saved preferences
+  poiLayerPrefs = loadPOILayerPrefs();
+
   leafletMap.on('zoomend', updatePOIVisibility);
   updatePOIVisibility();
+
+  // Add layer control panel
+  addPOIControl();
 }
 
 function updatePOIVisibility() {
-  if (!poiLayerGroup || !leafletMap) return;
+  if (!leafletMap) return;
   const zoom = leafletMap.getZoom();
-  if (zoom >= POI_ZOOM_THRESHOLD && !leafletMap.hasLayer(poiLayerGroup)) {
-    leafletMap.addLayer(poiLayerGroup);
-  } else if (zoom < POI_ZOOM_THRESHOLD && leafletMap.hasLayer(poiLayerGroup)) {
-    leafletMap.removeLayer(poiLayerGroup);
+  for (const cat of POI_CATEGORIES) {
+    const group = poiLayerGroups[cat.key];
+    if (!group) continue;
+    const shouldShow = zoom >= POI_ZOOM_THRESHOLD && poiLayerPrefs[cat.key] !== false;
+    if (shouldShow && !leafletMap.hasLayer(group)) {
+      leafletMap.addLayer(group);
+    } else if (!shouldShow && leafletMap.hasLayer(group)) {
+      leafletMap.removeLayer(group);
+    }
   }
+}
+
+function addPOIControl() {
+  if (!leafletMap) return;
+  const control = L.control({ position: 'topright' });
+  control.onAdd = function() {
+    const container = L.DomUtil.create('div', 'poi-control');
+    L.DomEvent.disableClickPropagation(container);
+    L.DomEvent.disableScrollPropagation(container);
+
+    const toggle = L.DomUtil.create('button', 'poi-control-toggle', container);
+    toggle.textContent = 'Layers';
+    const panel = L.DomUtil.create('div', 'poi-control-panel', container);
+    panel.style.display = 'none';
+
+    toggle.addEventListener('click', () => {
+      panel.style.display = panel.style.display === 'none' ? '' : 'none';
+    });
+
+    for (const cat of POI_CATEGORIES) {
+      const group = poiLayerGroups[cat.key];
+      if (!group) continue;
+      // Skip categories with no markers
+      if (group.getLayers().length === 0) continue;
+
+      const item = L.DomUtil.create('label', 'poi-control-item', panel);
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = poiLayerPrefs[cat.key] !== false;
+      const emoji = POI_ICONS[cat.key] || '';
+      item.appendChild(cb);
+      item.appendChild(document.createTextNode(` ${emoji} ${cat.label}`));
+
+      cb.addEventListener('change', () => {
+        poiLayerPrefs[cat.key] = cb.checked;
+        savePOILayerPrefs();
+        updatePOIVisibility();
+      });
+    }
+
+    return container;
+  };
+  control.addTo(leafletMap);
 }
 
 // =====================================================================
@@ -1389,7 +1691,7 @@ function addMapLegend() {
       <div class="map-legend-item"><span class="map-legend-dot" style="background:#6c9cfc"></span> B grade (65-79)</div>
       <div class="map-legend-item"><span class="map-legend-dot" style="background:#fbbf24"></span> C grade (50-64)</div>
       <div class="map-legend-item"><span class="map-legend-dot" style="background:#f87171"></span> D grade (&lt;50)</div>
-      <div class="map-legend-item" style="margin-top:4px;font-size:0.68rem">POIs visible at zoom ${POI_ZOOM_THRESHOLD}+</div>
+      <div class="map-legend-item" style="margin-top:4px;font-size:0.68rem">POIs at zoom ${POI_ZOOM_THRESHOLD}+ (toggle via Layers)</div>
     `;
     return div;
   };
@@ -1415,7 +1717,26 @@ function filterToArea(areaName) {
   currentPage = 0;
   render();
   pushHashState();
-  if (leafletMap) leafletMap.closePopup();
+
+  // Pan/zoom map to area and open its popup
+  if (leafletMap) {
+    leafletMap.closePopup();
+    const bareNorm = normalizeArea(areaName);
+    const markerKey = Object.keys(areaMarkers).find(k => k === bareNorm);
+    const marker = markerKey ? areaMarkers[markerKey] : null;
+    if (marker) {
+      leafletMap.flyTo(marker.getLatLng(), 13, { duration: 0.8 });
+      setTimeout(() => {
+        const freshStats = getAreaStats(getFiltered());
+        const areaInfo = poiData ? poiData.areas[markerKey] : null;
+        const s = Object.entries(freshStats).find(([k]) => normalizeArea(k) === bareNorm)?.[1] || null;
+        if (areaInfo) {
+          marker.unbindPopup();
+          marker.bindPopup(buildAreaPopup(markerKey, areaInfo, pref, s), { maxWidth: 320 }).openPopup();
+        }
+      }, 900);
+    }
+  }
 }
 
 function syncMapToFilters(areaStats) {
@@ -1478,14 +1799,12 @@ function renderAreaCards(areaStats) {
       <div class="area-card-pref">${escHtml(prefLabel)}</div>
       <div class="area-card-commute">${commData.min} min to Yotsuya &middot; ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''} &middot; ${escHtml(commData.line || '')}</div>
       ${stationsHtml}${poisHtml}
-      <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; ${s.grade.letter} avg</div>
+      <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; ${s.grade.letter} avg${neighbourhoodProfiles[norm] || Object.keys(neighbourhoodProfiles).find(k => normalizeArea(k) === norm) ? ` <a class="profile-link" data-profile-area="${escHtml(currentArea)}">View Profile</a>` : ''}</div>
     </div></div>`;
   } else {
-    // Top 5 areas by average score (min 5 listings to qualify)
+    // All areas sorted by average score
     const ranked = Object.entries(areaStats)
-      .filter(([, s]) => s.count >= 5)
-      .sort((a, b) => b[1].avgScore - a[1].avgScore)
-      .slice(0, 5);
+      .sort((a, b) => b[1].avgScore - a[1].avgScore);
 
     if (ranked.length === 0) { container.innerHTML = ''; return; }
 
@@ -1508,7 +1827,7 @@ function renderAreaCards(areaStats) {
         <div class="area-card-title" style="color:${color}">${escHtml(norm)}</div>
         <div class="area-card-pref">${escHtml(prefLabel)} &middot; ${commData.min} min, ${commData.transfers}x</div>
         ${highlight}
-        <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; <span class="grade-badge ${s.grade.cls}" style="width:18px;height:18px;line-height:18px;font-size:0.65rem">${s.grade.letter}</span></div>
+        <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; <span class="grade-badge ${s.grade.cls}" style="width:18px;height:18px;line-height:18px;font-size:0.65rem">${s.grade.letter}</span>${neighbourhoodProfiles[norm] || Object.keys(neighbourhoodProfiles).find(k => normalizeArea(k) === norm) ? ` <a class="profile-link" data-profile-area="${escHtml(areaName)}">&#9432;</a>` : ''}</div>
       </div>`;
     }
     html += '</div>';
@@ -1516,20 +1835,10 @@ function renderAreaCards(areaStats) {
   }
 }
 
-// Map toggle button
-document.getElementById('btnToggleMap').addEventListener('click', () => {
-  const container = document.getElementById('mapContainer');
-  const btn = document.getElementById('btnToggleMap');
-  const visible = container.style.display !== 'none';
-  container.style.display = visible ? 'none' : 'block';
-  btn.textContent = visible ? 'Show Area Map' : 'Hide Area Map';
-  btn.classList.toggle('active', !visible);
-  if (!visible && !mapInitialized) {
-    initMap();
-    // Leaflet needs a tick to measure container
-    setTimeout(() => leafletMap && leafletMap.invalidateSize(), 100);
-  }
-});
+// Map resize observer (map init happens in loadData after POI data is fetched)
+if (typeof ResizeObserver !== 'undefined' && typeof L !== 'undefined' && L !== null) {
+  new ResizeObserver(() => leafletMap && leafletMap.invalidateSize()).observe(document.getElementById('map'));
+}
 
 // =====================================================================
 // Scraper control panel
@@ -1753,6 +2062,7 @@ function applyProfile(profile) {
     deepMerge(BRIEF, profile.preferences);
   }
   buildRoomTypeSliders();
+  buildWeightSliders();
   syncFormToBrief();
   rescoreAll();
 }
@@ -1824,8 +2134,36 @@ function buildRoomTypeSliders() {
 }
 
 const PREFS_PREFECTURES = ['saitama', 'chiba', 'kanagawa', 'tokyo'];
-const PREFS_WEIGHT_KEYS = ['area', 'budget', 'size', 'roomType', 'walkTime', 'moveIn', 'buildAge'];
-const PREFS_WEIGHT_LABELS = { area: 'Area/Commute', budget: 'Budget', size: 'Size', roomType: 'Room Type', walkTime: 'Walk Time', moveIn: 'Move-in Cost', buildAge: 'Building Age' };
+const PREFS_WEIGHT_KEYS = ['area', 'budget', 'size', 'roomType', 'walkTime', 'moveIn', 'buildAge', 'amenities'];
+const PREFS_WEIGHT_LABELS = { area: 'Area/Commute', budget: 'Budget', size: 'Size', roomType: 'Room Type', walkTime: 'Walk Time', moveIn: 'Move-in Cost', buildAge: 'Building Age', amenities: 'Convenience' };
+
+function activeWeightKeys() { return PREFS_WEIGHT_KEYS; }
+function activeWeightLabels() { return PREFS_WEIGHT_LABELS; }
+
+function buildWeightSliders() {
+  const container = document.getElementById('prefsWeightsGrid');
+  if (!container) return;
+  container.innerHTML = '';
+  const keys = activeWeightKeys();
+  const labels = activeWeightLabels();
+  for (const wk of keys) {
+    const val = BRIEF.weights[wk] !== undefined ? BRIEF.weights[wk] : 0;
+    const row = document.createElement('div');
+    row.className = 'prefs-weight-row';
+    row.innerHTML =
+      `<span class="prefs-weight-label">${escHtml(labels[wk] || wk)}</span>` +
+      `<input type="range" id="prefW_${wk}" min="0" max="50" step="1" class="prefs-slider" value="${val}">` +
+      `<span class="prefs-weight-norm" id="prefWNorm_${wk}">0</span>`;
+    container.appendChild(row);
+    const slider = row.querySelector('input[type="range"]');
+    slider.addEventListener('input', () => {
+      updateWeightTotal();
+      readBriefFromForm();
+      debouncedRescore();
+    });
+  }
+  updateWeightTotal();
+}
 
 function syncFormToBrief() {
   for (const f of PREFS_FIELDS) {
@@ -1848,7 +2186,7 @@ function syncFormToBrief() {
       if (label) label.textContent = parseFloat(el.value).toFixed(1);
     }
   }
-  for (const wk of PREFS_WEIGHT_KEYS) {
+  for (const wk of activeWeightKeys()) {
     const el = document.getElementById('prefW_' + wk);
     if (el) el.value = BRIEF.weights[wk] !== undefined ? BRIEF.weights[wk] : 0;
   }
@@ -1856,9 +2194,10 @@ function syncFormToBrief() {
 }
 
 function updateWeightTotal() {
+  const keys = activeWeightKeys();
   const raw = {};
   let rawTotal = 0;
-  for (const wk of PREFS_WEIGHT_KEYS) {
+  for (const wk of keys) {
     const el = document.getElementById('prefW_' + wk);
     const val = el ? parseFloat(el.value) || 0 : 0;
     raw[wk] = val;
@@ -1869,7 +2208,7 @@ function updateWeightTotal() {
     const norm = normaliseWeights(raw);
     totalEl.textContent = rawTotal === 0 ? '0' : '100';
     totalEl.className = 'prefs-weight-total' + (rawTotal === 0 ? ' invalid' : '');
-    for (const wk of PREFS_WEIGHT_KEYS) {
+    for (const wk of keys) {
       const normLabel = document.getElementById('prefWNorm_' + wk);
       if (normLabel) normLabel.textContent = rawTotal === 0 ? '0' : norm[wk].toFixed(1);
     }
@@ -1889,8 +2228,9 @@ function readBriefFromForm() {
     const el = document.getElementById('prefPS_' + pref);
     if (el) BRIEF.prefScores[pref] = parseFloat(el.value) || 0;
   }
+  const keys = activeWeightKeys();
   const raw = {};
-  for (const wk of PREFS_WEIGHT_KEYS) {
+  for (const wk of keys) {
     const el = document.getElementById('prefW_' + wk);
     raw[wk] = el ? parseFloat(el.value) || 0 : 0;
   }
@@ -1928,15 +2268,7 @@ function initPrefsPanel() {
     });
   }
 
-  // Bind weight sliders
-  for (const wk of PREFS_WEIGHT_KEYS) {
-    const el = document.getElementById('prefW_' + wk);
-    if (el) el.addEventListener('input', () => {
-      updateWeightTotal();
-      readBriefFromForm();
-      debouncedRescore();
-    });
-  }
+  // Weight sliders are built dynamically by buildWeightSliders()
 
   // Profile dropdown
   const profileSel = document.getElementById('prefsProfileSelect');
@@ -1945,6 +2277,7 @@ function initPrefsPanel() {
     if (!id) {
       resetBriefToDefaults();
       buildRoomTypeSliders();
+      buildWeightSliders();
       syncFormToBrief();
       rescoreAll();
       return;
@@ -1995,6 +2328,7 @@ function initPrefsPanel() {
     populatePrefsProfileDropdown();
     resetBriefToDefaults();
     buildRoomTypeSliders();
+    buildWeightSliders();
     syncFormToBrief();
     rescoreAll();
   });
@@ -2004,9 +2338,30 @@ function initPrefsPanel() {
   if (resetBtn) resetBtn.addEventListener('click', () => {
     resetBriefToDefaults();
     buildRoomTypeSliders();
+    buildWeightSliders();
     syncFormToBrief();
     rescoreAll();
     if (profileSel) profileSel.value = '';
+  });
+
+  // Reload Config button — re-fetch scoring_config.json and apply
+  const reloadBtn = document.getElementById('btnPrefsReloadConfig');
+  if (reloadBtn) reloadBtn.addEventListener('click', async () => {
+    try {
+      const resp = await fetch('scoring_config.json', { cache: 'no-store' });
+      if (!resp.ok) { alert('Failed to load scoring_config.json'); return; }
+      const cfg = await resp.json();
+      scoringConfigOverrides = cfg;
+      resetBriefToDefaults();
+      buildRoomTypeSliders();
+      buildWeightSliders();
+      syncFormToBrief();
+      rescoreAll();
+      if (profileSel) profileSel.value = '';
+      console.log('Scoring config reloaded from scoring_config.json');
+    } catch (e) {
+      alert('Error reloading config: ' + e.message);
+    }
   });
 
   // Auto-generate title button
