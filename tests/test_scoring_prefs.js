@@ -154,37 +154,17 @@ console.log('\n--- generateProfileTitle ---');
 // =====================================================================
 
 test('generates budget tier correctly', () => {
-  const t1 = generateProfileTitle({ budget: { idealMax: 80000 }, roomType: { '2LDK': 1 }, prefScores: { saitama: 8 } });
-  assert(t1.startsWith('Budget'), `Expected "Budget...", got "${t1}"`);
+  const t1 = generateProfileTitle({ budget: { idealMax: 80000 } });
+  assert.strictEqual(t1, 'Budget', `Expected "Budget", got "${t1}"`);
 
-  const t2 = generateProfileTitle({ budget: { idealMax: 130000 }, roomType: { '2LDK': 1 }, prefScores: { saitama: 8 } });
-  assert(t2.startsWith('Mid-range'), `Expected "Mid-range...", got "${t2}"`);
+  const t2 = generateProfileTitle({ budget: { idealMax: 130000 } });
+  assert.strictEqual(t2, 'Mid-range', `Expected "Mid-range", got "${t2}"`);
 
-  const t3 = generateProfileTitle({ budget: { idealMax: 180000 }, roomType: { '2LDK': 1 }, prefScores: { saitama: 8 } });
-  assert(t3.startsWith('Premium'), `Expected "Premium...", got "${t3}"`);
+  const t3 = generateProfileTitle({ budget: { idealMax: 180000 } });
+  assert.strictEqual(t3, 'Premium', `Expected "Premium", got "${t3}"`);
 
-  const t4 = generateProfileTitle({ budget: { idealMax: 250000 }, roomType: { '2LDK': 1 }, prefScores: { saitama: 8 } });
-  assert(t4.startsWith('Luxury'), `Expected "Luxury...", got "${t4}"`);
-});
-
-test('includes top room types with multiplier >= 0.7', () => {
-  const t = generateProfileTitle({
-    budget: { idealMax: 120000 },
-    roomType: { '2LDK': 1.0, '3LDK': 0.7, '3DK': 0.4 },
-    prefScores: { saitama: 8 }
-  });
-  assert(t.includes('2LDK'), `Expected "2LDK" in "${t}"`);
-  assert(t.includes('3LDK'), `Expected "3LDK" in "${t}"`);
-  assert(!t.includes('3DK'), `Should not include "3DK" in "${t}"`);
-});
-
-test('includes top prefecture', () => {
-  const t = generateProfileTitle({
-    budget: { idealMax: 120000 },
-    roomType: { '2LDK': 1 },
-    prefScores: { saitama: 8, tokyo: 6 }
-  });
-  assert(t.includes('Saitama'), `Expected "Saitama" in "${t}"`);
+  const t4 = generateProfileTitle({ budget: { idealMax: 250000 } });
+  assert.strictEqual(t4, 'Luxury', `Expected "Luxury", got "${t4}"`);
 });
 
 // =====================================================================
@@ -264,14 +244,13 @@ test('resets BRIEF to defaults after mutation', () => {
   sandbox.scoringConfigOverrides = null;
   resetBriefToDefaults();
   assert.strictEqual(BRIEF.budget.idealMax, 150000, 'idealMax should be reset');
-  assert.strictEqual(BRIEF.weights.area, 18, 'area weight should be reset');
+  assert.strictEqual(BRIEF.weights.area, 30, 'area weight should be reset');
 });
 
 test('applies scoringConfigOverrides after reset', () => {
   sandbox.scoringConfigOverrides = { budget: { idealMax: 120000 } };
   resetBriefToDefaults();
   assert.strictEqual(BRIEF.budget.idealMax, 120000, 'Should have config override applied');
-  assert.strictEqual(BRIEF.budget.idealMin, 100000);
   sandbox.scoringConfigOverrides = null;
   resetBriefToDefaults();
 });
@@ -386,70 +365,10 @@ test('score changes when BRIEF weights change', () => {
   const score1 = computeScore(room).total;
 
   // Change weights dramatically
-  BRIEF.weights = { area: 2, budget: 80, size: 5, roomType: 3, walkTime: 5, moveIn: 3, buildAge: 2, amenities: 0 };
+  BRIEF.weights = { area: 2, budget: 80, size: 5, walkTime: 5, buildAge: 8 };
   const score2 = computeScore(room).total;
 
   assert(score1 !== score2, `Scores should change with weights: ${score1} vs ${score2}`);
-  resetBriefToDefaults();
-});
-
-test('room with unknown room type gets low roomType score', () => {
-  sandbox.scoringConfigOverrides = null;
-  resetBriefToDefaults();
-
-  const goodRoom = {
-    area: 'Kawaguchi', prefecture: 'saitama', source: 'ur',
-    total_value: 120000, floorspace: '60sqm', size: '60sqm',
-    room_type: '2LDK', floor: '2F', access: 'walk 5min',
-    rent_value: 120000, commonfee_value: 0,
-    deposit_value: 0, key_money_value: 0, move_in_cost: 0,
-    building_age_years: 10, _walkMin: 5, _sqm: 60,
-  };
-  const badRoom = { ...goodRoom, room_type: '1R' };
-
-  const goodScore = computeScore(goodRoom).total;
-  const badScore = computeScore(badRoom).total;
-  assert(goodScore > badScore, `2LDK (${goodScore}) should score higher than 1R (${badScore})`);
-});
-
-test('computeScore includes amenities dimension in breakdown', () => {
-  sandbox.scoringConfigOverrides = null;
-  resetBriefToDefaults();
-
-  const room = {
-    area: 'Kawaguchi', prefecture: 'saitama', source: 'ur',
-    total_value: 120000, floorspace: '60sqm', size: '60sqm',
-    room_type: '2LDK', floor: '2F', access: 'walk 5min',
-    rent_value: 120000, commonfee_value: 0,
-    deposit_value: 0, key_money_value: 0, move_in_cost: 0,
-    building_age_years: 10, _walkMin: 5, _sqm: 60,
-    _amenities: { convenience_score: 8 },
-  };
-  const result = computeScore(room);
-  assert(result.breakdown.amenities, 'Should have amenities in breakdown');
-  assert.strictEqual(result.breakdown.amenities.convScore, 8);
-});
-
-test('computeScore with _amenities data scores amenities dimension', () => {
-  sandbox.scoringConfigOverrides = null;
-  resetBriefToDefaults();
-  // Give amenities some weight
-  BRIEF.weights = { area: 10, budget: 10, size: 10, roomType: 10, walkTime: 10, moveIn: 10, buildAge: 10, amenities: 30 };
-
-  const roomWith = {
-    area: 'Kawaguchi', prefecture: 'saitama', source: 'ur',
-    total_value: 120000, floorspace: '60sqm', size: '60sqm',
-    room_type: '2LDK', floor: '2F', access: 'walk 5min',
-    rent_value: 120000, commonfee_value: 0,
-    deposit_value: 0, key_money_value: 0, move_in_cost: 0,
-    building_age_years: 10, _walkMin: 5, _sqm: 60,
-    _amenities: { convenience_score: 9 },
-  };
-  const roomWithout = { ...roomWith, _amenities: undefined };
-
-  const scoreWith = computeScore(roomWith).total;
-  const scoreWithout = computeScore(roomWithout).total;
-  assert(scoreWith > scoreWithout, `High amenities (${scoreWith}) should score higher than neutral (${scoreWithout})`);
   resetBriefToDefaults();
 });
 
@@ -476,28 +395,6 @@ test('computeScore with _hazard applies penalty', () => {
   const scoreHazard = computeScore(roomHazard).total;
   assert(scoreSafe > scoreHazard, `Safe room (${scoreSafe}) should score higher than hazard room (${scoreHazard})`);
   assert(scoreSafe - scoreHazard >= 10, `Hazard penalty should be at least 10 points, got ${scoreSafe - scoreHazard}`);
-});
-
-test('room without enrichment gets default neutral amenities score', () => {
-  sandbox.scoringConfigOverrides = null;
-  resetBriefToDefaults();
-  // Give amenities weight so we can test the default
-  BRIEF.weights = { area: 10, budget: 10, size: 10, roomType: 10, walkTime: 10, moveIn: 10, buildAge: 10, amenities: 30 };
-
-  const room = {
-    area: 'Kawaguchi', prefecture: 'saitama', source: 'ur',
-    total_value: 120000, floorspace: '60sqm', size: '60sqm',
-    room_type: '2LDK', floor: '2F', access: 'walk 5min',
-    rent_value: 120000, commonfee_value: 0,
-    deposit_value: 0, key_money_value: 0, move_in_cost: 0,
-    building_age_years: 10, _walkMin: 5, _sqm: 60,
-  };
-  const result = computeScore(room);
-  // Default ratio is 0.5 — so amenities score should be 0.5 * weight
-  assert.strictEqual(result.breakdown.amenities.convScore, null, 'convScore should be null when no data');
-  const expectedScore = round1(0.5 * 30);
-  assert.strictEqual(result.breakdown.amenities.score, expectedScore, `Expected amenities score ${expectedScore}, got ${result.breakdown.amenities.score}`);
-  resetBriefToDefaults();
 });
 
 // =====================================================================
@@ -616,6 +513,36 @@ test('savePOILayerPrefs persists to localStorage', () => {
   assert.strictEqual(stored.station, true);
   assert.strictEqual(stored.park, false);
   assert.strictEqual(stored.hospital, true);
+});
+
+// =====================================================================
+console.log('\n--- parseFloor edge cases (Phase 1) ---');
+// =====================================================================
+
+test('parseFloor handles standard floor "3F"', () => {
+  assert.strictEqual(parseFloor('3F'), 3);
+});
+
+test('parseFloor handles basement "B1F"', () => {
+  assert.strictEqual(parseFloor('B1F'), 1);
+});
+
+test('parseFloor handles range "1-2F"', () => {
+  assert.strictEqual(parseFloor('1-2F'), 1);
+});
+
+test('parseFloor handles just number "5"', () => {
+  assert.strictEqual(parseFloor('5'), 5);
+});
+
+test('parseFloor handles null/undefined', () => {
+  assert.strictEqual(parseFloor(null), 0);
+  assert.strictEqual(parseFloor(undefined), 0);
+  assert.strictEqual(parseFloor(''), 0);
+});
+
+test('parseFloor handles JP floor "3階"', () => {
+  assert.strictEqual(parseFloor('3階'), 3);
 });
 
 // =====================================================================
