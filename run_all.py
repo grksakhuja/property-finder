@@ -26,6 +26,7 @@ SCRAPERS = [
     {"name": "GaijinPot", "cmd": [sys.executable, "gaijinpot_search.py"]},
     {"name": "Wagaya", "cmd": [sys.executable, "wagaya_search.py"]},
     {"name": "VillageHouse", "cmd": [sys.executable, "villagehouse_search.py"]},
+    {"name": "Canary", "cmd": [sys.executable, "canary_search.py"]},
     {"name": "POIs", "cmd": [sys.executable, "build_pois.py"]},
 ]
 
@@ -97,6 +98,7 @@ def main():
     args = parser.parse_args()
 
     total_start = time.monotonic()
+
     print(f"Running {len(SCRAPERS)} scrapers {'sequentially' if args.sequential else 'in parallel'}...")
 
     results = []
