@@ -208,7 +208,7 @@ class CanaryScraper(BaseScraper):
 
         # Detail URL
         room_id = room.get("id", "")
-        detail_url = f"{BASE_URL}/chintai/room/{room_id}" if room_id else ""
+        detail_url = f"{BASE_URL}/chintai/rooms/{room_id}/" if room_id else ""
 
         return StandardRoom(
             floor=floor,
@@ -317,7 +317,7 @@ class CanaryScraper(BaseScraper):
             layout=layout,
             size=f"{square}m²" if square else "",
             size_display=f"{square}m²" if square else "",
-            detail_url=f"{BASE_URL}/chintai/room/{room_id}" if room_id else "",
+            detail_url=f"{BASE_URL}/chintai/rooms/{room_id}/" if room_id else "",
         )
 
     @staticmethod
