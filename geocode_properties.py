@@ -159,7 +159,12 @@ def normalize_address_for_geocoding(raw_address: str, source: str,
 
 
 def extract_addresses_from_results() -> dict[str, dict]:
-    """Read all results*.json and extract unique (raw_address → metadata) pairs."""
+    """Read all results*.json and extract unique (raw_address → metadata) pairs.
+
+    Supports both formats:
+    - Flat (BaseScraper): { source, rooms: [{address, area, prefecture, ...}] }
+    - Legacy: { source, areas: { "AreaName": [{address, ...}] } }
+    """
     import glob
     addresses = {}  # raw_address → {"source": ..., "prefecture": ...}
 
@@ -179,6 +184,18 @@ def extract_addresses_from_results() -> dict[str, dict]:
         if not source:
             continue
 
+        # Flat format: { source, rooms: [...] }
+        rooms = data.get("rooms", [])
+        if not isinstance(rooms, list):
+            rooms = []
+        for room in rooms:
+            raw = room.get("address", "")
+            if not raw or raw in addresses:
+                continue
+            pref = room.get("prefecture", "") or _guess_prefecture(room.get("area", ""))
+            addresses[raw] = {"source": source, "prefecture": pref}
+
+        # Legacy format: { source, areas: { "AreaName": [...] } }
         for area_name, properties in data.get("areas", {}).items():
             if not isinstance(properties, list):
                 continue
@@ -186,7 +203,6 @@ def extract_addresses_from_results() -> dict[str, dict]:
                 raw = prop.get("address", "")
                 if not raw or raw in addresses:
                     continue
-                # Determine prefecture from area name (best effort)
                 pref = _guess_prefecture(area_name)
                 addresses[raw] = {"source": source, "prefecture": pref}
 
