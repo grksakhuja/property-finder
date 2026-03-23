@@ -211,7 +211,7 @@ function computeScore(room) {
 
   // 1. Area/Commute (25pts)
   const commData = BRIEF.commute.known[normalizeArea(room.area)] || BRIEF.commute.prefectureDefault[room.prefecture] || { min: 55, transfers: 1 };
-  const commuteMin = (room._commute && room._commute.estimated_door_to_door != null) ? room._commute.estimated_door_to_door : commData.min;
+  const commuteMin = commData.min;
   let commuteRatio;
   if (commuteMin <= 20) commuteRatio = 1.0;
   else if (commuteMin <= 30) commuteRatio = 1.0 - (commuteMin - 20) * 0.015;
@@ -271,7 +271,6 @@ function computeScore(room) {
 
   // 5. Walk Time (10pts)
   let walkMin = room._walkMin != null ? room._walkMin : parseWalkTime(room);
-  if (walkMin < 0 && room._walkMinClaimed != null && room._walkMinClaimed > 0) walkMin = room._walkMinClaimed;
   let walkRatio = 0.3; // unknown default
   if (walkMin > 0) {
     if (walkMin <= BRIEF.walk.great) walkRatio = 1.0;
@@ -423,59 +422,50 @@ function toggleSort(key) {
 // Data loading — multi-source
 // =====================================================================
 let allRooms = [];
-let dataFromPipeline = false;  // cosmetic: tracks data source for subtitle
-let neighbourhoodProfiles = {};  // loaded from neighbourhood_profiles.json
+let amenitiesData = {};  // loaded from amenities_cache.json (keyed by listing ID)
+let mapBoundsFilter = null; // {south, west, north, east} when "Search this area" is active
 
-const SOURCE_FIELDS = {
-  ur:           { layout: 'room_type', size: 'floorspace', url: 'url', fee: 'commonfee', feeVal: 'commonfee_value', deposit: 'shikikin', roomName: 'room_name', hasAge: false, hasMoveIn: false },
-  suumo:        { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true },
-  rej:          { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
-  best_estate:  { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
-  gaijinpot:    { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
-  wagaya:       { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: true, hasMoveIn: true, fallbackFee: true },
-  villagehouse: { layout: 'layout', size: 'size', url: 'detail_url', fee: 'admin_fee', feeVal: 'admin_fee_value', deposit: 'deposit', roomName: null, hasAge: false, hasMoveIn: true, fallbackFee: true },
-};
-
-function loadSourceData(data, source) {
-  const f = SOURCE_FIELDS[source];
-  const rooms = [];
-  for (const [areaName, properties] of Object.entries(data.areas)) {
-    for (const prop of properties) {
-      for (const room of prop.rooms) {
-        const sizeVal = room[f.size];
-        const depositVal = f.hasMoveIn ? (room.deposit_value || 0) : 0;
-        const keyVal = f.hasMoveIn ? (room.key_money_value || 0) : 0;
-        const moveIn = f.hasMoveIn ? (room.rent_value || 0) + depositVal + keyVal : 0;
-        rooms.push({
-          source,
-          area: areaName,
-          prefecture: getPrefecture(areaName),
-          property: prop.name,
-          address: prop.address || '',
-          access: prop.access,
-          room_name: f.roomName ? (room[f.roomName] || '') : '',
-          room_type: room[f.layout],
-          floorspace: sizeVal,
-          size: sizeVal,
-          floor: room.floor,
-          rent: room.rent,
-          rent_value: room.rent_value,
-          commonfee: f.fallbackFee ? (room[f.fee] || '') : room[f.fee],
-          commonfee_value: f.fallbackFee ? (room[f.feeVal] || 0) : room[f.feeVal],
-          total_value: room.total_value,
-          shikikin: f.fallbackFee ? (room[f.deposit] || '') : room[f.deposit],
-          deposit_value: depositVal,
-          key_money_value: keyVal,
-          move_in_cost: moveIn,
-          building_age_years: f.hasAge ? (prop.building_age_years != null ? prop.building_age_years : -1) : -1,
-          building_age: f.hasAge ? (prop.building_age || '') : '',
-          url: room[f.url],
-          score: 0,
-        });
-      }
-    }
-  }
-  return rooms;
+function loadFlatRooms(data) {
+  /**
+   * Load rooms from the new flat JSON format.
+   * Each results_*.json now has { source, rooms: [...flat room dicts...] }.
+   */
+  const source = data.source || '';
+  return (data.rooms || []).map(r => {
+    const sizeDisplay = r.size_display || (r.size_sqm ? r.size_sqm + 'm²' : '');
+    const rentVal = r.rent || 0;
+    const adminFee = r.admin_fee || 0;
+    const depositVal = r.deposit || 0;
+    const keyMoneyVal = r.key_money || 0;
+    const moveIn = rentVal + depositVal + keyMoneyVal;
+    return {
+      source: r.source || source,
+      area: r.area || '',
+      prefecture: r.prefecture || getPrefecture(r.area || ''),
+      property: r.building || '',
+      address: r.address || '',
+      access: r.access || '',
+      room_name: '',
+      room_type: r.room_type || '',
+      floorspace: sizeDisplay,
+      size: sizeDisplay,
+      floor: r.floor || '',
+      rent: rentVal > 0 ? '¥' + rentVal.toLocaleString() : '-',
+      rent_value: rentVal,
+      commonfee: adminFee > 0 ? '¥' + adminFee.toLocaleString() : '-',
+      commonfee_value: adminFee,
+      total_value: r.total_monthly || 0,
+      shikikin: depositVal > 0 ? '¥' + depositVal.toLocaleString() : '-',
+      deposit_value: depositVal,
+      key_money_value: keyMoneyVal,
+      move_in_cost: moveIn,
+      building_age_years: r.building_age_years != null ? r.building_age_years : -1,
+      building_age: r.building_age_years != null && r.building_age_years >= 0 ? r.building_age_years + 'y' : '',
+      url: r.url || '',
+      _walkMinFromSource: r.walk_minutes,
+      score: 0,
+    };
+  });
 }
 
 // =====================================================================
@@ -488,22 +478,21 @@ function precomputeTranslations() {
     r._accessEn = englishSources.includes(r.source) ? accessFirst : translateAccess(accessFirst);
     r._floorEn = englishSources.includes(r.source) ? (r.floor || '') : translateFloor(r.floor);
     r._favKey = getFavKey(r);
-    r._walkMin = parseWalkTime(r);
+    r._walkMin = (r._walkMinFromSource != null && r._walkMinFromSource > 0) ? r._walkMinFromSource : parseWalkTime(r);
     r._sqm = parseSize(r.floorspace || r.size);
 
-    // Pre-compute deposit display
+    // Pre-compute deposit display (abbreviated)
     if (r.source === 'ur') {
       r._depositDisplay = translateDeposit(r.shikikin);
     } else {
-      const parts = [];
-      if (r.shikikin) parts.push('D: ' + r.shikikin);
-      if (r.key_money_value > 0) parts.push('K: \u00a5' + r.key_money_value.toLocaleString());
-      if (parts.length === 0 && r.deposit_value === 0 && r.key_money_value === 0) {
-        r._depositDisplay = 'None';
-      } else if (parts.length === 0) {
-        r._depositDisplay = r.shikikin || '-';
+      if (r.deposit_value === 0 && r.key_money_value === 0) {
+        r._depositDisplay = '\u2714 None';
+        r._depositNone = true;
       } else {
-        r._depositDisplay = parts.join(' / ');
+        const parts = [];
+        if (r.deposit_value > 0) parts.push('Dep \u00a5' + (r.deposit_value >= 1000 ? (r.deposit_value/1000).toFixed(0) + 'K' : r.deposit_value.toLocaleString()));
+        if (r.key_money_value > 0) parts.push('Key \u00a5' + (r.key_money_value >= 1000 ? (r.key_money_value/1000).toFixed(0) + 'K' : r.key_money_value.toLocaleString()));
+        r._depositDisplay = parts.length > 0 ? parts.join(' / ') : (r.shikikin || '-');
       }
     }
 
@@ -539,59 +528,9 @@ function populateAreaDropdown() {
   }
 }
 
-function mapToViewerFormat(listing) {
-  return {
-    source: listing.source,
-    area: listing.area_name,
-    prefecture: listing.prefecture,
-    property: listing.building_name,
-    address: listing.address,
-    access: listing.access,
-    room_name: listing.room_name || '',
-    room_type: listing.room_type,
-    layout: listing.room_type,
-    floorspace: listing.size_sqm != null ? listing.size_sqm + '㎡' : '',
-    size: listing.size_sqm != null ? listing.size_sqm + '㎡' : '',
-    floor: listing.floor,
-    rent: listing.rent_value ? '¥' + listing.rent_value.toLocaleString() : '-',
-    rent_value: listing.rent_value,
-    commonfee: listing.admin_fee_value ? '¥' + listing.admin_fee_value.toLocaleString() : '-',
-    commonfee_value: listing.admin_fee_value || 0,
-    total_value: listing.total_monthly,
-    shikikin: listing.deposit_value ? '¥' + listing.deposit_value.toLocaleString() : '-',
-    deposit_value: listing.deposit_value || 0,
-    key_money_value: listing.key_money_value || 0,
-    move_in_cost: listing.move_in_cost || 0,
-    building_age_years: listing.building_age_years != null ? listing.building_age_years : -1,
-    building_age: listing.building_age_years != null ? listing.building_age_years + '年' : '',
-    url: listing.url,
-    detail_url: listing.url,
-    _walkMinClaimed: listing.walk_minutes_claimed,
-    _pipelineScores: listing.scores,
-    _pipelineGrade: listing.grade,
-    _commute: listing.commute,
-    _amenities: listing.amenities,
-    _hazard: listing.hazard,
-    _geocode: listing.geocode,
-    score: 0,
-  };
-}
-
-async function loadPipelineData() {
+async function loadAmenitiesData() {
   try {
-    const resp = await fetch('data/scored_listings.json');
-    if (!resp.ok) return null;
-    const listings = await resp.json();
-    if (!Array.isArray(listings) || listings.length === 0) return null;
-    return listings;
-  } catch (e) {
-    return null;
-  }
-}
-
-async function loadNeighbourhoodProfiles() {
-  try {
-    const resp = await fetch('data/neighbourhood_profiles.json');
+    const resp = await fetch('amenities_cache.json');
     if (!resp.ok) return {};
     return await resp.json();
   } catch (e) {
@@ -600,52 +539,41 @@ async function loadNeighbourhoodProfiles() {
 }
 
 async function loadData() {
-  // Try pipeline data first
-  const pipelineListings = await loadPipelineData();
+  const sources = [
+    { file: 'results.json',              label: 'UR' },
+    { file: 'results_suumo.json',        label: 'SUUMO' },
+    { file: 'results_realestate_jp.json', label: 'REJ' },
+    { file: 'results_best_estate.json',  label: 'BestEstate' },
+    { file: 'results_gaijinpot.json',    label: 'GaijinPot' },
+    { file: 'results_wagaya.json',       label: 'Wagaya' },
+    { file: 'results_villagehouse.json', label: 'VillageHouse' },
+    { file: 'results_canary.json',       label: 'Canary' },
+  ];
+
   const loaded = [];
+  allRooms = [];
 
-  if (pipelineListings) {
-    dataFromPipeline = true;
-    allRooms = pipelineListings.map(mapToViewerFormat);
-    loaded.push(`Pipeline: ${allRooms.length} listings`);
-    console.log('Loaded data from scored_listings.json (enrichment data available)');
-  } else {
-    // Fallback: load individual results files
-    dataFromPipeline = false;
-    const sources = [
-      { file: 'results.json',              source: 'ur',           label: 'UR' },
-      { file: 'results_suumo.json',        source: 'suumo',        label: 'SUUMO' },
-      { file: 'results_realestate_jp.json', source: 'rej',          label: 'REJ' },
-      { file: 'results_best_estate.json',  source: 'best_estate',  label: 'BestEstate' },
-      { file: 'results_gaijinpot.json',    source: 'gaijinpot',    label: 'GaijinPot' },
-      { file: 'results_wagaya.json',       source: 'wagaya',       label: 'Wagaya' },
-      { file: 'results_villagehouse.json', source: 'villagehouse',  label: 'VillageHouse' },
-    ];
-
-    allRooms = [];
-    const results = await Promise.all(sources.map(async (src) => {
-      try {
-        const resp = await fetch(src.file);
-        if (!resp.ok) return null;
-        const data = await resp.json();
-        return { src, data };
-      } catch (e) {
-        return null;
-      }
-    }));
-
-    for (const result of results) {
-      if (!result) continue;
-      const rooms = loadSourceData(result.data, result.src.source);
-      allRooms.push(...rooms);
-      loaded.push(`${result.src.label}: ${rooms.length}`);
+  const results = await Promise.all(sources.map(async (src) => {
+    try {
+      const resp = await fetch(src.file);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return { src, data };
+    } catch (e) {
+      return null;
     }
-    console.log('Loaded data from individual results files (fallback mode)');
+  }));
+
+  for (const result of results) {
+    if (!result) continue;
+    const rooms = loadFlatRooms(result.data);
+    allRooms.push(...rooms);
+    loaded.push(`${result.src.label}: ${rooms.length}`);
   }
 
   if (allRooms.length === 0) {
     document.getElementById('subtitle').textContent =
-      'No data found. Run the scrapers first: python3 ur_rental_search.py / suumo_search.py / realestate_jp_search.py';
+      'No data found. Run the scrapers first: python run_all.py';
     return;
   }
 
@@ -656,20 +584,24 @@ async function loadData() {
       const cfg = await cfgResp.json();
       scoringConfigOverrides = cfg;
       deepMerge(BRIEF, cfg);
-      console.log('Scoring config loaded from scoring_config.json');
-    } else {
-      console.log('No scoring_config.json found — using defaults');
     }
   } catch (e) {
-    if (e instanceof SyntaxError) {
-      console.warn('scoring_config.json is malformed — using defaults. Error:', e.message);
-    } else {
-      console.log('Could not load scoring_config.json — using defaults:', e.message);
-    }
+    console.log('Could not load scoring_config.json — using defaults:', e.message);
   }
 
-  // Load neighbourhood profiles (non-blocking)
-  neighbourhoodProfiles = await loadNeighbourhoodProfiles();
+  // Load amenities sidecar (optional)
+  amenitiesData = await loadAmenitiesData();
+
+  // Join amenities by listing ID
+  for (const r of allRooms) {
+    const listingId = [r.source, normalizeArea(r.area), r.property, r.room_type, r.floor]
+      .map(s => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''))
+      .join('__');
+    const amenity = amenitiesData[listingId];
+    if (amenity) {
+      r._amenities = amenity;
+    }
+  }
 
   precomputeTranslations();
   allRooms.forEach((r, i) => {
@@ -768,6 +700,12 @@ function getFiltered() {
     if (minGrade && r.score < minGrade) return false;
     if (search && !r._searchText.includes(search)) return false;
     if (showFavOnly && !favourites.has(r._favKey)) return false;
+    if (mapBoundsFilter && geocodedData) {
+      const geo = geocodedData[r.address];
+      if (!geo) return false;
+      if (geo.lat < mapBoundsFilter.south || geo.lat > mapBoundsFilter.north ||
+          geo.lng < mapBoundsFilter.west || geo.lng > mapBoundsFilter.east) return false;
+    }
     return true;
   });
 }
@@ -786,7 +724,7 @@ function getSorted(rooms) {
 // =====================================================================
 // Render
 // =====================================================================
-const SOURCE_LABELS = { ur: 'UR', suumo: 'SUUMO', rej: 'REJ', best_estate: 'BestEstate', gaijinpot: 'GaijinPot', wagaya: 'Wagaya', villagehouse: 'VillageH' };
+const SOURCE_LABELS = { ur: 'UR', suumo: 'SUUMO', rej: 'REJ', best_estate: 'BestEstate', gaijinpot: 'GaijinPot', wagaya: 'Wagaya', villagehouse: 'VillageH', canary: 'Canary' };
 
 function render(paginationOnly = false) {
   const filtered = getFiltered();
@@ -802,6 +740,7 @@ function render(paginationOnly = false) {
 
   // Stats
   const statsEl = document.getElementById('stats');
+  const headerStatsEl = document.getElementById('headerStats');
   const withRent = filtered.filter(r => r.total_value > 0);
   const avgRent = withRent.length ? Math.round(withRent.reduce((s, r) => s + r.total_value, 0) / withRent.length) : 0;
   const avgSize = withRent.length ? Math.round(withRent.reduce((s, r) => s + r._sqm, 0) / withRent.length) : 0;
@@ -811,9 +750,21 @@ function render(paginationOnly = false) {
   const srcCounts = {};
   filtered.forEach(r => { srcCounts[r.source] = (srcCounts[r.source] || 0) + 1; });
   const srcSummary = Object.entries(srcCounts).map(([k,v]) => `${SOURCE_LABELS[k]||k}: ${v}`).join(' / ');
+  const numSources = Object.keys(srcCounts).length;
 
   const favCount = filtered.filter(r => favourites.has(r._favKey)).length;
 
+  // Compact header stats
+  if (headerStatsEl) {
+    headerStatsEl.innerHTML = `
+      <span><span class="hs-value">${sorted.length}</span> rooms</span>
+      <span>Avg <span class="hs-value">&yen;${(avgRent/1000).toFixed(0)}K</span></span>
+      <span>Cheapest <span class="hs-value">&yen;${(minRent/1000).toFixed(0)}K</span></span>
+      <span><span class="hs-value">${numSources}</span> sources</span>
+    `;
+  }
+
+  // Detail stats cards
   statsEl.innerHTML = `
     <div class="stat"><div class="stat-value">${sorted.length}</div><div class="stat-label">Rooms</div></div>
     <div class="stat clickable" id="statCheapest"><div class="stat-value">&yen;${minRent.toLocaleString()}</div><div class="stat-label">Cheapest &rarr;</div></div>
@@ -852,10 +803,16 @@ function render(paginationOnly = false) {
     const isFav = favourites.has(r._favKey);
 
     const rentDisplay = r.rent_value > 0 ? `<span class="money">${escHtml(r.rent)}</span>` : '<span class="rent-tbd">Inquiry</span>';
+    // Total rent tint: only flag out-of-range values
+    let totalTintClass = '';
+    if (r.total_value > 0 && r.total_value > BRIEF.budget.hardMax) totalTintClass = ' rent-over-hard';
+    else if (r.total_value > 0 && r.total_value > BRIEF.budget.idealMax) totalTintClass = ' rent-over-ideal';
     const totalDisplay = r.total_value > 0 ? `<span class="money">&yen;${r.total_value.toLocaleString()}</span>` : '<span class="rent-tbd">TBD</span>';
     const yenDisplay = yenPerSqm ? `<span class="money">&yen;${yenPerSqm.toLocaleString()}</span>` : '-';
     const validUrl = safeUrl(r.url);
-    const linkDisplay = validUrl ? `<a class="view-link" href="${escHtml(validUrl)}" target="_blank" rel="noopener noreferrer">View</a>` : '-';
+    const hasGeo = geocodedData && geocodedData[r.address];
+    const mapPin = hasGeo ? '<span class="map-pin-icon" title="On map">\u{1F4CD}</span>' : '';
+    const linkDisplay = validUrl ? `${mapPin}<a class="view-link" href="${escHtml(validUrl)}" target="_blank" rel="noopener noreferrer">View</a>` : (mapPin || '-');
 
     let moveInDisplay = '-';
     if (r.source !== 'ur' && r.move_in_cost > 0) {
@@ -869,37 +826,35 @@ function render(paginationOnly = false) {
       ageDisplay = escHtml(r.building_age);
     }
 
-    // Pipeline display enhancements
-    const commuteDisplay = r._commute && r._commute.estimated_door_to_door
-      ? `<span class="commute-badge">${r._commute.estimated_door_to_door}min</span>`
-      : '';
     const amenityDisplay = r._amenities && r._amenities.konbini_500m > 0
       ? `<span class="amenity-badge" title="Konbini within 500m">${r._amenities.konbini_500m}</span>`
       : '';
-    const hazardWarn = r._hazard && r._hazard.data_available &&
-      (r._hazard.flood_risk === 'high' || r._hazard.liquefaction_risk === 'high')
-      ? '<span class="hazard-warn" title="High hazard risk">!</span>'
-      : '';
-    const completeness = r._pipelineScores
-      ? `<span class="completeness">${r._pipelineScores.scored_dimensions}/${r._pipelineScores.total_dimensions}</span>`
-      : '';
 
-    return `<tr class="${isFav ? 'fav-row' : ''}">
+    // Size color class
+    const sqm = r._sqm;
+    let sizeClass = 'size-cell';
+    if (sqm > 0) {
+      if (sqm >= BRIEF.size.idealMin && sqm <= BRIEF.size.idealMax) sizeClass += ' size-ideal';
+      else if (sqm >= BRIEF.size.okMin && sqm <= BRIEF.size.okMax) sizeClass += ' size-ok';
+      else sizeClass += ' size-out';
+    }
+
+    return `<tr class="${isFav ? 'fav-row' : ''}" data-address="${escHtml(r.address || '')}">
       <td><span class="fav-star ${isFav ? 'starred' : ''}" data-favkey="${escHtml(r._favKey)}">${isFav ? '\u2605' : '\u2606'}</span></td>
-      <td class="score-cell" data-room-idx="${r._idx}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span>${hazardWarn}${completeness}<div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
-      <td><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || escHtml(r.source)}</span></td>
-      <td><span class="area-tag ${prefClass}">${escHtml(r.area)}</span></td>
-      <td><div class="prop-name">${escHtml(r.property)}</div><div class="prop-access" title="${escHtml(r.access || '')}">${escHtml(r._accessEn)}${commuteDisplay ? ' ' + commuteDisplay : ''}${amenityDisplay ? ' ' + amenityDisplay : ''}</div></td>
+      <td class="score-cell" data-room-idx="${r._idx}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
+      <td class="col-secondary"><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || escHtml(r.source)}</span></td>
+      <td><span class="area-tag area-tag-clickable ${prefClass}" data-filter-area="${escHtml(r.area)}">${escHtml(r.area)}</span></td>
+      <td><div class="prop-name">${escHtml(r.property)}</div><div class="prop-access" title="${escHtml(r.access || '')}">${escHtml(r._accessEn)}${amenityDisplay ? ' ' + amenityDisplay : ''}</div></td>
       <td>${escHtml(roomType)}</td>
-      <td class="size-cell">${escHtml(sizeDisplay)}</td>
-      <td>${escHtml(r._floorEn)}</td>
+      <td class="${sizeClass}">${escHtml(sizeDisplay)}</td>
+      <td class="col-secondary">${escHtml(r._floorEn)}</td>
       <td class="walk-cell ${r._walkMin > 0 ? (r._walkMin <= 5 ? 'walk-great' : r._walkMin <= 10 ? 'walk-good' : r._walkMin <= 15 ? 'walk-ok' : 'walk-far') : ''}">${r._walkMin > 0 ? r._walkMin + ' min' : '-'}</td>
       <td>${rentDisplay}</td>
-      <td>${totalDisplay}</td>
-      <td>${yenDisplay}</td>
-      <td>${moveInDisplay}</td>
+      <td class="total-cell${totalTintClass}">${totalDisplay}</td>
+      <td class="col-secondary">${yenDisplay}</td>
+      <td class="col-secondary">${moveInDisplay}</td>
       <td>${ageDisplay}</td>
-      <td><div>${escHtml(r._depositDisplay)}</div></td>
+      <td class="col-secondary"><div class="${r._depositNone ? 'deposit-none' : ''}">${escHtml(r._depositDisplay)}</div></td>
       <td>${linkDisplay}</td>
     </tr>`;
   }).join('');
@@ -924,6 +879,9 @@ function render(paginationOnly = false) {
     syncPropertyMarkersToFilters(filtered);
     updateMarkerColours(filtered);
   }
+
+  // Apply column visibility after table body is rendered
+  if (typeof applyColVisibility === 'function') applyColVisibility();
 }
 
 // =====================================================================
@@ -1002,7 +960,7 @@ function showBreakdown(idx) {
 
   const amenitiesDetail = b.amenities.convScore != null ? `Score: ${b.amenities.convScore}/10` : 'No data (neutral)';
   const dims = [
-    { key: 'area', label: 'Area', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}${r._commute && r._commute.estimated_door_to_door != null ? ' (enriched)' : ''}` },
+    { key: 'area', label: 'Area', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}` },
     { key: 'budget', label: 'Budget', detail: b.budget.rent > 0 ? `¥${b.budget.rent.toLocaleString()}/mo` : 'Unknown' },
     { key: 'size', label: 'Size', detail: b.size.sqm > 0 ? `${b.size.sqm}㎡` : 'Unknown' },
     { key: 'roomType', label: 'Type', detail: b.roomType.type || 'Unknown' },
@@ -1070,13 +1028,10 @@ const PROFILE_DIMS = [
 ];
 
 function showNeighbourhoodProfile(areaName) {
-  // Try exact match, then normalizeArea match against profile keys
-  let profile = neighbourhoodProfiles[areaName];
-  if (!profile) {
-    const norm = normalizeArea(areaName);
-    const match = Object.keys(neighbourhoodProfiles).find(k => normalizeArea(k) === norm);
-    if (match) profile = neighbourhoodProfiles[match];
-  }
+  // Neighbourhood profiles are not currently available
+  return;
+  /* eslint-disable no-unreachable */
+  const profile = null;
   if (!profile) return;
 
   document.getElementById('profileTitle').textContent = areaName;
@@ -1152,6 +1107,7 @@ function debounce(fn, ms) {
 
 const debouncedRender = debounce(() => {
   currentPage = 0;
+  syncQuickFilterChips();
   render();
   pushHashState();
 }, 300);
@@ -1160,20 +1116,71 @@ const debouncedRender = debounce(() => {
 // Event bindings
 // =====================================================================
 
-// Table body — event delegation for favourites and score breakdowns
+// Table body — event delegation for favourites, score breakdowns, row clicks, area tags
 document.getElementById('tableBody').addEventListener('click', (e) => {
   const star = e.target.closest('.fav-star');
   if (star) { toggleFavourite(star.dataset.favkey); return; }
   const scoreCell = e.target.closest('.score-cell');
   if (scoreCell) { showBreakdown(parseInt(scoreCell.dataset.roomIdx)); return; }
+  const viewLink = e.target.closest('.view-link');
+  if (viewLink) return; // let link navigate normally
+  // Clickable area tag → filter + zoom
+  const areaTag = e.target.closest('.area-tag-clickable');
+  if (areaTag) { filterToArea(areaTag.dataset.filterArea); return; }
+  // Click table row → pan map to property
+  const tr = e.target.closest('tr[data-address]');
+  if (tr && tr.dataset.address && geocodedData) {
+    const geo = geocodedData[tr.dataset.address];
+    if (geo && leafletMap) {
+      leafletMap.flyTo([geo.lat, geo.lng], 15, { duration: 0.6 });
+      const marker = propertyMarkersMap[tr.dataset.address];
+      if (marker) {
+        setTimeout(() => {
+          const filtered = allRooms.filter(r => r.address === tr.dataset.address);
+          marker.unbindPopup();
+          marker.bindPopup(buildPropertyPopup(filtered), { maxWidth: 280, maxHeight: 320 }).openPopup();
+        }, 700);
+      }
+      // Scroll map into view on narrow screens
+      const mapEl = document.getElementById('mapContainer');
+      if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
 });
 
-// Map popup & area card clicks — event delegation for filterToArea + profile links
+// Table hover → highlight marker on map (3a)
+let hoveredMarker = null;
+let hoveredMarkerOrigStyle = null;
+document.getElementById('tableBody').addEventListener('mouseenter', (e) => {
+  const tr = e.target.closest('tr[data-address]');
+  if (!tr || !tr.dataset.address || !geocodedData) return;
+  const marker = propertyMarkersMap[tr.dataset.address];
+  if (!marker) return;
+  hoveredMarkerOrigStyle = { radius: marker.getRadius(), fillOpacity: marker.options.fillOpacity };
+  marker.setStyle({ fillOpacity: 1 });
+  marker.setRadius(10);
+  hoveredMarker = marker;
+}, true);
+document.getElementById('tableBody').addEventListener('mouseleave', (e) => {
+  const tr = e.target.closest('tr[data-address]');
+  if (!tr) return;
+  if (hoveredMarker && hoveredMarkerOrigStyle) {
+    hoveredMarker.setStyle({ fillOpacity: hoveredMarkerOrigStyle.fillOpacity });
+    hoveredMarker.setRadius(hoveredMarkerOrigStyle.radius);
+    hoveredMarker = null;
+    hoveredMarkerOrigStyle = null;
+  }
+}, true);
+
+// Map popup & area card clicks — event delegation for filterToArea + profile links + show in table
 document.addEventListener('click', (e) => {
   const profileLink = e.target.closest('[data-profile-area]');
   if (profileLink) { e.preventDefault(); e.stopPropagation(); showNeighbourhoodProfile(profileLink.dataset.profileArea); return; }
   const filterLink = e.target.closest('[data-filter-area]');
   if (filterLink) { filterToArea(filterLink.dataset.filterArea); return; }
+  // "Show in table" from map popup
+  const showInTable = e.target.closest('[data-show-in-table]');
+  if (showInTable) { e.preventDefault(); scrollToAddress(showInTable.dataset.showInTable); return; }
 });
 
 // Stat card clicks — event delegation on static container (avoids re-binding inside render())
@@ -1188,6 +1195,7 @@ document.getElementById('stats').addEventListener('click', (e) => {
 ['filterSource', 'filterType', 'filterMinGrade'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     currentPage = 0;
+    syncQuickFilterChips();
     render();
     pushHashState();
   });
@@ -1197,6 +1205,7 @@ document.getElementById('stats').addEventListener('click', (e) => {
 document.getElementById('filterPref').addEventListener('change', () => {
   populateAreaDropdown();
   currentPage = 0;
+  syncQuickFilterChips();
   render();
   pushHashState();
 });
@@ -1204,6 +1213,7 @@ document.getElementById('filterPref').addEventListener('change', () => {
 // Area — instant
 document.getElementById('filterArea').addEventListener('change', () => {
   currentPage = 0;
+  syncQuickFilterChips();
   render();
   pushHashState();
 });
@@ -1234,22 +1244,139 @@ document.getElementById('btnReset').addEventListener('click', () => {
   document.getElementById('filterMinGrade').value = '';
   document.getElementById('filterSearch').value = '';
   showFavOnly = false;
+  mapBoundsFilter = null;
   populateAreaDropdown();
   document.getElementById('filterArea').value = '';
   sortCol = 'score';
   sortAsc = false;
   currentPage = 0;
   updateFavButton();
+  syncQuickFilterChips();
   render();
   pushHashState();
 });
 
+// =====================================================================
+// Quick-filter chips
+// =====================================================================
+const QUICK_PRESETS = [
+  { label: '1LDK under \u00a5150k', filters: { type: '1LDK', maxRent: 150000 } },
+  { label: 'Grade A only', filters: { minGrade: 80 } },
+  { label: '\u22645min walk', filters: { maxWalk: 5 } },
+  { label: '40\u33a1+', filters: { minSize: 40 } },
+  { label: 'Under \u00a5100k', filters: { maxRent: 100000 } },
+  { label: 'New build (\u226410y)', filters: { maxAge: 10 } },
+];
+
+const FILTER_MAP = {
+  type: { id: 'filterType', type: 'select' },
+  maxRent: { id: 'filterMaxRent', type: 'number' },
+  minGrade: { id: 'filterMinGrade', type: 'select' },
+  maxWalk: { id: 'filterMaxWalk', type: 'number' },
+  minSize: { id: 'filterMinSize', type: 'number' },
+  maxAge: { id: 'filterMaxAge', type: 'number' },
+};
+
+function initQuickFilters() {
+  const container = document.getElementById('quickFilters');
+  if (!container) return;
+  container.innerHTML = QUICK_PRESETS.map((p, i) =>
+    `<button class="qf-chip" data-qf-idx="${i}">${escHtml(p.label)}</button>`
+  ).join('');
+
+  container.addEventListener('click', (e) => {
+    const chip = e.target.closest('.qf-chip');
+    if (!chip) return;
+    const idx = parseInt(chip.dataset.qfIdx);
+    const preset = QUICK_PRESETS[idx];
+    if (!preset) return;
+
+    const isActive = chip.classList.contains('active');
+
+    // Toggle: if active, clear these filter values; if inactive, set them
+    for (const [key, value] of Object.entries(preset.filters)) {
+      const mapping = FILTER_MAP[key];
+      if (!mapping) continue;
+      const el = document.getElementById(mapping.id);
+      if (!el) continue;
+      if (isActive) {
+        el.value = '';
+      } else {
+        el.value = String(value);
+      }
+    }
+
+    currentPage = 0;
+    syncQuickFilterChips();
+    render();
+    pushHashState();
+  });
+}
+
+function syncQuickFilterChips() {
+  const chips = document.querySelectorAll('.qf-chip');
+  for (const chip of chips) {
+    const idx = parseInt(chip.dataset.qfIdx);
+    const preset = QUICK_PRESETS[idx];
+    if (!preset) continue;
+
+    // A chip is active if ALL its filter values match the current form
+    let active = true;
+    for (const [key, value] of Object.entries(preset.filters)) {
+      const mapping = FILTER_MAP[key];
+      if (!mapping) { active = false; break; }
+      const el = document.getElementById(mapping.id);
+      if (!el) { active = false; break; }
+      const curVal = mapping.type === 'number' ? (parseInt(el.value) || 0) : el.value;
+      if (String(curVal) !== String(value)) { active = false; break; }
+    }
+    chip.classList.toggle('active', active);
+  }
+  updateFilterCount();
+}
+
+function updateFilterCount() {
+  const countEl = document.getElementById('filterCount');
+  if (!countEl) return;
+  let count = 0;
+  const ids = ['filterSource', 'filterPref', 'filterArea', 'filterType', 'filterMaxRent', 'filterMinSize', 'filterMaxAge', 'filterMaxWalk', 'filterMinGrade'];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el && el.value) count++;
+  }
+  const search = document.getElementById('filterSearch');
+  if (search && search.value.trim()) count++;
+  countEl.textContent = count > 0 ? count : '';
+}
+
+// Collapsible filter controls
+function initCollapsibleFilters() {
+  const toggle = document.getElementById('btnFiltersToggle');
+  const body = document.getElementById('controlsBody');
+  if (!toggle || !body) return;
+
+  toggle.addEventListener('click', () => {
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('active', !isOpen);
+  });
+}
+
 // Pagination buttons
+function scrollTableToTop() {
+  const mainRight = document.querySelector('.main-right');
+  if (mainRight && window.matchMedia('(min-width: 1400px)').matches) {
+    mainRight.scrollTop = 0;
+  } else {
+    const tableWrap = document.querySelector('.table-wrap');
+    if (tableWrap) tableWrap.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }
+}
 document.getElementById('btnPrev').addEventListener('click', () => {
-  if (currentPage > 0) { currentPage--; render(true); pushHashState(); window.scrollTo(0, 0); }
+  if (currentPage > 0) { currentPage--; render(true); pushHashState(); scrollTableToTop(); }
 });
 document.getElementById('btnNext').addEventListener('click', () => {
-  currentPage++; render(true); pushHashState(); window.scrollTo(0, 0);
+  currentPage++; render(true); pushHashState(); scrollTableToTop();
 });
 
 // =====================================================================
@@ -1416,6 +1543,9 @@ function initMap() {
 
   // Map legend
   addMapLegend();
+
+  // Search this area button
+  addSearchThisAreaButton();
 }
 
 function buildAreaPopup(areaName, areaInfo, pref, stats) {
@@ -1466,6 +1596,7 @@ function buildAreaPopup(areaName, areaInfo, pref, stats) {
 // Property popup builder — XSS hardened
 // =====================================================================
 function buildPropertyPopup(rooms) {
+  const address = rooms[0] ? rooms[0].address : '';
   return rooms.slice(0, 3).map(r => {
     const grade = r._grade;
     const total = r.total_value > 0 ? `¥${r.total_value.toLocaleString()}` : 'Inquiry';
@@ -1482,7 +1613,8 @@ function buildPropertyPopup(rooms) {
       ${r._accessEn ? `<div style="font-size:0.75rem;color:var(--text-dim)">${escHtml(r._accessEn)}</div>` : ''}
       ${link}`;
   }).join('<hr style="border-color:var(--border);margin:8px 0">')
-  + (rooms.length > 3 ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:6px">+${rooms.length - 3} more rooms</div>` : '');
+  + (rooms.length > 3 ? `<div style="font-size:0.72rem;color:var(--text-dim);margin-top:6px">+${rooms.length - 3} more rooms</div>` : '')
+  + (address ? `<a class="map-popup-filter" data-show-in-table="${escHtml(address)}" style="margin-top:6px">Show in table &darr;</a>` : '');
 }
 
 // =====================================================================
@@ -1698,6 +1830,66 @@ function addMapLegend() {
   legend.addTo(leafletMap);
 }
 
+// =====================================================================
+// "Show in table" — find address in filtered list, paginate, scroll, flash
+// =====================================================================
+function scrollToAddress(address) {
+  if (!address) return;
+  const filtered = getFiltered();
+  const sorted = getSorted(filtered);
+  const idx = sorted.findIndex(r => r.address === address);
+  if (idx < 0) return;
+  const targetPage = Math.floor(idx / PAGE_SIZE);
+  currentPage = targetPage;
+  render(true);
+  pushHashState();
+  // Flash-highlight matching rows after render
+  setTimeout(() => {
+    const rows = document.querySelectorAll(`tr[data-address="${CSS.escape(address)}"]`);
+    for (const row of rows) {
+      row.classList.add('row-highlight');
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => row.classList.remove('row-highlight'), 2000);
+    }
+  }, 50);
+}
+
+// =====================================================================
+// "Search this area" — map bounds filter
+// =====================================================================
+function addSearchThisAreaButton() {
+  if (!leafletMap) return;
+  const control = L.control({ position: 'topleft' });
+  control.onAdd = function() {
+    const btn = L.DomUtil.create('button', 'btn-map-bounds');
+    btn.textContent = 'Search this area';
+    L.DomEvent.disableClickPropagation(btn);
+    btn.addEventListener('click', () => {
+      if (mapBoundsFilter) {
+        // Toggle off
+        mapBoundsFilter = null;
+        btn.classList.remove('active');
+        btn.textContent = 'Search this area';
+      } else {
+        const bounds = leafletMap.getBounds();
+        mapBoundsFilter = {
+          south: bounds.getSouth(),
+          west: bounds.getWest(),
+          north: bounds.getNorth(),
+          east: bounds.getEast(),
+        };
+        btn.classList.add('active');
+        btn.textContent = 'Clear area filter';
+      }
+      currentPage = 0;
+      render();
+      pushHashState();
+    });
+    return btn;
+  };
+  control.addTo(leafletMap);
+}
+
 function filterToArea(areaName) {
   const pref = getPrefecture(areaName);
   document.getElementById('filterPref').value = pref;
@@ -1799,7 +1991,7 @@ function renderAreaCards(areaStats) {
       <div class="area-card-pref">${escHtml(prefLabel)}</div>
       <div class="area-card-commute">${commData.min} min to Yotsuya &middot; ${commData.transfers} transfer${commData.transfers !== 1 ? 's' : ''} &middot; ${escHtml(commData.line || '')}</div>
       ${stationsHtml}${poisHtml}
-      <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; ${s.grade.letter} avg${neighbourhoodProfiles[norm] || Object.keys(neighbourhoodProfiles).find(k => normalizeArea(k) === norm) ? ` <a class="profile-link" data-profile-area="${escHtml(currentArea)}">View Profile</a>` : ''}</div>
+      <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; ${s.grade.letter} avg</div>
     </div></div>`;
   } else {
     // All areas sorted by average score
@@ -1827,7 +2019,7 @@ function renderAreaCards(areaStats) {
         <div class="area-card-title" style="color:${color}">${escHtml(norm)}</div>
         <div class="area-card-pref">${escHtml(prefLabel)} &middot; ${commData.min} min, ${commData.transfers}x</div>
         ${highlight}
-        <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; <span class="grade-badge ${s.grade.cls}" style="width:18px;height:18px;line-height:18px;font-size:0.65rem">${s.grade.letter}</span>${neighbourhoodProfiles[norm] || Object.keys(neighbourhoodProfiles).find(k => normalizeArea(k) === norm) ? ` <a class="profile-link" data-profile-area="${escHtml(areaName)}">&#9432;</a>` : ''}</div>
+        <div class="area-card-stats">${s.count} rooms &middot; Avg &yen;${(s.avgRent/1000).toFixed(0)}K &middot; ${s.avgSize}&#13217; &middot; <span class="grade-badge ${s.grade.cls}" style="width:18px;height:18px;line-height:18px;font-size:0.65rem">${s.grade.letter}</span></div>
       </div>`;
     }
     html += '</div>';
@@ -1840,111 +2032,7 @@ if (typeof ResizeObserver !== 'undefined' && typeof L !== 'undefined' && L !== n
   new ResizeObserver(() => leafletMap && leafletMap.invalidateSize()).observe(document.getElementById('map'));
 }
 
-// =====================================================================
-// Scraper control panel
-// =====================================================================
-(function initScraperPanel() {
-  const toggle = document.getElementById('btnScraperToggle');
-  const body = document.getElementById('scraperPanelBody');
-  const runBtn = document.getElementById('btnRunScrapers');
-  let pollTimer = null;
-
-  toggle.addEventListener('click', () => {
-    const visible = body.style.display !== 'none';
-    body.style.display = visible ? 'none' : 'block';
-    toggle.classList.toggle('active', !visible);
-    toggle.textContent = visible ? 'Run Scrapers' : 'Hide Scraper Panel';
-  });
-
-  // Fetch registry and populate groups
-  fetch('/api/scrapers').then(r => r.json()).then(registry => {
-    const groups = {
-      foreigner_friendly: document.getElementById('scraperGroupForeignerFriendly'),
-      japanese_only: document.getElementById('scraperGroupJapaneseOnly'),
-      utility: document.getElementById('scraperGroupUtility'),
-    };
-    for (const [key, info] of Object.entries(registry)) {
-      const container = groups[info.category];
-      if (!container) continue;
-      const checked = info.category === 'utility' ? ' checked' : '';
-      container.insertAdjacentHTML('beforeend',
-        `<label class="scraper-item">
-          <input type="checkbox" name="scraper" value="${escHtml(key)}"${checked}>
-          <span>${escHtml(info.name)}</span>
-          <span class="scraper-badge status-idle" id="badge-${escHtml(key)}">idle</span>
-        </label>`);
-    }
-  }).catch(() => { /* API unavailable — panel stays empty, viewer still works */ });
-
-  // Select helpers
-  document.getElementById('scraperSelectAll').addEventListener('click', e => {
-    e.preventDefault();
-    body.querySelectorAll('input[name="scraper"]').forEach(cb => cb.checked = true);
-  });
-  document.getElementById('scraperSelectNone').addEventListener('click', e => {
-    e.preventDefault();
-    body.querySelectorAll('input[name="scraper"]').forEach(cb => cb.checked = false);
-  });
-
-  function getSelectedScrapers() {
-    return Array.from(body.querySelectorAll('input[name="scraper"]:checked')).map(cb => cb.value);
-  }
-
-  const VALID_STATUSES = new Set(['idle', 'pending', 'running', 'done', 'failed']);
-  function updateBadges(scrapers) {
-    for (const [key, status] of Object.entries(scrapers)) {
-      const badge = document.getElementById('badge-' + key);
-      if (!badge) continue;
-      const safeStatus = VALID_STATUSES.has(status) ? status : 'idle';
-      badge.className = 'scraper-badge status-' + safeStatus;
-      badge.textContent = safeStatus;
-    }
-  }
-
-  function pollStatus() {
-    fetch('/api/scrape/status').then(r => r.json()).then(data => {
-      updateBadges(data.scrapers);
-      if (!data.running) {
-        clearInterval(pollTimer);
-        pollTimer = null;
-        runBtn.disabled = false;
-        runBtn.textContent = 'Run Selected Scrapers';
-        // Reload data to show fresh results
-        loadData();
-      }
-    }).catch(() => {
-      clearInterval(pollTimer);
-      pollTimer = null;
-      runBtn.disabled = false;
-      runBtn.textContent = 'Run Selected Scrapers';
-    });
-  }
-
-  runBtn.addEventListener('click', () => {
-    const selected = getSelectedScrapers();
-    if (selected.length === 0) return;
-
-    runBtn.disabled = true;
-    runBtn.textContent = 'Running...';
-
-    fetch('/api/scrape', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scrapers: selected }),
-    }).then(r => {
-      if (r.status === 409) {
-        runBtn.textContent = 'Job already running...';
-        if (!pollTimer) pollTimer = setInterval(pollStatus, 2000);
-        return;
-      }
-      if (!r.ok) throw new Error('Failed to start');
-      if (!pollTimer) pollTimer = setInterval(pollStatus, 2000);
-    }).catch(() => {
-      runBtn.disabled = false;
-      runBtn.textContent = 'Run Selected Scrapers';
-    });
-  });
-})();
+// Scraper control panel removed — run scrapers from terminal: python run_all.py
 
 // =====================================================================
 // Scoring preferences panel
@@ -2377,5 +2465,139 @@ function initPrefsPanel() {
   syncFormToBrief();
 }
 
+// =====================================================================
+// Column visibility toggle
+// =====================================================================
+const DEFAULT_HIDDEN_COLS = ['floor', 'yensqm', 'movein', 'deposit'];
+let colVisibility = {};
+
+function loadColVisibility() {
+  try {
+    const stored = localStorage.getItem('tokyoRental_colVis');
+    if (stored) return JSON.parse(stored);
+  } catch (e) { /* ignore */ }
+  // Default: hide secondary cols
+  const vis = {};
+  for (const col of COLUMNS) {
+    vis[col.key] = !DEFAULT_HIDDEN_COLS.includes(col.key);
+  }
+  return vis;
+}
+
+function saveColVisibility() {
+  localStorage.setItem('tokyoRental_colVis', JSON.stringify(colVisibility));
+}
+
+function applyColVisibility() {
+  // Apply to thead
+  const ths = document.querySelectorAll('#tableHead th[data-sort-key]');
+  ths.forEach(th => {
+    const key = th.dataset.sortKey;
+    th.classList.toggle('col-hidden', colVisibility[key] === false);
+  });
+  // Apply to tbody
+  const rows = document.querySelectorAll('#tableBody tr');
+  for (const row of rows) {
+    const cells = row.querySelectorAll('td');
+    cells.forEach((td, i) => {
+      if (i < COLUMNS.length) {
+        td.classList.toggle('col-hidden', colVisibility[COLUMNS[i].key] === false);
+      }
+    });
+  }
+}
+
+function initColToggle() {
+  colVisibility = loadColVisibility();
+  const btn = document.getElementById('btnColToggle');
+  const dropdown = document.getElementById('colToggleDropdown');
+  if (!btn || !dropdown) return;
+
+  // Build checkboxes (skip fav and link — always visible)
+  const toggleable = COLUMNS.filter(c => c.key !== 'fav' && c.key !== 'link');
+  dropdown.innerHTML = toggleable.map(col =>
+    `<label class="col-toggle-item"><input type="checkbox" data-col-key="${col.key}" ${colVisibility[col.key] !== false ? 'checked' : ''}> ${escHtml(col.label)}</label>`
+  ).join('');
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  });
+
+  dropdown.addEventListener('change', (e) => {
+    const cb = e.target.closest('input[data-col-key]');
+    if (!cb) return;
+    colVisibility[cb.dataset.colKey] = cb.checked;
+    saveColVisibility();
+    applyColVisibility();
+  });
+
+  // Close dropdown on click outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.col-toggle-wrap')) {
+      dropdown.style.display = 'none';
+    }
+  });
+}
+
+// =====================================================================
+// Draggable resize handle for split-pane
+// =====================================================================
+function initResizeHandle() {
+  const handle = document.getElementById('resizeHandle');
+  const mainLeft = document.querySelector('.main-left');
+  if (!handle || !mainLeft) return;
+
+  // Restore saved width
+  try {
+    const saved = localStorage.getItem('tokyoRental_mapWidth');
+    if (saved) {
+      const w = parseInt(saved);
+      if (w >= 280 && w <= window.innerWidth * 0.65) {
+        mainLeft.style.setProperty('--map-col-width', w + 'px');
+      }
+    }
+  } catch (e) { /* ignore */ }
+
+  let isDragging = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  handle.addEventListener('mousedown', (e) => {
+    if (!window.matchMedia('(min-width: 1400px)').matches) return;
+    isDragging = true;
+    startX = e.clientX;
+    startWidth = mainLeft.getBoundingClientRect().width;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const delta = e.clientX - startX;
+    const newWidth = Math.max(280, Math.min(window.innerWidth * 0.65, startWidth + delta));
+    mainLeft.style.setProperty('--map-col-width', newWidth + 'px');
+    if (leafletMap) leafletMap.invalidateSize();
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    // Save width
+    const w = mainLeft.getBoundingClientRect().width;
+    try { localStorage.setItem('tokyoRental_mapWidth', String(Math.round(w))); } catch (e) { /* ignore */ }
+    if (leafletMap) leafletMap.invalidateSize();
+  });
+}
+
 loadData();
 initPrefsPanel();
+initQuickFilters();
+initCollapsibleFilters();
+initColToggle();
+initResizeHandle();

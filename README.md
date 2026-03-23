@@ -21,7 +21,7 @@ python villagehouse_search.py
 
 # Serve the viewer
 python server.py
-# Open http://localhost:5000
+# Open http://localhost:8080
 ```
 
 ## Data Sources
@@ -164,18 +164,18 @@ Currently searches 40 areas across 4 prefectures:
 │   ├── parsers.py               #   Shared parsing utilities (yen, age, size)
 │   └── logging_setup.py         #   Logging configuration
 ├── tests/                       # Test suite
-│   ├── test_ur_parser.py
-│   ├── test_suumo_parser.py
-│   ├── test_realestate_parser.py
-│   ├── test_best_estate_parser.py
-│   ├── test_gaijinpot_parser.py
-│   ├── test_wagaya_parser.py
-│   ├── test_villagehouse_parser.py
-│   ├── test_parsers.py
+│   ├── test_*_parser.py        # One per scraper (7 files)
+│   ├── test_build_pois.py
 │   ├── test_cli.py
 │   ├── test_config.py
+│   ├── test_geocoder.py
 │   ├── test_http_client.py
-│   └── fixtures/                # HTML/JSON test fixtures (one per source)
+│   ├── test_parsers.py
+│   ├── test_run_all.py
+│   ├── test_scraper_template.py
+│   ├── test_server.py
+│   ├── test_scoring_prefs.js   # JS scoring tests (Node.js)
+│   └── fixtures/               # HTML/JSON test fixtures
 ├── requirements.txt
 ├── .github/workflows/ci.yml     # CI pipeline
 └── .githooks/pre-push           # Pre-push test hook
