@@ -144,11 +144,10 @@ def main():
     failed = [r for r in results if r["returncode"] != 0]
     if failed:
         print(f"\n{len(failed)} scraper(s) failed.")
-        sys.exit(1)
     else:
         print(f"\nAll {len(results)} scrapers completed successfully.")
 
-    # Run geocoder as final non-fatal step
+    # Run geocoder as final non-fatal step (even if some scrapers failed)
     print(f"\n{'='*60}")
     print("Running geocoder (non-fatal)...")
     print(f"{'='*60}")
@@ -171,6 +170,9 @@ def main():
         print("  Geocoder: TIMEOUT (30 min)")
     except Exception as exc:
         print(f"  Geocoder: ERROR ({exc})")
+
+    if failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
