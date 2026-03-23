@@ -1,6 +1,8 @@
 """Tests for best_estate_search.parse_page using fixture HTML."""
 
+import re
 import os
+from bs4 import BeautifulSoup
 from shared.config import Area, AREAS
 
 from best_estate_search import BestEstateScraper
@@ -23,11 +25,13 @@ class TestBestEstateParser:
         self.props = self.scraper.parse_page(html, AREA)
 
     def test_returns_properties(self):
-        assert len(self.props) >= 1
+        assert len(self.props) == 7, (
+            f"Expected 7 properties (4 inline + 3 template-only), got {len(self.props)}")
 
     def test_properties_have_rooms(self):
         total_rooms = sum(len(p.rooms) for p in self.props)
-        assert total_rooms >= 1
+        assert total_rooms == 20, (
+            f"Expected 20 rooms total, got {total_rooms}")
 
     def test_rent_values_positive(self):
         for prop in self.props:
@@ -130,3 +134,92 @@ class TestBestEstateAreaMatching:
         for jp_name, pref_jp, area in self.entries:
             assert jp_name, f"jp_name should not be empty for {area.name}"
             assert pref_jp, f"pref_jp should not be empty for {area.name}"
+
+
+class TestBestEstateTemplateResolution:
+    """Tests for _build_rs_map() and _resolve_templates() methods."""
+
+    def setup_method(self):
+        self.scraper = BestEstateScraper()
+        self.scraper.ROOM_TYPE_FILTER = []
+        self.html = _load_fixture()
+        self.soup = BeautifulSoup(self.html, "html.parser")
+
+    def test_build_rs_map_finds_mappings(self):
+        """RS map should contain P:→S: entries from $RS scripts."""
+        rs_map = self.scraper._build_rs_map(self.soup)
+        assert len(rs_map) > 0, "RS map should have at least one mapping"
+        for p_id, s_id in rs_map.items():
+            assert p_id.startswith("P:"), f"Key should be P:X, got {p_id}"
+            assert s_id.startswith("S:"), f"Value should be S:X, got {s_id}"
+
+    def test_resolve_templates_injects_room_data(self):
+        """After resolution, template-only cards should contain room rows."""
+        rs_map = self.scraper._build_rs_map(self.soup)
+        # Count room rows before resolution
+        cards_before = self.soup.find_all("div", class_=re.compile(r"lg:border-t-4"))
+        cards_with_rooms_before = sum(
+            1 for c in cards_before
+            if c.find("div", class_=re.compile(r"border-y-\[1px\].*border-beu-border"))
+        )
+        # Resolve templates
+        self.scraper._resolve_templates(self.soup, rs_map)
+        # Count room rows after resolution
+        cards_after = self.soup.find_all("div", class_=re.compile(r"lg:border-t-4"))
+        cards_with_rooms_after = sum(
+            1 for c in cards_after
+            if c.find("div", class_=re.compile(r"border-y-\[1px\].*border-beu-border"))
+        )
+        assert cards_with_rooms_after > cards_with_rooms_before, (
+            f"Template resolution should add rooms to cards: "
+            f"{cards_with_rooms_before} before → {cards_with_rooms_after} after")
+
+    def test_resolve_templates_all_cards_have_rooms(self):
+        """After resolution, every property card should have at least 1 room row."""
+        rs_map = self.scraper._build_rs_map(self.soup)
+        self.scraper._resolve_templates(self.soup, rs_map)
+        cards = self.soup.find_all("div", class_=re.compile(r"lg:border-t-4"))
+        for i, card in enumerate(cards):
+            room_rows = card.find_all(
+                "div", class_=re.compile(r"border-y-\[1px\].*border-beu-border"))
+            assert len(room_rows) >= 1, (
+                f"Card {i} should have at least 1 room row after template resolution")
+
+    def test_template_only_cards_produce_properties(self):
+        """Cards that have no inline rooms should still produce properties after resolution."""
+        # Parse with template resolution (normal path)
+        props = self.scraper.parse_page(self.html, AREA)
+        assert len(props) == 7, (
+            f"All 7 cards (including 3 template-only) should produce properties, got {len(props)}")
+        # Every property must have rooms
+        for i, prop in enumerate(props):
+            assert len(prop.rooms) >= 1, (
+                f"Property {i} ({prop.name}) should have rooms")
+
+
+class TestBestEstateRobustness:
+    """Tests for graceful degradation and edge cases."""
+
+    def setup_method(self):
+        self.scraper = BestEstateScraper()
+        self.scraper.ROOM_TYPE_FILTER = []
+
+    def test_parse_page_without_rs_scripts_still_parses_inline(self):
+        """If $RS scripts are stripped, inline cards should still parse."""
+        html = _load_fixture()
+        # Strip all <script> tags containing $RS
+        html_no_rs = re.sub(
+            r'<script>[^<]*\$RS[^<]*</script>', '', html)
+        props = self.scraper.parse_page(html_no_rs, AREA)
+        assert len(props) >= 4, (
+            f"Without RS scripts, at least 4 inline-room cards should parse, got {len(props)}")
+
+    def test_parse_page_with_empty_html(self):
+        """Empty string should return empty list, no crash."""
+        props = self.scraper.parse_page("", AREA)
+        assert props == []
+
+    def test_parse_page_with_no_cards(self):
+        """Valid HTML with no property cards should return empty list."""
+        props = self.scraper.parse_page("<html><body><p>No listings</p></body></html>", AREA)
+        assert props == []

@@ -206,7 +206,7 @@ class TestSaveResults:
         self.scraper = _StubScraper()
         self.scraper.logger = MagicMock()
 
-    def test_json_has_correct_structure(self, tmp_path):
+    def test_json_has_correct_flat_structure(self, tmp_path):
         fp = str(tmp_path / "results.json")
         props = [_make_property(area_name="A", n_rooms=2)]
         self.scraper.save_results(props, filename=fp)
@@ -215,11 +215,19 @@ class TestSaveResults:
             data = json.load(f)
 
         assert data["source"] == "stub"
-        assert data["total_properties"] == 1
         assert data["total_rooms"] == 2
-        assert "A" in data["areas"]
+        assert isinstance(data["rooms"], list)
+        assert len(data["rooms"]) == 2
+        # Each room should have flat fields
+        room = data["rooms"][0]
+        assert room["source"] == "stub"
+        assert room["area"] == "A"
+        assert room["building"] == "Test Building"
+        assert "rent" in room
+        assert "total_monthly" in room
+        assert "walk_minutes" in room
 
-    def test_groups_properties_by_area_name(self, tmp_path):
+    def test_flat_rooms_from_multiple_areas(self, tmp_path):
         fp = str(tmp_path / "results.json")
         props = [
             _make_property(area_name="A"),
@@ -231,8 +239,10 @@ class TestSaveResults:
         with open(fp, encoding="utf-8") as f:
             data = json.load(f)
 
-        assert len(data["areas"]["A"]) == 2
-        assert len(data["areas"]["B"]) == 1
+        assert data["total_rooms"] == 3
+        areas = [r["area"] for r in data["rooms"]]
+        assert areas.count("A") == 2
+        assert areas.count("B") == 1
 
     def test_uses_output_file_when_filename_empty(self, tmp_path):
         self.scraper.OUTPUT_FILE = str(tmp_path / "results_stub.json")
@@ -240,3 +250,33 @@ class TestSaveResults:
         self.scraper.save_results(props, filename="")
 
         assert os.path.exists(self.scraper.OUTPUT_FILE)
+
+
+class TestToFlatRooms:
+    def setup_method(self):
+        self.scraper = _StubScraper()
+
+    def test_flattens_properties_to_room_dicts(self):
+        props = [_make_property(area_name="TestArea", n_rooms=2)]
+        rooms = self.scraper.to_flat_rooms(props)
+
+        assert len(rooms) == 2
+        for room in rooms:
+            assert room["source"] == "stub"
+            assert room["area"] == "TestArea"
+            assert room["building"] == "Test Building"
+            assert isinstance(room["rent"], int)
+            assert isinstance(room["total_monthly"], int)
+            assert isinstance(room["size_sqm"], float)
+
+    def test_includes_walk_minutes(self):
+        prop = _make_property(access="JR京浜東北線 川口駅 徒歩8分")
+        rooms = self.scraper.to_flat_rooms([prop])
+
+        assert rooms[0]["walk_minutes"] == 8
+
+    def test_walk_minutes_none_when_no_access(self):
+        prop = _make_property(access="")
+        rooms = self.scraper.to_flat_rooms([prop])
+
+        assert rooms[0]["walk_minutes"] is None

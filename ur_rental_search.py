@@ -14,12 +14,12 @@ import json
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 
 import requests
 from tabulate import tabulate
 
-from shared.parsers import parse_yen
+from shared.parsers import parse_yen, parse_walk_minutes, parse_size_sqm
 from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
 from shared.config import Area, get_areas_for_source, get_target_room_types
@@ -261,30 +261,47 @@ def print_results(all_properties: list[Property]):
     print(f"\n{'='*90}")
 
 
+def normalize_output(all_properties: list[Property]) -> list[dict]:
+    """Convert nested Property/Room objects to flat room dicts."""
+    flat_rooms = []
+    for prop in all_properties:
+        for room in prop.rooms:
+            size_sqm = parse_size_sqm(room.floorspace)
+            walk_min = parse_walk_minutes(prop.traffic)
+            flat_rooms.append({
+                "source": "ur",
+                "area": prop.area_name,
+                "prefecture": prop.tdfk_name,
+                "building": prop.name,
+                "address": prop.address,
+                "access": prop.traffic,
+                "room_type": room.room_type,
+                "floor": room.floor,
+                "size_sqm": size_sqm,
+                "size_display": room.floorspace,
+                "building_age_years": -1,
+                "rent": room.rent_value,
+                "admin_fee": room.commonfee_value,
+                "total_monthly": room.total_value,
+                "deposit": 0,
+                "key_money": 0,
+                "walk_minutes": walk_min,
+                "url": room.url,
+            })
+    return flat_rooms
+
+
 def save_results(all_properties: list[Property], filename: str = "results.json"):
-    """Save structured results to JSON."""
+    """Save flat room results to JSON."""
+    flat_rooms = normalize_output(all_properties)
+
     data = {
+        "source": "ur",
         "search_date": time.strftime("%Y-%m-%d %H:%M:%S"),
         "room_type_filter": ROOM_TYPE_FILTER,
-        "total_properties": len(all_properties),
-        "total_rooms": sum(len(p.rooms) for p in all_properties),
-        "areas": {},
+        "total_rooms": len(flat_rooms),
+        "rooms": flat_rooms,
     }
-
-    for prop in all_properties:
-        area = prop.area_name
-        if area not in data["areas"]:
-            data["areas"][area] = []
-
-        prop_dict = {
-            "name": prop.name,
-            "address": prop.address,
-            "access": prop.traffic,
-            "property_code": f"{prop.shisya}_{prop.danchi}{prop.shikibetu}",
-            "url": f"{SITE_URL}/chintai/kanto/{prop.tdfk_name}/{prop.shisya}_{prop.danchi}{prop.shikibetu}.html",
-            "rooms": [asdict(r) for r in prop.rooms],
-        }
-        data["areas"][area].append(prop_dict)
 
     safe_write_json(data, filename)
 
