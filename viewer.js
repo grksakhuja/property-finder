@@ -592,8 +592,6 @@ async function loadData() {
   document.getElementById('subtitle').textContent =
     `Loaded: ${loaded.join(' | ')} (${allRooms.length} total rooms)`;
 
-  // Build table header once (sort arrows updated in render())
-  buildTableHeader();
 
   // Restore state from URL hash before first render
   restoreHashState();
@@ -613,42 +611,6 @@ async function loadData() {
   populatePrefsProfileDropdown();
 }
 
-let tableHeaderListenerAdded = false;
-
-function buildTableHeader() {
-  const head = document.getElementById('tableHead');
-  if (!head) return;
-  head.innerHTML = COLUMNS.map(col => {
-    const cls = col.sortFn ? 'sortable' : '';
-    return `<th class="${cls}" data-sort-key="${col.key}">${col.label}<span class="sort-arrow"></span></th>`;
-  }).join('');
-  // Event delegation for sort clicks (attach only once — survives innerHTML rebuilds)
-  if (!tableHeaderListenerAdded) {
-    head.addEventListener('click', (e) => {
-      const th = e.target.closest('th[data-sort-key]');
-      if (th) toggleSort(th.dataset.sortKey);
-    });
-    tableHeaderListenerAdded = true;
-  }
-}
-
-function updateSortArrows() {
-  const tableHead = document.getElementById('tableHead');
-  if (!tableHead) return;
-  const ths = tableHead.querySelectorAll('th[data-sort-key]');
-  for (const th of ths) {
-    const key = th.dataset.sortKey;
-    const col = COLUMNS.find(c => c.key === key);
-    const arrow = th.querySelector('.sort-arrow');
-    if (key === sortCol && col && col.sortFn) {
-      th.classList.add('sorted');
-      arrow.innerHTML = sortAsc ? '&#9650;' : '&#9660;';
-    } else {
-      th.classList.remove('sorted');
-      arrow.innerHTML = col && col.sortFn ? '&#9650;' : '';
-    }
-  }
-}
 
 function getFiltered() {
   const source = document.getElementById('filterSource').value;
@@ -772,7 +734,7 @@ function renderCardBreakdown(r) {
   }).join('');
   const hazard = r._breakdown.hazardPenalty || 0;
   const hazardLine = hazard < 0 ? `<div class="bd-row bd-hazard"><span class="bd-label">Hazard</span><span class="bd-val">${hazard}</span></div>` : '';
-  const depositInfo = r.deposit !== undefined ? `Deposit: &yen;${(r.deposit || 0).toLocaleString()} / Key: &yen;${(r.key_money || 0).toLocaleString()}` : '';
+  const depositInfo = r.deposit_value !== undefined ? `Deposit: &yen;${(r.deposit_value || 0).toLocaleString()} / Key: &yen;${(r.key_money_value || 0).toLocaleString()}` : '';
   return `${bars}${hazardLine}<div class="bd-extra">${escHtml(r._floorEn)} &middot; ${depositInfo}</div>`;
 }
 
@@ -2477,81 +2439,6 @@ function initPrefsPanel() {
 }
 
 // =====================================================================
-// Column visibility toggle
-// =====================================================================
-const DEFAULT_HIDDEN_COLS = ['floor', 'yensqm', 'movein', 'deposit'];
-let colVisibility = {};
-
-function loadColVisibility() {
-  try {
-    const stored = localStorage.getItem('tokyoRental_colVis');
-    if (stored) return JSON.parse(stored);
-  } catch (e) { /* ignore */ }
-  // Default: hide secondary cols
-  const vis = {};
-  for (const col of COLUMNS) {
-    vis[col.key] = !DEFAULT_HIDDEN_COLS.includes(col.key);
-  }
-  return vis;
-}
-
-function saveColVisibility() {
-  localStorage.setItem('tokyoRental_colVis', JSON.stringify(colVisibility));
-}
-
-function applyColVisibility() {
-  // Apply to thead
-  const ths = document.querySelectorAll('#tableHead th[data-sort-key]');
-  ths.forEach(th => {
-    const key = th.dataset.sortKey;
-    th.classList.toggle('col-hidden', colVisibility[key] === false);
-  });
-  // Apply to tbody
-  const rows = document.querySelectorAll('#tableBody tr');
-  for (const row of rows) {
-    const cells = row.querySelectorAll('td');
-    cells.forEach((td, i) => {
-      if (i < COLUMNS.length) {
-        td.classList.toggle('col-hidden', colVisibility[COLUMNS[i].key] === false);
-      }
-    });
-  }
-}
-
-function initColToggle() {
-  colVisibility = loadColVisibility();
-  const btn = document.getElementById('btnColToggle');
-  const dropdown = document.getElementById('colToggleDropdown');
-  if (!btn || !dropdown) return;
-
-  // Build checkboxes (skip fav and link — always visible)
-  const toggleable = COLUMNS.filter(c => c.key !== 'fav' && c.key !== 'link');
-  dropdown.innerHTML = toggleable.map(col =>
-    `<label class="col-toggle-item"><input type="checkbox" data-col-key="${col.key}" ${colVisibility[col.key] !== false ? 'checked' : ''}> ${escHtml(col.label)}</label>`
-  ).join('');
-
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-  });
-
-  dropdown.addEventListener('change', (e) => {
-    const cb = e.target.closest('input[data-col-key]');
-    if (!cb) return;
-    colVisibility[cb.dataset.colKey] = cb.checked;
-    saveColVisibility();
-    applyColVisibility();
-  });
-
-  // Close dropdown on click outside
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.col-toggle-wrap')) {
-      dropdown.style.display = 'none';
-    }
-  });
-}
-
-// =====================================================================
 // Draggable resize handle for split-pane
 // =====================================================================
 function initResizeHandle() {
@@ -2609,5 +2496,4 @@ loadData();
 initPrefsPanel();
 initQuickFilters();
 initCollapsibleFilters();
-initColToggle();
 initResizeHandle();
