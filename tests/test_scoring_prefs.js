@@ -453,25 +453,7 @@ test('computeScore with _amenities data scores amenities dimension', () => {
   resetBriefToDefaults();
 });
 
-test('computeScore with _commute.estimated_door_to_door uses enriched commute', () => {
-  sandbox.scoringConfigOverrides = null;
-  resetBriefToDefaults();
-
-  const roomEnriched = {
-    area: 'Omiya', prefecture: 'saitama', source: 'suumo',
-    total_value: 120000, floorspace: '60sqm', size: '60sqm',
-    room_type: '2LDK', floor: '2F', access: 'walk 5min',
-    rent_value: 120000, commonfee_value: 0,
-    deposit_value: 0, key_money_value: 0, move_in_cost: 0,
-    building_age_years: 10, _walkMin: 5, _sqm: 60,
-    _commute: { estimated_door_to_door: 20 },  // Much shorter than Omiya's default 45min
-  };
-  const roomDefault = { ...roomEnriched, _commute: undefined };
-
-  const scoreEnriched = computeScore(roomEnriched).total;
-  const scoreDefault = computeScore(roomDefault).total;
-  assert(scoreEnriched > scoreDefault, `Enriched commute 20min (${scoreEnriched}) should beat default 45min (${scoreDefault})`);
-});
+// _commute enrichment removed — commute scoring now uses area lookup only
 
 test('computeScore with _hazard applies penalty', () => {
   sandbox.scoringConfigOverrides = null;

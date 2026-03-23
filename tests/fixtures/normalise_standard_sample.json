@@ -1,0 +1,50 @@
+{
+  "source": "suumo",
+  "search_date": "2026-03-16",
+  "total_properties": 1,
+  "total_rooms": 2,
+  "areas": {
+    "Wako (和光市)": [
+      {
+        "name": "東武東上線 成増駅 7階建 築30年",
+        "address": "埼玉県和光市白子３",
+        "access": "東武東上線/成増駅 歩17分 / 東京メトロ有楽町線/和光市駅 歩18分",
+        "building_age": "築30年",
+        "building_age_years": 30,
+        "total_floors": "7階建",
+        "rooms": [
+          {
+            "floor": "4階",
+            "rent": "11.8万円",
+            "rent_value": 118000,
+            "admin_fee": "10000円",
+            "admin_fee_value": 10000,
+            "total_value": 128000,
+            "deposit": "11.8万円",
+            "deposit_value": 118000,
+            "key_money": "-",
+            "key_money_value": 0,
+            "layout": "3LDK",
+            "size": "66.15m2",
+            "detail_url": "https://suumo.jp/chintai/jnc_000105778419/"
+          },
+          {
+            "floor": "2階",
+            "rent": "10.5万円",
+            "rent_value": 105000,
+            "admin_fee": "8000円",
+            "admin_fee_value": 8000,
+            "total_value": 113000,
+            "deposit": "10.5万円",
+            "deposit_value": 105000,
+            "key_money": "10.5万円",
+            "key_money_value": 105000,
+            "layout": "2LDK",
+            "size": "55.00m²",
+            "detail_url": "https://suumo.jp/chintai/jnc_000105590540/"
+          }
+        ]
+      }
+    ]
+  }
+}

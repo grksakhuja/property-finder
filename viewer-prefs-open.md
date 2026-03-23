@@ -1,0 +1,3252 @@
+- generic [ref=e1]:
+  - banner [ref=e2]:
+    - heading "Tokyo Rental Search Results" [level=1] [ref=e3]
+    - generic [ref=e4]: "Loaded: Pipeline: 2733 listings (2733 total rooms)"
+  - generic [ref=e56]:
+    - generic [ref=e3075]:
+      - generic [ref=e3076]: "2733"
+      - generic [ref=e3077]: Rooms
+    - generic [ref=e3078] [cursor=pointer]:
+      - generic [ref=e3079]: ¥2,600
+      - generic [ref=e3080]: Cheapest →
+    - generic [ref=e3081]:
+      - generic [ref=e3082]: ¥3,053,950
+      - generic [ref=e3083]: Avg Total
+    - generic [ref=e3084]:
+      - generic [ref=e3085]: 58㎡
+      - generic [ref=e3086]: Avg Size
+    - generic [ref=e3087] [cursor=pointer]:
+      - generic [ref=e3088]: 1038㎡
+      - generic [ref=e3089]: Largest →
+    - generic [ref=e3090]:
+      - generic [ref=e3091]: "UR: 23 / SUUMO: 1658 / REJ: 682 / GaijinPot: 234 / Wagaya: 26 / VillageH: 110"
+      - generic [ref=e3092]: By Source
+  - button "Run Scrapers" [ref=e6] [cursor=pointer]
+  - generic [ref=e7]:
+    - generic [ref=e8]:
+      - generic [ref=e9] [cursor=pointer]: A
+      - text: Excellent (80+)
+    - generic [ref=e10]:
+      - generic [ref=e11] [cursor=pointer]: B
+      - text: Good (65-79)
+    - generic [ref=e12]:
+      - generic [ref=e13] [cursor=pointer]: C
+      - text: Fair (50-64)
+    - generic [ref=e14]:
+      - generic [ref=e15] [cursor=pointer]: D
+      - text: Below 50
+  - generic [ref=e16]:
+    - button "Hide Preferences" [active] [ref=e2931] [cursor=pointer]
+    - generic [ref=e2932]:
+      - generic [ref=e2933]:
+        - combobox [ref=e2934]:
+          - option "-- Default --" [selected]
+        - textbox "Profile name (or auto-generate)" [ref=e2935]
+        - button "Auto" [ref=e2936] [cursor=pointer]
+        - button "Save" [ref=e2937] [cursor=pointer]
+        - button "Delete" [ref=e2938] [cursor=pointer]
+        - button "Reset" [ref=e2939] [cursor=pointer]
+      - generic [ref=e2940]:
+        - generic [ref=e2941]:
+          - generic [ref=e2942]: Budget (yen/mo)
+          - generic [ref=e2943]:
+            - generic [ref=e2944]:
+              - text: Ideal Min
+              - spinbutton "Ideal Min" [ref=e2945]: "100000"
+            - generic [ref=e2946]:
+              - text: Ideal Max
+              - spinbutton "Ideal Max" [ref=e2947]: "150000"
+          - generic [ref=e2948]:
+            - generic [ref=e2949]:
+              - text: Hard Max
+              - spinbutton "Hard Max" [ref=e2950]: "200000"
+            - generic [ref=e2951]:
+              - text: Move-in Max
+              - spinbutton "Move-in Max" [ref=e2952]: "600000"
+        - generic [ref=e2953]:
+          - generic [ref=e2954]: Size (sqm)
+          - generic [ref=e2955]:
+            - generic [ref=e2956]:
+              - text: Ideal Min
+              - spinbutton "Ideal Min" [ref=e2957]: "55"
+            - generic [ref=e2958]:
+              - text: Ideal Max
+              - spinbutton "Ideal Max" [ref=e2959]: "65"
+          - generic [ref=e2960]:
+            - generic [ref=e2961]:
+              - text: OK Min
+              - spinbutton "OK Min" [ref=e2962]: "50"
+            - generic [ref=e2963]:
+              - text: OK Max
+              - spinbutton "OK Max" [ref=e2964]: "75"
+        - generic [ref=e2965]:
+          - generic [ref=e2966]: Walk to Station (min)
+          - generic [ref=e2967]:
+            - generic [ref=e2968]:
+              - text: Great
+              - spinbutton "Great" [ref=e2969]: "5"
+            - generic [ref=e2970]:
+              - text: Good
+              - spinbutton "Good" [ref=e2971]: "10"
+            - generic [ref=e2972]:
+              - text: OK
+              - spinbutton "OK" [ref=e2973]: "15"
+            - generic [ref=e2974]:
+              - text: Max
+              - spinbutton "Max" [ref=e2975]: "20"
+        - generic [ref=e2976]:
+          - generic [ref=e2977]: Building Age (years)
+          - generic [ref=e2978]:
+            - generic [ref=e2979]:
+              - text: Ideal
+              - spinbutton "Ideal" [ref=e2980]: "15"
+            - generic [ref=e2981]:
+              - text: OK
+              - spinbutton "OK" [ref=e2982]: "25"
+            - generic [ref=e2983]:
+              - text: Old
+              - spinbutton "Old" [ref=e2984]: "35"
+        - generic [ref=e2985]:
+          - generic [ref=e2986]: Room Type Multipliers
+          - generic [ref=e2987]:
+            - generic [ref=e2988]:
+              - generic [ref=e2989]: 1LDK
+              - slider [ref=e2990]: "0.7"
+              - generic [ref=e2991]: "0.70"
+            - generic [ref=e2992]:
+              - generic [ref=e2993]: 2LDK
+              - slider [ref=e2994]: "1"
+              - generic [ref=e2995]: "1.00"
+            - generic [ref=e2996]:
+              - generic [ref=e2997]: 2SLDK
+              - slider [ref=e2998]: "0.95"
+              - generic [ref=e2999]: "0.95"
+            - generic [ref=e3000]:
+              - generic [ref=e3001]: 3LDK
+              - slider [ref=e3002]: "0.7"
+              - generic [ref=e3003]: "0.70"
+            - generic [ref=e3004]:
+              - generic [ref=e3005]: 3SLDK
+              - slider [ref=e3006]: "0.25"
+              - generic [ref=e3007]: "0.25"
+            - generic [ref=e3008]:
+              - generic [ref=e3009]: 3DK
+              - slider [ref=e3010]: "0.4"
+              - generic [ref=e3011]: "0.40"
+            - generic [ref=e3012]:
+              - generic [ref=e3013]: 3K
+              - slider [ref=e3014]: "0.3"
+              - generic [ref=e3015]: "0.30"
+        - generic [ref=e3016]:
+          - generic [ref=e3017]:
+            - text: Prefecture Scores
+            - generic [ref=e3018]: (0.5 intervals)
+          - generic [ref=e3019]:
+            - generic [ref=e3020]: Saitama
+            - slider [ref=e3021]: "8"
+            - generic [ref=e3022]: "8.0"
+          - generic [ref=e3023]:
+            - generic [ref=e3024]: Chiba
+            - slider [ref=e3025]: "6.5"
+            - generic [ref=e3026]: "6.5"
+          - generic [ref=e3027]:
+            - generic [ref=e3028]: Kanagawa
+            - slider [ref=e3029]: "6.5"
+            - generic [ref=e3030]: "6.5"
+          - generic [ref=e3031]:
+            - generic [ref=e3032]: Tokyo
+            - slider [ref=e3033]: "6.5"
+            - generic [ref=e3034]: "6.5"
+        - generic [ref=e3035]:
+          - generic [ref=e3036]:
+            - text: Scoring Weights
+            - generic [ref=e3037]: "100"
+          - generic [ref=e3038]:
+            - generic [ref=e3039]:
+              - generic [ref=e3040]: Commute
+              - slider [ref=e3041]: "50"
+              - generic [ref=e3042]: "38.4"
+            - generic [ref=e3043]:
+              - generic [ref=e3044]: Affordability
+              - slider [ref=e3045]: "20"
+              - generic [ref=e3046]: "15.4"
+            - generic [ref=e3047]:
+              - generic [ref=e3048]: Space Value
+              - slider [ref=e3049]: "12"
+              - generic [ref=e3050]: "9.2"
+            - generic [ref=e3051]:
+              - generic [ref=e3052]: Room Type
+              - slider [ref=e3053]: "8"
+              - generic [ref=e3054]: "6.2"
+            - generic [ref=e3055]:
+              - generic [ref=e3056]: Station Access
+              - slider [ref=e3057]: "8"
+              - generic [ref=e3058]: "6.2"
+            - generic [ref=e3059]:
+              - generic [ref=e3060]: Move-in Cost
+              - slider [ref=e3061]: "6"
+              - generic [ref=e3062]: "4.6"
+            - generic [ref=e3063]:
+              - generic [ref=e3064]: Building Quality
+              - slider [ref=e3065]: "6"
+              - generic [ref=e3066]: "4.6"
+            - generic [ref=e3067]:
+              - generic [ref=e3068]: Daily Convenience
+              - slider [ref=e3069]: "10"
+              - generic [ref=e3070]: "7.7"
+            - generic [ref=e3071]:
+              - generic [ref=e3072]: Area Character
+              - slider [ref=e3073]: "10"
+              - generic [ref=e3074]: "7.7"
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - generic [ref=e20]: Source
+      - combobox [ref=e21]:
+        - option "All Sources" [selected]
+        - option "UR Housing"
+        - option "SUUMO"
+        - option "Real Estate Japan"
+        - option "Best Estate"
+        - option "GaijinPot"
+        - option "Wagaya Japan"
+        - option "Village House"
+    - generic [ref=e22]:
+      - generic [ref=e23]: Prefecture
+      - combobox [ref=e24]:
+        - option "All Prefectures" [selected]
+        - option "Saitama"
+        - option "Chiba"
+        - option "Kanagawa"
+        - option "Tokyo"
+    - generic [ref=e25]:
+      - generic [ref=e26]: Area
+      - combobox [ref=e27]:
+        - option "All Areas" [selected]
+        - option "Adachi-ku (足立区)"
+        - option "Chigasaki (茅ヶ崎市)"
+        - option "Edogawa-ku (江戸川区)"
+        - option "Fujisawa (藤沢市)"
+        - option "Funabashi (船橋市)"
+        - option "Ichikawa (市川市)"
+        - option "Itabashi-ku (板橋区)"
+        - option "Kamakura (鎌倉市)"
+        - option "Kawagoe (川越市)"
+        - option "Kawaguchi (川口市)"
+        - option "Kawasaki (川崎市)"
+        - option "Kawasaki-ku (川崎区)"
+        - option "Kita-ku (北区)"
+        - option "Matsudo (松戸市)"
+        - option "Nakahara-ku (中原区)"
+        - option "Nerima-ku (練馬区)"
+        - option "Niiza (新座市)"
+        - option "Omiya (大宮区)"
+        - option "Saitama Minami-ku (南区)"
+        - option "Saiwai-ku (幸区)"
+        - option "Takatsu-ku (高津区)"
+        - option "Toda (戸田市)"
+        - option "Urawa (浦和区)"
+        - option "Urayasu (浦安市)"
+        - option "Wako (和光市)"
+        - option "Warabi (蕨市)"
+        - option "Yokohama (横浜市)"
+        - option "Yokohama Isogo-ku (磯子区)"
+        - option "Yokohama Kanagawa-ku (神奈川区)"
+        - option "Yokohama Minami-ku (南区)"
+        - option "Yokohama Naka-ku (中区)"
+        - option "Yokohama Nishi-ku (西区)"
+        - option "Yokohama Tsuzuki-ku (都筑区)"
+    - generic [ref=e28]:
+      - generic [ref=e29]: Room Type
+      - combobox [ref=e30]:
+        - option "All Types" [selected]
+        - option "1LDK"
+        - option "2LDK"
+        - option "2SLDK"
+        - option "3LDK"
+        - option "3SLDK"
+        - option "3DK"
+        - option "3K"
+    - generic [ref=e31]:
+      - generic [ref=e32]: Max Total (¥/mo)
+      - spinbutton [ref=e33]
+    - generic [ref=e34]:
+      - generic [ref=e35]: Min Size (㎡)
+      - spinbutton [ref=e36]
+    - generic [ref=e37]:
+      - generic [ref=e38]: Max Age (years)
+      - spinbutton [ref=e39]
+    - generic [ref=e40]:
+      - generic [ref=e41]: Max Walk (min)
+      - spinbutton [ref=e42]
+    - generic [ref=e43]:
+      - generic [ref=e44]: Min Grade
+      - combobox [ref=e45]:
+        - option "All Grades" [selected]
+        - option "A (80+)"
+        - option "B (65+)"
+        - option "C (50+)"
+    - generic [ref=e46]:
+      - generic [ref=e47]: Search
+      - textbox "e.g. Kawaguchi, Musashino" [ref=e48]
+    - button "★ Favourites (0)" [ref=e51] [cursor=pointer]
+    - button "Reset Filters" [ref=e54] [cursor=pointer]
+  - button "Show Area Map" [ref=e55] [cursor=pointer]
+  - generic [ref=e3093]:
+    - generic [ref=e3094] [cursor=pointer]:
+      - generic [ref=e3095]: Saitama Minami-ku
+      - generic [ref=e3096]: Saitama · 35 min, 1x
+      - generic [ref=e3097]: 🛍 Muji
+      - generic [ref=e3098]:
+        - text: 6 rooms · Avg ¥39K · 66㎡ ·
+        - generic [ref=e3099]: B
+    - generic [ref=e3100] [cursor=pointer]:
+      - generic [ref=e3101]: Kawasaki-ku
+      - generic [ref=e3102]: Kanagawa · 25 min, 1x
+      - generic [ref=e3103]: 🛍 マッジョーレ
+      - generic [ref=e3104]:
+        - text: 118 rooms · Avg ¥6116K · 54㎡ ·
+        - generic [ref=e3105]: B
+    - generic [ref=e3106] [cursor=pointer]:
+      - generic [ref=e3107]: Itabashi-ku
+      - generic [ref=e3108]: Tokyo · 20 min, 1x
+      - generic [ref=e3109]: 🛍 Aeon Style
+      - generic [ref=e3110]:
+        - text: 91 rooms · Avg ¥650K · 42㎡ ·
+        - generic [ref=e3111]: B
+    - generic [ref=e3112] [cursor=pointer]:
+      - generic [ref=e3113]: Kita-ku
+      - generic [ref=e3114]: Tokyo · 20 min, 1x
+      - generic [ref=e3115]: 🛍 atre vie
+      - generic [ref=e3116]:
+        - text: 109 rooms · Avg ¥304K · 42㎡ ·
+        - generic [ref=e3117]: B
+    - generic [ref=e3118] [cursor=pointer]:
+      - generic [ref=e3119]: Kawasaki
+      - generic [ref=e3120]: Kanagawa · 25 min, 1x
+      - generic [ref=e3121]:
+        - text: 88 rooms · Avg ¥101K · 47㎡ ·
+        - generic [ref=e3122]: B
+  - table [ref=e107]:
+    - rowgroup [ref=e108]:
+      - row "★ Score▼ Source▲ Area▲ Property / Access▲ Type▲ Size▲ Floor▲ Walk▲ Rent▲ Total▲ ¥/㎡▲ Move-in▲ Age▲ Deposit Link" [ref=e109]:
+        - columnheader "★" [ref=e110] [cursor=pointer]: ★
+        - columnheader "Score▼" [ref=e111] [cursor=pointer]
+        - columnheader "Source▲" [ref=e112] [cursor=pointer]
+        - columnheader "Area▲" [ref=e113] [cursor=pointer]
+        - columnheader "Property / Access▲" [ref=e114] [cursor=pointer]
+        - columnheader "Type▲" [ref=e115] [cursor=pointer]
+        - columnheader "Size▲" [ref=e116] [cursor=pointer]
+        - columnheader "Floor▲" [ref=e117] [cursor=pointer]
+        - columnheader "Walk▲" [ref=e118] [cursor=pointer]
+        - columnheader "Rent▲" [ref=e119] [cursor=pointer]
+        - columnheader "Total▲" [ref=e120] [cursor=pointer]
+        - columnheader "¥/㎡▲" [ref=e121] [cursor=pointer]
+        - columnheader "Move-in▲" [ref=e122] [cursor=pointer]
+        - columnheader "Age▲" [ref=e123] [cursor=pointer]
+        - columnheader "Deposit" [ref=e124] [cursor=pointer]: Deposit
+        - columnheader "Link" [ref=e125] [cursor=pointer]: Link
+    - rowgroup [ref=e126]:
+      - 'row "☆ A 7/9 90.2 SUUMO Kawaguchi (川口市) ハイブリッヂＢ Saitama Railway/鳩ヶ谷 Stn 歩14min 28min 2LDK 56.07㎡ 2F 3 min ¥68,000 ¥71,300 ¥1,272 ¥68,000 33y D: - View" [ref=e3123]':
+        - cell "☆" [ref=e3124]
+        - cell "A 7/9 90.2" [ref=e3125] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3126]: A
+          - generic [ref=e3127]: 7/9
+          - text: "90.2"
+        - cell "SUUMO" [ref=e3130]:
+          - generic [ref=e3131]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3132]:
+          - generic [ref=e3133]: Kawaguchi (川口市)
+        - cell "ハイブリッヂＢ Saitama Railway/鳩ヶ谷 Stn 歩14min 28min" [ref=e3134]:
+          - generic [ref=e3135]: ハイブリッヂＢ
+          - generic "埼玉高速鉄道/鳩ヶ谷駅 歩14分 / 埼玉高速鉄道/新井宿駅 歩22分 / ＪＲ京浜東北線/川口駅 バス27分 (バス停)サンテピア 歩3分" [ref=e3136]:
+            - text: Saitama Railway/鳩ヶ谷 Stn 歩14min
+            - generic [ref=e3137]: 28min
+        - cell "2LDK" [ref=e3138]
+        - cell "56.07㎡" [ref=e3139]
+        - cell "2F" [ref=e3140]
+        - cell "3 min" [ref=e3141]
+        - cell "¥68,000" [ref=e3142]
+        - cell "¥71,300" [ref=e3143]
+        - cell "¥1,272" [ref=e3144]
+        - cell "¥68,000" [ref=e3145]
+        - cell "33y" [ref=e3146]
+        - 'cell "D: -" [ref=e3147]':
+          - generic [ref=e3148]: "D: -"
+        - cell "View" [ref=e3149]:
+          - link "View" [ref=e3150] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000082675185/?bc=100492413822
+      - 'row "☆ A 7/9 84.6 SUUMO Toda (戸田市) ドミール欅 ＪＲ埼京線/戸田 Stn 歩18min 31min 2LDK 55.27㎡ 2F 1 min ¥79,000 ¥82,000 ¥1,484 ¥79,000 33y D: - View" [ref=e3151]':
+        - cell "☆" [ref=e3152]
+        - cell "A 7/9 84.6" [ref=e3153] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3154]: A
+          - generic [ref=e3155]: 7/9
+          - text: "84.6"
+        - cell "SUUMO" [ref=e3158]:
+          - generic [ref=e3159]: SUUMO
+        - cell "Toda (戸田市)" [ref=e3160]:
+          - generic [ref=e3161]: Toda (戸田市)
+        - cell "ドミール欅 ＪＲ埼京線/戸田 Stn 歩18min 31min" [ref=e3162]:
+          - generic [ref=e3163]: ドミール欅
+          - generic "ＪＲ埼京線/戸田駅 歩18分 / ＪＲ埼京線/北戸田駅 歩22分 / ＪＲ埼京線/戸田公園駅 バス21分 (バス停)境橋 歩1分" [ref=e3164]:
+            - text: ＪＲ埼京線/戸田 Stn 歩18min
+            - generic [ref=e3165]: 31min
+        - cell "2LDK" [ref=e3166]
+        - cell "55.27㎡" [ref=e3167]
+        - cell "2F" [ref=e3168]
+        - cell "1 min" [ref=e3169]
+        - cell "¥79,000" [ref=e3170]
+        - cell "¥82,000" [ref=e3171]
+        - cell "¥1,484" [ref=e3172]
+        - cell "¥79,000" [ref=e3173]
+        - cell "33y" [ref=e3174]
+        - 'cell "D: -" [ref=e3175]':
+          - generic [ref=e3176]: "D: -"
+        - cell "View" [ref=e3177]:
+          - link "View" [ref=e3178] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105729678/?bc=100495624087
+      - 'row "☆ A 7/9 84.2 SUUMO Kawaguchi (川口市) オカダメゾン Saitama Railway/新井宿 Stn 歩11min 27min 3DK 49.68㎡ 3F 2 min ¥70,000 ¥72,000 ¥1,449 ¥105,000 38y D: ¥35,000 View" [ref=e3179]':
+        - cell "☆" [ref=e3180]
+        - cell "A 7/9 84.2" [ref=e3181] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3182]: A
+          - generic [ref=e3183]: 7/9
+          - text: "84.2"
+        - cell "SUUMO" [ref=e3186]:
+          - generic [ref=e3187]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3188]:
+          - generic [ref=e3189]: Kawaguchi (川口市)
+        - cell "オカダメゾン Saitama Railway/新井宿 Stn 歩11min 27min" [ref=e3190]:
+          - generic [ref=e3191]: オカダメゾン
+          - generic "埼玉高速鉄道/新井宿駅 歩11分 / 埼玉高速鉄道/鳩ヶ谷駅 歩14分 / ＪＲ京浜東北線/西川口駅 バス28分 (バス停)桜２丁目 歩2分" [ref=e3192]:
+            - text: Saitama Railway/新井宿 Stn 歩11min
+            - generic [ref=e3193]: 27min
+        - cell "3DK" [ref=e3194]
+        - cell "49.68㎡" [ref=e3195]
+        - cell "3F" [ref=e3196]
+        - cell "2 min" [ref=e3197]
+        - cell "¥70,000" [ref=e3198]
+        - cell "¥72,000" [ref=e3199]
+        - cell "¥1,449" [ref=e3200]
+        - cell "¥105,000" [ref=e3201]
+        - cell "38y" [ref=e3202]
+        - 'cell "D: ¥35,000" [ref=e3203]':
+          - generic [ref=e3204]: "D: ¥35,000"
+        - cell "View" [ref=e3205]:
+          - link "View" [ref=e3206] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000058016926/?bc=100486391473
+      - 'row "☆ A 7/9 83.9 SUUMO Wako (和光市) リーフコート Tobu Tojo Line/和光市 Stn bus 8min (bus 停)神明道下 歩1min 31min 2LDK 49.4㎡ 2F 1 min ¥77,000 ¥83,000 ¥1,680 ¥154,000 23y D: - / K: ¥77,000 View" [ref=e3207]':
+        - cell "☆" [ref=e3208]
+        - cell "A 7/9 83.9" [ref=e3209] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3210]: A
+          - generic [ref=e3211]: 7/9
+          - text: "83.9"
+        - cell "SUUMO" [ref=e3214]:
+          - generic [ref=e3215]: SUUMO
+        - cell "Wako (和光市)" [ref=e3216]:
+          - generic [ref=e3217]: Wako (和光市)
+        - cell "リーフコート Tobu Tojo Line/和光市 Stn bus 8min (bus 停)神明道下 歩1min 31min" [ref=e3218]:
+          - generic [ref=e3219]: リーフコート
+          - generic "東武東上線/和光市駅 バス8分 (バス停)神明道下 歩1分 / 東京メトロ副都心線/和光市駅 バス8分 (バス停)神明道下 歩1分 / 東京メトロ有楽町線/和光市駅 バス8分 (バス停)神明道下 歩1分" [ref=e3220]:
+            - text: Tobu Tojo Line/和光市 Stn bus 8min (bus 停)神明道下 歩1min
+            - generic [ref=e3221]: 31min
+        - cell "2LDK" [ref=e3222]
+        - cell "49.4㎡" [ref=e3223]
+        - cell "2F" [ref=e3224]
+        - cell "1 min" [ref=e3225]
+        - cell "¥77,000" [ref=e3226]
+        - cell "¥83,000" [ref=e3227]
+        - cell "¥1,680" [ref=e3228]
+        - cell "¥154,000" [ref=e3229]
+        - cell "23y" [ref=e3230]
+        - 'cell "D: - / K: ¥77,000" [ref=e3231]':
+          - generic [ref=e3232]: "D: - / K: ¥77,000"
+        - cell "View" [ref=e3233]:
+          - link "View" [ref=e3234] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000104927627/?bc=100489269713
+      - 'row "☆ A 7/9 83.5 SUUMO Kawaguchi (川口市) ヴェルハイム上青木 ＪＲ京浜東北線/西川口 Stn 歩23min 28min 3DK 53.77㎡ 1F 3 min ¥72,000 ¥75,000 ¥1,395 ¥144,000 32y D: ¥72,000 View" [ref=e3235]':
+        - cell "☆" [ref=e3236]
+        - cell "A 7/9 83.5" [ref=e3237] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3238]: A
+          - generic [ref=e3239]: 7/9
+          - text: "83.5"
+        - cell "SUUMO" [ref=e3242]:
+          - generic [ref=e3243]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3244]:
+          - generic [ref=e3245]: Kawaguchi (川口市)
+        - cell "ヴェルハイム上青木 ＪＲ京浜東北線/西川口 Stn 歩23min 28min" [ref=e3246]:
+          - generic [ref=e3247]: ヴェルハイム上青木
+          - generic "ＪＲ京浜東北線/西川口駅 歩23分 / ＪＲ京浜東北線/蕨駅 歩28分 / ＪＲ京浜東北線/西川口駅 バス10分 (バス停)六円橋 歩3分" [ref=e3248]:
+            - text: ＪＲ京浜東北線/西川口 Stn 歩23min
+            - generic [ref=e3249]: 28min
+        - cell "3DK" [ref=e3250]
+        - cell "53.77㎡" [ref=e3251]
+        - cell "1F" [ref=e3252]
+        - cell "3 min" [ref=e3253]
+        - cell "¥72,000" [ref=e3254]
+        - cell "¥75,000" [ref=e3255]
+        - cell "¥1,395" [ref=e3256]
+        - cell "¥144,000" [ref=e3257]
+        - cell "32y" [ref=e3258]
+        - 'cell "D: ¥72,000" [ref=e3259]':
+          - generic [ref=e3260]: "D: ¥72,000"
+        - cell "View" [ref=e3261]:
+          - link "View" [ref=e3262] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000095435317/?bc=100488360795
+      - 'row "☆ A 7/9 83.1 REJ Itabashi-ku (板橋区) 2LDK Apartment Chikatetsu Akatsuka Station (5 min. walk) 25min 2LDK 36.94㎡ 4 / 4F 5 min ¥79,000 ¥79,000 ¥2,139 ¥79,000 40y D: - View" [ref=e3263]':
+        - cell "☆" [ref=e3264]
+        - cell "A 7/9 83.1" [ref=e3265] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3266]: A
+          - generic [ref=e3267]: 7/9
+          - text: "83.1"
+        - cell "REJ" [ref=e3270]:
+          - generic [ref=e3271]: REJ
+        - cell "Itabashi-ku (板橋区)" [ref=e3272]:
+          - generic [ref=e3273]: Itabashi-ku (板橋区)
+        - cell "2LDK Apartment Chikatetsu Akatsuka Station (5 min. walk) 25min" [ref=e3274]:
+          - generic [ref=e3275]: 2LDK Apartment
+          - generic "Chikatetsu Akatsuka Station (5 min. walk)" [ref=e3276]:
+            - text: Chikatetsu Akatsuka Station (5 min. walk)
+            - generic [ref=e3277]: 25min
+        - cell "2LDK" [ref=e3278]
+        - cell "36.94㎡" [ref=e3279]
+        - cell "4 / 4F" [ref=e3280]
+        - cell "5 min" [ref=e3281]
+        - cell "¥79,000" [ref=e3282]
+        - cell "¥79,000" [ref=e3283]
+        - cell "¥2,139" [ref=e3284]
+        - cell "¥79,000" [ref=e3285]
+        - cell "40y" [ref=e3286]
+        - 'cell "D: -" [ref=e3287]':
+          - generic [ref=e3288]: "D: -"
+        - cell "View" [ref=e3289]:
+          - link "View" [ref=e3290] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1309145?prefecture=JP-13&city=13119&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=7
+      - 'row "☆ A 7/9 82.4 REJ Kawasaki (川崎市) 2DK Apartment Yurigaoka Station (2 min. walk) 27min 2DK 39.75㎡ 2 / 2F 2 min ¥74,000 ¥74,000 ¥1,862 ¥74,000 31y D: - View" [ref=e3291]':
+        - cell "☆" [ref=e3292]
+        - cell "A 7/9 82.4" [ref=e3293] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3294]: A
+          - generic [ref=e3295]: 7/9
+          - text: "82.4"
+        - cell "REJ" [ref=e3298]:
+          - generic [ref=e3299]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e3300]:
+          - generic [ref=e3301]: Kawasaki (川崎市)
+        - cell "2DK Apartment Yurigaoka Station (2 min. walk) 27min" [ref=e3302]:
+          - generic [ref=e3303]: 2DK Apartment
+          - generic "Yurigaoka Station (2 min. walk)" [ref=e3304]:
+            - text: Yurigaoka Station (2 min. walk)
+            - generic [ref=e3305]: 27min
+        - cell "2DK" [ref=e3306]
+        - cell "39.75㎡" [ref=e3307]
+        - cell "2 / 2F" [ref=e3308]
+        - cell "2 min" [ref=e3309]
+        - cell "¥74,000" [ref=e3310]
+        - cell "¥74,000" [ref=e3311]
+        - cell "¥1,862" [ref=e3312]
+        - cell "¥74,000" [ref=e3313]
+        - cell "31y" [ref=e3314]
+        - 'cell "D: -" [ref=e3315]':
+          - generic [ref=e3316]: "D: -"
+        - cell "View" [ref=e3317]:
+          - link "View" [ref=e3318] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1325434?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=10
+      - 'row "☆ A 7/9 82.3 SUUMO Kawaguchi (川口市) 坂本ハイツ Saitama Railway/鳩ヶ谷 Stn 歩14min 28min 3DK 55㎡ 1F 3 min ¥75,000 ¥77,000 ¥1,400 ¥150,000 38y D: ¥75,000 View" [ref=e3319]':
+        - cell "☆" [ref=e3320]
+        - cell "A 7/9 82.3" [ref=e3321] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3322]: A
+          - generic [ref=e3323]: 7/9
+          - text: "82.3"
+        - cell "SUUMO" [ref=e3326]:
+          - generic [ref=e3327]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3328]:
+          - generic [ref=e3329]: Kawaguchi (川口市)
+        - cell "坂本ハイツ Saitama Railway/鳩ヶ谷 Stn 歩14min 28min" [ref=e3330]:
+          - generic [ref=e3331]: 坂本ハイツ
+          - generic "埼玉高速鉄道/鳩ヶ谷駅 歩14分 / 埼玉高速鉄道/南鳩ヶ谷駅 歩17分 / ＪＲ京浜東北線/西川口駅 バス14分 (バス停)南７丁目 歩3分" [ref=e3332]:
+            - text: Saitama Railway/鳩ヶ谷 Stn 歩14min
+            - generic [ref=e3333]: 28min
+        - cell "3DK" [ref=e3334]
+        - cell "55㎡" [ref=e3335]
+        - cell "1F" [ref=e3336]
+        - cell "3 min" [ref=e3337]
+        - cell "¥75,000" [ref=e3338]
+        - cell "¥77,000" [ref=e3339]
+        - cell "¥1,400" [ref=e3340]
+        - cell "¥150,000" [ref=e3341]
+        - cell "38y" [ref=e3342]
+        - 'cell "D: ¥75,000" [ref=e3343]':
+          - generic [ref=e3344]: "D: ¥75,000"
+        - cell "View" [ref=e3345]:
+          - link "View" [ref=e3346] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000096269490/?bc=100496124181
+      - row "☆ A 6/9 82.1 UR Saitama Minami-ku (南区) うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min 3LDK 66㎡ 5F 2 min Inquiry ¥4,000 ¥61 - - - View" [ref=e3347]:
+        - cell "☆" [ref=e3348]
+        - cell "A 6/9 82.1" [ref=e3349] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3350]: A
+          - generic [ref=e3351]: 6/9
+          - text: "82.1"
+        - cell "UR" [ref=e3354]:
+          - generic [ref=e3355]: UR
+        - cell "Saitama Minami-ku (南区)" [ref=e3356]:
+          - generic [ref=e3357]: Saitama Minami-ku (南区)
+        - cell "うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min" [ref=e3358]:
+          - generic [ref=e3359]: うらわイーストシティ けやき街
+          - generic "JR武蔵野線「東浦和」駅 徒歩16～19分 または バス3分 徒歩2～5分 / JR東北本線「浦和」駅バス14分 徒歩2～5分" [ref=e3360]:
+            - text: JR Musashino Line"東浦和" Stn walk 16～19min or bus 3min walk 2～5min
+            - generic [ref=e3361]: 37min
+        - cell "3LDK" [ref=e3362]
+        - cell "66㎡" [ref=e3363]
+        - cell "5F" [ref=e3364]
+        - cell "2 min" [ref=e3365]
+        - cell "Inquiry" [ref=e3366]
+        - cell "¥4,000" [ref=e3367]
+        - cell "¥61" [ref=e3368]
+        - cell "-" [ref=e3369]
+        - cell "-" [ref=e3370]
+        - cell "-" [ref=e3371]:
+          - generic [ref=e3372]: "-"
+        - cell "View" [ref=e3373]:
+          - link "View" [ref=e3374] [cursor=pointer]:
+            - /url: https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000050503
+      - row "☆ A 6/9 82.1 UR Saitama Minami-ku (南区) うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min 3LDK 70㎡ 3F 2 min Inquiry ¥4,000 ¥57 - - - View" [ref=e3375]:
+        - cell "☆" [ref=e3376]
+        - cell "A 6/9 82.1" [ref=e3377] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3378]: A
+          - generic [ref=e3379]: 6/9
+          - text: "82.1"
+        - cell "UR" [ref=e3382]:
+          - generic [ref=e3383]: UR
+        - cell "Saitama Minami-ku (南区)" [ref=e3384]:
+          - generic [ref=e3385]: Saitama Minami-ku (南区)
+        - cell "うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min" [ref=e3386]:
+          - generic [ref=e3387]: うらわイーストシティ けやき街
+          - generic "JR武蔵野線「東浦和」駅 徒歩16～19分 または バス3分 徒歩2～5分 / JR東北本線「浦和」駅バス14分 徒歩2～5分" [ref=e3388]:
+            - text: JR Musashino Line"東浦和" Stn walk 16～19min or bus 3min walk 2～5min
+            - generic [ref=e3389]: 37min
+        - cell "3LDK" [ref=e3390]
+        - cell "70㎡" [ref=e3391]
+        - cell "3F" [ref=e3392]
+        - cell "2 min" [ref=e3393]
+        - cell "Inquiry" [ref=e3394]
+        - cell "¥4,000" [ref=e3395]
+        - cell "¥57" [ref=e3396]
+        - cell "-" [ref=e3397]
+        - cell "-" [ref=e3398]
+        - cell "-" [ref=e3399]:
+          - generic [ref=e3400]: "-"
+        - cell "View" [ref=e3401]:
+          - link "View" [ref=e3402] [cursor=pointer]:
+            - /url: https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000060306
+      - row "☆ A 6/9 82.1 UR Saitama Minami-ku (南区) うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min 3LDK 70㎡ 4F 2 min Inquiry ¥4,000 ¥57 - - - View" [ref=e3403]:
+        - cell "☆" [ref=e3404]
+        - cell "A 6/9 82.1" [ref=e3405] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3406]: A
+          - generic [ref=e3407]: 6/9
+          - text: "82.1"
+        - cell "UR" [ref=e3410]:
+          - generic [ref=e3411]: UR
+        - cell "Saitama Minami-ku (南区)" [ref=e3412]:
+          - generic [ref=e3413]: Saitama Minami-ku (南区)
+        - cell "うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min" [ref=e3414]:
+          - generic [ref=e3415]: うらわイーストシティ けやき街
+          - generic "JR武蔵野線「東浦和」駅 徒歩16～19分 または バス3分 徒歩2～5分 / JR東北本線「浦和」駅バス14分 徒歩2～5分" [ref=e3416]:
+            - text: JR Musashino Line"東浦和" Stn walk 16～19min or bus 3min walk 2～5min
+            - generic [ref=e3417]: 37min
+        - cell "3LDK" [ref=e3418]
+        - cell "70㎡" [ref=e3419]
+        - cell "4F" [ref=e3420]
+        - cell "2 min" [ref=e3421]
+        - cell "Inquiry" [ref=e3422]
+        - cell "¥4,000" [ref=e3423]
+        - cell "¥57" [ref=e3424]
+        - cell "-" [ref=e3425]
+        - cell "-" [ref=e3426]
+        - cell "-" [ref=e3427]:
+          - generic [ref=e3428]: "-"
+        - cell "View" [ref=e3429]:
+          - link "View" [ref=e3430] [cursor=pointer]:
+            - /url: https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000060406
+      - row "☆ A 6/9 82.1 UR Saitama Minami-ku (南区) うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min 3LDK 66㎡ 3F 2 min Inquiry ¥4,000 ¥61 - - - View" [ref=e3431]:
+        - cell "☆" [ref=e3432]
+        - cell "A 6/9 82.1" [ref=e3433] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3434]: A
+          - generic [ref=e3435]: 6/9
+          - text: "82.1"
+        - cell "UR" [ref=e3438]:
+          - generic [ref=e3439]: UR
+        - cell "Saitama Minami-ku (南区)" [ref=e3440]:
+          - generic [ref=e3441]: Saitama Minami-ku (南区)
+        - cell "うらわイーストシティ けやき街 JR Musashino Line\"東浦和\" Stn walk 16～19min or bus 3min walk 2～5min 37min" [ref=e3442]:
+          - generic [ref=e3443]: うらわイーストシティ けやき街
+          - generic "JR武蔵野線「東浦和」駅 徒歩16～19分 または バス3分 徒歩2～5分 / JR東北本線「浦和」駅バス14分 徒歩2～5分" [ref=e3444]:
+            - text: JR Musashino Line"東浦和" Stn walk 16～19min or bus 3min walk 2～5min
+            - generic [ref=e3445]: 37min
+        - cell "3LDK" [ref=e3446]
+        - cell "66㎡" [ref=e3447]
+        - cell "3F" [ref=e3448]
+        - cell "2 min" [ref=e3449]
+        - cell "Inquiry" [ref=e3450]
+        - cell "¥4,000" [ref=e3451]
+        - cell "¥61" [ref=e3452]
+        - cell "-" [ref=e3453]
+        - cell "-" [ref=e3454]
+        - cell "-" [ref=e3455]:
+          - generic [ref=e3456]: "-"
+        - cell "View" [ref=e3457]:
+          - link "View" [ref=e3458] [cursor=pointer]:
+            - /url: https://www.ur-net.go.jp/chintai/kanto/saitama/50_2530_room.html?JKSS=000120305
+      - 'row "☆ A 7/9 82 SUUMO Kawaguchi (川口市) コーポ平田 ＪＲ京浜東北線/蕨 Stn 歩6min 31min 2LDK 55.06㎡ 1F 6 min ¥75,000 ¥75,000 ¥1,362 ¥225,000 38y D: ¥150,000 View" [ref=e3459]':
+        - cell "☆" [ref=e3460]
+        - cell "A 7/9 82" [ref=e3461] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3462]: A
+          - generic [ref=e3463]: 7/9
+          - text: "82"
+        - cell "SUUMO" [ref=e3466]:
+          - generic [ref=e3467]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3468]:
+          - generic [ref=e3469]: Kawaguchi (川口市)
+        - cell "コーポ平田 ＪＲ京浜東北線/蕨 Stn 歩6min 31min" [ref=e3470]:
+          - generic [ref=e3471]: コーポ平田
+          - generic "ＪＲ京浜東北線/蕨駅 歩6分 / /" [ref=e3472]:
+            - text: ＪＲ京浜東北線/蕨 Stn 歩6min
+            - generic [ref=e3473]: 31min
+        - cell "2LDK" [ref=e3474]
+        - cell "55.06㎡" [ref=e3475]
+        - cell "1F" [ref=e3476]
+        - cell "6 min" [ref=e3477]
+        - cell "¥75,000" [ref=e3478]
+        - cell "¥75,000" [ref=e3479]
+        - cell "¥1,362" [ref=e3480]
+        - cell "¥225,000" [ref=e3481]
+        - cell "38y" [ref=e3482]
+        - 'cell "D: ¥150,000" [ref=e3483]':
+          - generic [ref=e3484]: "D: ¥150,000"
+        - cell "View" [ref=e3485]:
+          - link "View" [ref=e3486] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000013163375/?bc=100280718493
+      - 'row "☆ A 7/9 81.9 SUUMO Kawaguchi (川口市) オカダメゾン Saitama Railway/新井宿 Stn 歩11min 27min 3DK 48.55㎡ 3F 2 min ¥72,000 ¥74,000 ¥1,524 ¥216,000 38y D: ¥72,000 / K: ¥72,000 View" [ref=e3487]':
+        - cell "☆" [ref=e3488]
+        - cell "A 7/9 81.9" [ref=e3489] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3490]: A
+          - generic [ref=e3491]: 7/9
+          - text: "81.9"
+        - cell "SUUMO" [ref=e3494]:
+          - generic [ref=e3495]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3496]:
+          - generic [ref=e3497]: Kawaguchi (川口市)
+        - cell "オカダメゾン Saitama Railway/新井宿 Stn 歩11min 27min" [ref=e3498]:
+          - generic [ref=e3499]: オカダメゾン
+          - generic "埼玉高速鉄道/新井宿駅 歩11分 / 埼玉高速鉄道/鳩ヶ谷駅 歩14分 / ＪＲ京浜東北線/西川口駅 バス28分 (バス停)桜２丁目 歩2分" [ref=e3500]:
+            - text: Saitama Railway/新井宿 Stn 歩11min
+            - generic [ref=e3501]: 27min
+        - cell "3DK" [ref=e3502]
+        - cell "48.55㎡" [ref=e3503]
+        - cell "3F" [ref=e3504]
+        - cell "2 min" [ref=e3505]
+        - cell "¥72,000" [ref=e3506]
+        - cell "¥74,000" [ref=e3507]
+        - cell "¥1,524" [ref=e3508]
+        - cell "¥216,000" [ref=e3509]
+        - cell "38y" [ref=e3510]
+        - 'cell "D: ¥72,000 / K: ¥72,000" [ref=e3511]':
+          - generic [ref=e3512]: "D: ¥72,000 / K: ¥72,000"
+        - cell "View" [ref=e3513]:
+          - link "View" [ref=e3514] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000037372046/?bc=100408508208
+      - 'row "☆ A 7/9 81.7 REJ Kawaguchi (川口市) 2LDK Apartment Warabi Station (6 min. walk) 31min 2LDK 38.7㎡ 2 / 2F 6 min ¥69,000 ¥69,000 ¥1,783 ¥69,000 45y D: - View" [ref=e3515]':
+        - cell "☆" [ref=e3516]
+        - cell "A 7/9 81.7" [ref=e3517] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3518]: A
+          - generic [ref=e3519]: 7/9
+          - text: "81.7"
+        - cell "REJ" [ref=e3522]:
+          - generic [ref=e3523]: REJ
+        - cell "Kawaguchi (川口市)" [ref=e3524]:
+          - generic [ref=e3525]: Kawaguchi (川口市)
+        - cell "2LDK Apartment Warabi Station (6 min. walk) 31min" [ref=e3526]:
+          - generic [ref=e3527]: 2LDK Apartment
+          - generic "Warabi Station (6 min. walk)" [ref=e3528]:
+            - text: Warabi Station (6 min. walk)
+            - generic [ref=e3529]: 31min
+        - cell "2LDK" [ref=e3530]
+        - cell "38.7㎡" [ref=e3531]
+        - cell "2 / 2F" [ref=e3532]
+        - cell "6 min" [ref=e3533]
+        - cell "¥69,000" [ref=e3534]
+        - cell "¥69,000" [ref=e3535]
+        - cell "¥1,783" [ref=e3536]
+        - cell "¥69,000" [ref=e3537]
+        - cell "45y" [ref=e3538]
+        - 'cell "D: -" [ref=e3539]':
+          - generic [ref=e3540]: "D: -"
+        - cell "View" [ref=e3541]:
+          - link "View" [ref=e3542] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/889543?prefecture=JP-11&city=11203&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=0
+      - 'row "☆ A 7/9 81.7 GaijinPot Kawasaki (川崎市) in Yurigaoka Kawasaki-shi Asao-ku, Kanagawa Yurigaoka Station (2 min. walk) 27min 2DK 39.75㎡ 2 / 2F 2 min ¥74,000 ¥74,000 ¥1,862 ¥74,000 31y D: - View" [ref=e3543]':
+        - cell "☆" [ref=e3544]
+        - cell "A 7/9 81.7" [ref=e3545] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3546]: A
+          - generic [ref=e3547]: 7/9
+          - text: "81.7"
+        - cell "GaijinPot" [ref=e3550]:
+          - generic [ref=e3551]: GaijinPot
+        - cell "Kawasaki (川崎市)" [ref=e3552]:
+          - generic [ref=e3553]: Kawasaki (川崎市)
+        - cell "in Yurigaoka Kawasaki-shi Asao-ku, Kanagawa Yurigaoka Station (2 min. walk) 27min" [ref=e3554]:
+          - generic [ref=e3555]: in Yurigaoka Kawasaki-shi Asao-ku, Kanagawa
+          - generic "Yurigaoka Station (2 min. walk)" [ref=e3556]:
+            - text: Yurigaoka Station (2 min. walk)
+            - generic [ref=e3557]: 27min
+        - cell "2DK" [ref=e3558]
+        - cell "39.75㎡" [ref=e3559]
+        - cell "2 / 2F" [ref=e3560]
+        - cell "2 min" [ref=e3561]
+        - cell "¥74,000" [ref=e3562]
+        - cell "¥74,000" [ref=e3563]
+        - cell "¥1,862" [ref=e3564]
+        - cell "¥74,000" [ref=e3565]
+        - cell "31y" [ref=e3566]
+        - 'cell "D: -" [ref=e3567]':
+          - generic [ref=e3568]: "D: -"
+        - cell "View" [ref=e3569]:
+          - link "View" [ref=e3570] [cursor=pointer]:
+            - /url: https://apartments.gaijinpot.com/en/rent/view/1325434?max_price=200000&min_price=50000&order=index_ranking-desc&page=56&index=8
+      - 'row "☆ A 7/9 81.6 SUUMO Kawaguchi (川口市) コーポ平田 ＪＲ京浜東北線/蕨 Stn 歩6min 31min 2LDK 52.56㎡ 1F 6 min ¥75,000 ¥75,000 ¥1,427 ¥225,000 38y D: ¥150,000 View" [ref=e3571]':
+        - cell "☆" [ref=e3572]
+        - cell "A 7/9 81.6" [ref=e3573] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3574]: A
+          - generic [ref=e3575]: 7/9
+          - text: "81.6"
+        - cell "SUUMO" [ref=e3578]:
+          - generic [ref=e3579]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3580]:
+          - generic [ref=e3581]: Kawaguchi (川口市)
+        - cell "コーポ平田 ＪＲ京浜東北線/蕨 Stn 歩6min 31min" [ref=e3582]:
+          - generic [ref=e3583]: コーポ平田
+          - generic "ＪＲ京浜東北線/蕨駅 歩6分 / /" [ref=e3584]:
+            - text: ＪＲ京浜東北線/蕨 Stn 歩6min
+            - generic [ref=e3585]: 31min
+        - cell "2LDK" [ref=e3586]
+        - cell "52.56㎡" [ref=e3587]
+        - cell "1F" [ref=e3588]
+        - cell "6 min" [ref=e3589]
+        - cell "¥75,000" [ref=e3590]
+        - cell "¥75,000" [ref=e3591]
+        - cell "¥1,427" [ref=e3592]
+        - cell "¥225,000" [ref=e3593]
+        - cell "38y" [ref=e3594]
+        - 'cell "D: ¥150,000" [ref=e3595]':
+          - generic [ref=e3596]: "D: ¥150,000"
+        - cell "View" [ref=e3597]:
+          - link "View" [ref=e3598] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000096945048/?bc=100463713830
+      - 'row "☆ A 7/9 81.6 SUUMO Kawaguchi (川口市) ライオンズプラザ鳩ヶ谷 Saitama Railway/鳩ヶ谷 Stn 歩12min 27min 2LDK 54.22㎡ 4F 2 min ¥100,000 ¥105,000 ¥1,937 ¥100,000 32y D: - View" [ref=e3599]':
+        - cell "☆" [ref=e3600]
+        - cell "A 7/9 81.6" [ref=e3601] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3602]: A
+          - generic [ref=e3603]: 7/9
+          - text: "81.6"
+        - cell "SUUMO" [ref=e3606]:
+          - generic [ref=e3607]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3608]:
+          - generic [ref=e3609]: Kawaguchi (川口市)
+        - cell "ライオンズプラザ鳩ヶ谷 Saitama Railway/鳩ヶ谷 Stn 歩12min 27min" [ref=e3610]:
+          - generic [ref=e3611]: ライオンズプラザ鳩ヶ谷
+          - generic "埼玉高速鉄道/鳩ヶ谷駅 歩12分 / 埼玉高速鉄道/新井宿駅 歩9分 / ＪＲ京浜東北線/西川口駅 バス18分 (バス停)桜町2丁目 歩2分" [ref=e3612]:
+            - text: Saitama Railway/鳩ヶ谷 Stn 歩12min
+            - generic [ref=e3613]: 27min
+        - cell "2LDK" [ref=e3614]
+        - cell "54.22㎡" [ref=e3615]
+        - cell "4F" [ref=e3616]
+        - cell "2 min" [ref=e3617]
+        - cell "¥100,000" [ref=e3618]
+        - cell "¥105,000" [ref=e3619]
+        - cell "¥1,937" [ref=e3620]
+        - cell "¥100,000" [ref=e3621]
+        - cell "32y" [ref=e3622]
+        - 'cell "D: -" [ref=e3623]':
+          - generic [ref=e3624]: "D: -"
+        - cell "View" [ref=e3625]:
+          - link "View" [ref=e3626] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105658447/?bc=100495037252
+      - 'row "☆ A 7/9 81.5 SUUMO Kawaguchi (川口市) アーバンスクエア Saitama Railway/戸塚安行 Stn 歩23min 30min 3DK 56㎡ 3F 5 min ¥71,000 ¥76,000 ¥1,357 ¥142,000 31y D: ¥71,000 View" [ref=e3627]':
+        - cell "☆" [ref=e3628]
+        - cell "A 7/9 81.5" [ref=e3629] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3630]: A
+          - generic [ref=e3631]: 7/9
+          - text: "81.5"
+        - cell "SUUMO" [ref=e3634]:
+          - generic [ref=e3635]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3636]:
+          - generic [ref=e3637]: Kawaguchi (川口市)
+        - cell "アーバンスクエア Saitama Railway/戸塚安行 Stn 歩23min 30min" [ref=e3638]:
+          - generic [ref=e3639]: アーバンスクエア
+          - generic "埼玉高速鉄道/戸塚安行駅 歩23分 / 東武伊勢崎線/草加駅 バス22分 (バス停)南公園［出羽南公園］ 歩5分 / 埼玉高速鉄道/新井宿駅 歩44分" [ref=e3640]:
+            - text: Saitama Railway/戸塚安行 Stn 歩23min
+            - generic [ref=e3641]: 30min
+        - cell "3DK" [ref=e3642]
+        - cell "56㎡" [ref=e3643]
+        - cell "3F" [ref=e3644]
+        - cell "5 min" [ref=e3645]
+        - cell "¥71,000" [ref=e3646]
+        - cell "¥76,000" [ref=e3647]
+        - cell "¥1,357" [ref=e3648]
+        - cell "¥142,000" [ref=e3649]
+        - cell "31y" [ref=e3650]
+        - 'cell "D: ¥71,000" [ref=e3651]':
+          - generic [ref=e3652]: "D: ¥71,000"
+        - cell "View" [ref=e3653]:
+          - link "View" [ref=e3654] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105709219/?bc=100496027832
+      - 'row "☆ A 7/9 81.4 REJ Kawasaki (川崎市) 2LDK Apartment Tsurukawa Station (6 min. walk) 31min 2LDK 48㎡ 2 / 2F 6 min ¥84,000 ¥84,000 ¥1,750 ¥84,000 25y D: - View" [ref=e3655]':
+        - cell "☆" [ref=e3656]
+        - cell "A 7/9 81.4" [ref=e3657] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3658]: A
+          - generic [ref=e3659]: 7/9
+          - text: "81.4"
+        - cell "REJ" [ref=e3662]:
+          - generic [ref=e3663]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e3664]:
+          - generic [ref=e3665]: Kawasaki (川崎市)
+        - cell "2LDK Apartment Tsurukawa Station (6 min. walk) 31min" [ref=e3666]:
+          - generic [ref=e3667]: 2LDK Apartment
+          - generic "Tsurukawa Station (6 min. walk)" [ref=e3668]:
+            - text: Tsurukawa Station (6 min. walk)
+            - generic [ref=e3669]: 31min
+        - cell "2LDK" [ref=e3670]
+        - cell "48㎡" [ref=e3671]
+        - cell "2 / 2F" [ref=e3672]
+        - cell "6 min" [ref=e3673]
+        - cell "¥84,000" [ref=e3674]
+        - cell "¥84,000" [ref=e3675]
+        - cell "¥1,750" [ref=e3676]
+        - cell "¥84,000" [ref=e3677]
+        - cell "25y" [ref=e3678]
+        - 'cell "D: -" [ref=e3679]':
+          - generic [ref=e3680]: "D: -"
+        - cell "View" [ref=e3681]:
+          - link "View" [ref=e3682] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1278124?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=2&index=3
+      - 'row "☆ A 7/9 81.3 SUUMO Toda (戸田市) グランシャリオ ＪＲ京浜東北線/西川口 Stn 歩19min 32min 2LDK 43㎡ 3F 2 min ¥75,000 ¥75,000 ¥1,744 ¥150,000 34y D: ¥75,000 View" [ref=e3683]':
+        - cell "☆" [ref=e3684]
+        - cell "A 7/9 81.3" [ref=e3685] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3686]: A
+          - generic [ref=e3687]: 7/9
+          - text: "81.3"
+        - cell "SUUMO" [ref=e3690]:
+          - generic [ref=e3691]: SUUMO
+        - cell "Toda (戸田市)" [ref=e3692]:
+          - generic [ref=e3693]: Toda (戸田市)
+        - cell "グランシャリオ ＪＲ京浜東北線/西川口 Stn 歩19min 32min" [ref=e3694]:
+          - generic [ref=e3695]: グランシャリオ
+          - generic "ＪＲ京浜東北線/西川口駅 歩19分 / ＪＲ埼京線/戸田公園駅 バス12分 (バス停)中町一丁目 歩2分 / ＪＲ京浜東北線/蕨駅 歩29分" [ref=e3696]:
+            - text: ＪＲ京浜東北線/西川口 Stn 歩19min
+            - generic [ref=e3697]: 32min
+        - cell "2LDK" [ref=e3698]
+        - cell "43㎡" [ref=e3699]
+        - cell "3F" [ref=e3700]
+        - cell "2 min" [ref=e3701]
+        - cell "¥75,000" [ref=e3702]
+        - cell "¥75,000" [ref=e3703]
+        - cell "¥1,744" [ref=e3704]
+        - cell "¥150,000" [ref=e3705]
+        - cell "34y" [ref=e3706]
+        - 'cell "D: ¥75,000" [ref=e3707]':
+          - generic [ref=e3708]: "D: ¥75,000"
+        - cell "View" [ref=e3709]:
+          - link "View" [ref=e3710] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000064656635/?bc=100493127589
+      - 'row "☆ A 7/9 81 REJ Kawasaki (川崎市) 2LDK Apartment Tsurukawa Station (6 min. walk) 31min 2LDK 48㎡ 2 / 2F 6 min ¥85,000 ¥85,000 ¥1,771 ¥85,000 25y D: - View" [ref=e3711]':
+        - cell "☆" [ref=e3712]
+        - cell "A 7/9 81" [ref=e3713] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3714]: A
+          - generic [ref=e3715]: 7/9
+          - text: "81"
+        - cell "REJ" [ref=e3718]:
+          - generic [ref=e3719]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e3720]:
+          - generic [ref=e3721]: Kawasaki (川崎市)
+        - cell "2LDK Apartment Tsurukawa Station (6 min. walk) 31min" [ref=e3722]:
+          - generic [ref=e3723]: 2LDK Apartment
+          - generic "Tsurukawa Station (6 min. walk)" [ref=e3724]:
+            - text: Tsurukawa Station (6 min. walk)
+            - generic [ref=e3725]: 31min
+        - cell "2LDK" [ref=e3726]
+        - cell "48㎡" [ref=e3727]
+        - cell "2 / 2F" [ref=e3728]
+        - cell "6 min" [ref=e3729]
+        - cell "¥85,000" [ref=e3730]
+        - cell "¥85,000" [ref=e3731]
+        - cell "¥1,771" [ref=e3732]
+        - cell "¥85,000" [ref=e3733]
+        - cell "25y" [ref=e3734]
+        - 'cell "D: -" [ref=e3735]':
+          - generic [ref=e3736]: "D: -"
+        - cell "View" [ref=e3737]:
+          - link "View" [ref=e3738] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1307772?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=2&index=5
+      - 'row "☆ A 7/9 80.8 SUUMO Kawaguchi (川口市) グラディオ・ＡＫＡＹＡＭＡ Saitama Railway/新井宿 Stn 歩5min 29min 3DK 55.71㎡ 1F 4 min ¥83,000 ¥85,800 ¥1,540 ¥83,000 27y D: - View" [ref=e3739]':
+        - cell "☆" [ref=e3740]
+        - cell "A 7/9 80.8" [ref=e3741] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3742]: A
+          - generic [ref=e3743]: 7/9
+          - text: "80.8"
+        - cell "SUUMO" [ref=e3746]:
+          - generic [ref=e3747]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3748]:
+          - generic [ref=e3749]: Kawaguchi (川口市)
+        - cell "グラディオ・ＡＫＡＹＡＭＡ Saitama Railway/新井宿 Stn 歩5min 29min" [ref=e3750]:
+          - generic [ref=e3751]: グラディオ・ＡＫＡＹＡＭＡ
+          - generic "埼玉高速鉄道/新井宿駅 歩5分 / ＪＲ京浜東北線/川口駅 バス30分 (バス停)新井宿駅（バス） 歩6分 / ＪＲ京浜東北線/赤羽駅 バス25分 (バス停)桜ヶ丘 歩4分" [ref=e3752]:
+            - text: Saitama Railway/新井宿 Stn 歩5min
+            - generic [ref=e3753]: 29min
+        - cell "3DK" [ref=e3754]
+        - cell "55.71㎡" [ref=e3755]
+        - cell "1F" [ref=e3756]
+        - cell "4 min" [ref=e3757]
+        - cell "¥83,000" [ref=e3758]
+        - cell "¥85,800" [ref=e3759]
+        - cell "¥1,540" [ref=e3760]
+        - cell "¥83,000" [ref=e3761]
+        - cell "27y" [ref=e3762]
+        - 'cell "D: -" [ref=e3763]':
+          - generic [ref=e3764]: "D: -"
+        - cell "View" [ref=e3765]:
+          - link "View" [ref=e3766] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105278700/?bc=100493012215
+      - 'row "☆ A 7/9 80.7 SUUMO Kawaguchi (川口市) アコルト ＪＲ京浜東北線/川口 Stn bus 25min (bus 停)大竹 歩2min 27min 3LDK 66.55㎡ 2F 2 min ¥102,000 ¥107,500 ¥1,615 ¥204,000 11y D: - / K: ¥102,000 View" [ref=e3767]':
+        - cell "☆" [ref=e3768]
+        - cell "A 7/9 80.7" [ref=e3769] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3770]: A
+          - generic [ref=e3771]: 7/9
+          - text: "80.7"
+        - cell "SUUMO" [ref=e3774]:
+          - generic [ref=e3775]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3776]:
+          - generic [ref=e3777]: Kawaguchi (川口市)
+        - cell "アコルト ＪＲ京浜東北線/川口 Stn bus 25min (bus 停)大竹 歩2min 27min" [ref=e3778]:
+          - generic [ref=e3779]: アコルト
+          - generic "ＪＲ京浜東北線/川口駅 バス25分 (バス停)大竹 歩2分 / 埼玉高速鉄道/川口元郷駅 バス15分 (バス停)大竹 歩2分 / 埼玉高速鉄道/鳩ヶ谷駅 歩41分" [ref=e3780]:
+            - text: ＪＲ京浜東北線/川口 Stn bus 25min (bus 停)大竹 歩2min
+            - generic [ref=e3781]: 27min
+        - cell "3LDK" [ref=e3782]
+        - cell "66.55㎡" [ref=e3783]
+        - cell "2F" [ref=e3784]
+        - cell "2 min" [ref=e3785]
+        - cell "¥102,000" [ref=e3786]
+        - cell "¥107,500" [ref=e3787]
+        - cell "¥1,615" [ref=e3788]
+        - cell "¥204,000" [ref=e3789]
+        - cell "11y" [ref=e3790]
+        - 'cell "D: - / K: ¥102,000" [ref=e3791]':
+          - generic [ref=e3792]: "D: - / K: ¥102,000"
+        - cell "View" [ref=e3793]:
+          - link "View" [ref=e3794] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105446076/?bc=100493920518
+      - 'row "☆ A 7/9 80.6 SUUMO Kawaguchi (川口市) オーベルコート Saitama Railway/戸塚安行 Stn 歩10min 27min 2LDK 61.52㎡ 3F 2 min ¥106,500 ¥112,300 ¥1,825 ¥213,000 17y D: - / K: ¥106,500 View" [ref=e3795]':
+        - cell "☆" [ref=e3796]
+        - cell "A 7/9 80.6" [ref=e3797] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3798]: A
+          - generic [ref=e3799]: 7/9
+          - text: "80.6"
+        - cell "SUUMO" [ref=e3802]:
+          - generic [ref=e3803]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3804]:
+          - generic [ref=e3805]: Kawaguchi (川口市)
+        - cell "オーベルコート Saitama Railway/戸塚安行 Stn 歩10min 27min" [ref=e3806]:
+          - generic [ref=e3807]: オーベルコート
+          - generic "埼玉高速鉄道/戸塚安行駅 歩10分 / ＪＲ武蔵野線/東浦和駅 バス16分 (バス停)新町（川口市） 歩12分 / ＪＲ京浜東北線/川口駅 バス46分 (バス停)西立野中央 歩2分" [ref=e3808]:
+            - text: Saitama Railway/戸塚安行 Stn 歩10min
+            - generic [ref=e3809]: 27min
+        - cell "2LDK" [ref=e3810]
+        - cell "61.52㎡" [ref=e3811]
+        - cell "3F" [ref=e3812]
+        - cell "2 min" [ref=e3813]
+        - cell "¥106,500" [ref=e3814]
+        - cell "¥112,300" [ref=e3815]
+        - cell "¥1,825" [ref=e3816]
+        - cell "¥213,000" [ref=e3817]
+        - cell "17y" [ref=e3818]
+        - 'cell "D: - / K: ¥106,500" [ref=e3819]':
+          - generic [ref=e3820]: "D: - / K: ¥106,500"
+        - cell "View" [ref=e3821]:
+          - link "View" [ref=e3822] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105696628/?bc=100495724537
+      - 'row "☆ A 7/9 80.4 REJ Kawasaki (川崎市) 2LDK Apartment Tsurukawa Station (6 min. walk) 31min 2LDK 48㎡ 1 / 2F 6 min ¥86,360 ¥86,360 ¥1,799 ¥86,360 25y D: - View" [ref=e3823]':
+        - cell "☆" [ref=e3824]
+        - cell "A 7/9 80.4" [ref=e3825] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3826]: A
+          - generic [ref=e3827]: 7/9
+          - text: "80.4"
+        - cell "REJ" [ref=e3830]:
+          - generic [ref=e3831]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e3832]:
+          - generic [ref=e3833]: Kawasaki (川崎市)
+        - cell "2LDK Apartment Tsurukawa Station (6 min. walk) 31min" [ref=e3834]:
+          - generic [ref=e3835]: 2LDK Apartment
+          - generic "Tsurukawa Station (6 min. walk)" [ref=e3836]:
+            - text: Tsurukawa Station (6 min. walk)
+            - generic [ref=e3837]: 31min
+        - cell "2LDK" [ref=e3838]
+        - cell "48㎡" [ref=e3839]
+        - cell "1 / 2F" [ref=e3840]
+        - cell "6 min" [ref=e3841]
+        - cell "¥86,360" [ref=e3842]
+        - cell "¥86,360" [ref=e3843]
+        - cell "¥1,799" [ref=e3844]
+        - cell "¥86,360" [ref=e3845]
+        - cell "25y" [ref=e3846]
+        - 'cell "D: -" [ref=e3847]':
+          - generic [ref=e3848]: "D: -"
+        - cell "View" [ref=e3849]:
+          - link "View" [ref=e3850] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1290621?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=2&index=7
+      - 'row "☆ A 7/9 80.2 SUUMO Kawaguchi (川口市) オーベルコート Saitama Railway/戸塚安行 Stn 歩10min 27min 2LDK 61.52㎡ 5F 2 min ¥108,500 ¥114,300 ¥1,858 ¥217,000 17y D: - / K: ¥108,500 View" [ref=e3851]':
+        - cell "☆" [ref=e3852]
+        - cell "A 7/9 80.2" [ref=e3853] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3854]: A
+          - generic [ref=e3855]: 7/9
+          - text: "80.2"
+        - cell "SUUMO" [ref=e3858]:
+          - generic [ref=e3859]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3860]:
+          - generic [ref=e3861]: Kawaguchi (川口市)
+        - cell "オーベルコート Saitama Railway/戸塚安行 Stn 歩10min 27min" [ref=e3862]:
+          - generic [ref=e3863]: オーベルコート
+          - generic "埼玉高速鉄道/戸塚安行駅 歩10分 / ＪＲ武蔵野線/東浦和駅 バス16分 (バス停)新町（川口市） 歩12分 / ＪＲ京浜東北線/川口駅 バス46分 (バス停)西立野中央 歩2分" [ref=e3864]:
+            - text: Saitama Railway/戸塚安行 Stn 歩10min
+            - generic [ref=e3865]: 27min
+        - cell "2LDK" [ref=e3866]
+        - cell "61.52㎡" [ref=e3867]
+        - cell "5F" [ref=e3868]
+        - cell "2 min" [ref=e3869]
+        - cell "¥108,500" [ref=e3870]
+        - cell "¥114,300" [ref=e3871]
+        - cell "¥1,858" [ref=e3872]
+        - cell "¥217,000" [ref=e3873]
+        - cell "17y" [ref=e3874]
+        - 'cell "D: - / K: ¥108,500" [ref=e3875]':
+          - generic [ref=e3876]: "D: - / K: ¥108,500"
+        - cell "View" [ref=e3877]:
+          - link "View" [ref=e3878] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105615317/?bc=100495029197
+      - 'row "☆ A 7/9 80.2 SUUMO Kawaguchi (川口市) 鳩ヶ谷ヒルズ Saitama Railway/鳩ヶ谷 Stn 歩13min 30min 3DK 50.82㎡ 1F 5 min ¥74,000 ¥77,000 ¥1,515 ¥74,000 37y D: - View" [ref=e3879]':
+        - cell "☆" [ref=e3880]
+        - cell "A 7/9 80.2" [ref=e3881] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3882]: A
+          - generic [ref=e3883]: 7/9
+          - text: "80.2"
+        - cell "SUUMO" [ref=e3886]:
+          - generic [ref=e3887]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e3888]:
+          - generic [ref=e3889]: Kawaguchi (川口市)
+        - cell "鳩ヶ谷ヒルズ Saitama Railway/鳩ヶ谷 Stn 歩13min 30min" [ref=e3890]:
+          - generic [ref=e3891]: 鳩ヶ谷ヒルズ
+          - generic "埼玉高速鉄道/鳩ヶ谷駅 歩13分 / ＪＲ京浜東北線/西川口駅 バス16分 (バス停)鳩ヶ谷本町1丁目 歩5分 / 埼玉高速鉄道/新井宿駅 歩23分" [ref=e3892]:
+            - text: Saitama Railway/鳩ヶ谷 Stn 歩13min
+            - generic [ref=e3893]: 30min
+        - cell "3DK" [ref=e3894]
+        - cell "50.82㎡" [ref=e3895]
+        - cell "1F" [ref=e3896]
+        - cell "5 min" [ref=e3897]
+        - cell "¥74,000" [ref=e3898]
+        - cell "¥77,000" [ref=e3899]
+        - cell "¥1,515" [ref=e3900]
+        - cell "¥74,000" [ref=e3901]
+        - cell "37y" [ref=e3902]
+        - 'cell "D: -" [ref=e3903]':
+          - generic [ref=e3904]: "D: -"
+        - cell "View" [ref=e3905]:
+          - link "View" [ref=e3906] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105271331/?bc=100492343072
+      - 'row "☆ A 7/9 80 SUUMO Wako (和光市) 諏訪原団地 2-6号棟 Tobu Tojo Line/成増 Stn bus 7min (bus 停)団地西口 歩1min 31min 2LDK 66.68㎡ 1F 1 min ¥84,000 ¥89,000 ¥1,335 ¥252,000 60y D: ¥168,000 View" [ref=e3907]':
+        - cell "☆" [ref=e3908]
+        - cell "A 7/9 80" [ref=e3909] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3910]: A
+          - generic [ref=e3911]: 7/9
+          - text: "80"
+        - cell "SUUMO" [ref=e3914]:
+          - generic [ref=e3915]: SUUMO
+        - cell "Wako (和光市)" [ref=e3916]:
+          - generic [ref=e3917]: Wako (和光市)
+        - cell "諏訪原団地 2-6号棟 Tobu Tojo Line/成増 Stn bus 7min (bus 停)団地西口 歩1min 31min" [ref=e3918]:
+          - generic [ref=e3919]: 諏訪原団地 2-6号棟
+          - generic "東武東上線/成増駅 バス7分 (バス停)団地西口 歩1分 / /" [ref=e3920]:
+            - text: Tobu Tojo Line/成増 Stn bus 7min (bus 停)団地西口 歩1min
+            - generic [ref=e3921]: 31min
+        - cell "2LDK" [ref=e3922]
+        - cell "66.68㎡" [ref=e3923]
+        - cell "1F" [ref=e3924]
+        - cell "1 min" [ref=e3925]
+        - cell "¥84,000" [ref=e3926]
+        - cell "¥89,000" [ref=e3927]
+        - cell "¥1,335" [ref=e3928]
+        - cell "¥252,000" [ref=e3929]
+        - cell "60y" [ref=e3930]
+        - 'cell "D: ¥168,000" [ref=e3931]':
+          - generic [ref=e3932]: "D: ¥168,000"
+        - cell "View" [ref=e3933]:
+          - link "View" [ref=e3934] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105729713/?bc=100495641010
+      - 'row "☆ A 7/9 80 REJ Kawasaki (川崎市) 2SLDK Apartment Tsurukawa Station (6 min. walk) 31min 2SLDK 48.73㎡ 1 / 2F 6 min ¥87,700 ¥87,700 ¥1,800 ¥87,700 23y D: - View" [ref=e3935]':
+        - cell "☆" [ref=e3936]
+        - cell "A 7/9 80" [ref=e3937] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3938]: A
+          - generic [ref=e3939]: 7/9
+          - text: "80"
+        - cell "REJ" [ref=e3942]:
+          - generic [ref=e3943]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e3944]:
+          - generic [ref=e3945]: Kawasaki (川崎市)
+        - cell "2SLDK Apartment Tsurukawa Station (6 min. walk) 31min" [ref=e3946]:
+          - generic [ref=e3947]: 2SLDK Apartment
+          - generic "Tsurukawa Station (6 min. walk)" [ref=e3948]:
+            - text: Tsurukawa Station (6 min. walk)
+            - generic [ref=e3949]: 31min
+        - cell "2SLDK" [ref=e3950]
+        - cell "48.73㎡" [ref=e3951]
+        - cell "1 / 2F" [ref=e3952]
+        - cell "6 min" [ref=e3953]
+        - cell "¥87,700" [ref=e3954]
+        - cell "¥87,700" [ref=e3955]
+        - cell "¥1,800" [ref=e3956]
+        - cell "¥87,700" [ref=e3957]
+        - cell "23y" [ref=e3958]
+        - 'cell "D: -" [ref=e3959]':
+          - generic [ref=e3960]: "D: -"
+        - cell "View" [ref=e3961]:
+          - link "View" [ref=e3962] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1209348?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=2&index=9
+      - 'row "☆ A 7/9 80 REJ Itabashi-ku (板橋区) 2K Apartment Hasune Station (4 min. walk) 24min 2K 35㎡ 2 / 2F 4 min ¥72,000 ¥72,000 ¥2,057 ¥142,000 37y D: ¥70,000 View" [ref=e3963]':
+        - cell "☆" [ref=e3964]
+        - cell "A 7/9 80" [ref=e3965] [cursor=pointer]:
+          - generic "Excellent match" [ref=e3966]: A
+          - generic [ref=e3967]: 7/9
+          - text: "80"
+        - cell "REJ" [ref=e3970]:
+          - generic [ref=e3971]: REJ
+        - cell "Itabashi-ku (板橋区)" [ref=e3972]:
+          - generic [ref=e3973]: Itabashi-ku (板橋区)
+        - cell "2K Apartment Hasune Station (4 min. walk) 24min" [ref=e3974]:
+          - generic [ref=e3975]: 2K Apartment
+          - generic "Hasune Station (4 min. walk)" [ref=e3976]:
+            - text: Hasune Station (4 min. walk)
+            - generic [ref=e3977]: 24min
+        - cell "2K" [ref=e3978]
+        - cell "35㎡" [ref=e3979]
+        - cell "2 / 2F" [ref=e3980]
+        - cell "4 min" [ref=e3981]
+        - cell "¥72,000" [ref=e3982]
+        - cell "¥72,000" [ref=e3983]
+        - cell "¥2,057" [ref=e3984]
+        - cell "¥142,000" [ref=e3985]
+        - cell "37y" [ref=e3986]
+        - 'cell "D: ¥70,000" [ref=e3987]':
+          - generic [ref=e3988]: "D: ¥70,000"
+        - cell "View" [ref=e3989]:
+          - link "View" [ref=e3990] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/929234?prefecture=JP-13&city=13119&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=4
+      - 'row "☆ B 7/9 79.9 SUUMO Kawaguchi (川口市) オーベルコート Saitama Railway/戸塚安行 Stn 歩10min 27min 2LDK 61.52㎡ 5F 2 min ¥108,500 ¥115,100 ¥1,871 ¥217,000 17y D: - / K: ¥108,500 View" [ref=e3991]':
+        - cell "☆" [ref=e3992]
+        - cell "B 7/9 79.9" [ref=e3993] [cursor=pointer]:
+          - generic "Good match" [ref=e3994]: B
+          - generic [ref=e3995]: 7/9
+          - text: "79.9"
+        - cell "SUUMO" [ref=e3998]:
+          - generic [ref=e3999]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e4000]:
+          - generic [ref=e4001]: Kawaguchi (川口市)
+        - cell "オーベルコート Saitama Railway/戸塚安行 Stn 歩10min 27min" [ref=e4002]:
+          - generic [ref=e4003]: オーベルコート
+          - generic "埼玉高速鉄道/戸塚安行駅 歩10分 / ＪＲ武蔵野線/東浦和駅 バス16分 (バス停)新町（川口市） 歩12分 / ＪＲ京浜東北線/川口駅 バス46分 (バス停)西立野中央 歩2分" [ref=e4004]:
+            - text: Saitama Railway/戸塚安行 Stn 歩10min
+            - generic [ref=e4005]: 27min
+        - cell "2LDK" [ref=e4006]
+        - cell "61.52㎡" [ref=e4007]
+        - cell "5F" [ref=e4008]
+        - cell "2 min" [ref=e4009]
+        - cell "¥108,500" [ref=e4010]
+        - cell "¥115,100" [ref=e4011]
+        - cell "¥1,871" [ref=e4012]
+        - cell "¥217,000" [ref=e4013]
+        - cell "17y" [ref=e4014]
+        - 'cell "D: - / K: ¥108,500" [ref=e4015]':
+          - generic [ref=e4016]: "D: - / K: ¥108,500"
+        - cell "View" [ref=e4017]:
+          - link "View" [ref=e4018] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105635951/?bc=100494856637
+      - 'row "☆ B 5/9 79.9 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-407 South (2 Building / 4 Floor) - ¥39,000 ¥39,000 ¥1,163 ¥39,000 - D: - View" [ref=e4019]':
+        - cell "☆" [ref=e4020]
+        - cell "B 5/9 79.9" [ref=e4021] [cursor=pointer]:
+          - generic "Good match" [ref=e4022]: B
+          - generic [ref=e4023]: 5/9
+          - text: "79.9"
+        - cell "VillageH" [ref=e4026]:
+          - generic [ref=e4027]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4028]:
+          - generic [ref=e4029]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4030]:
+          - generic [ref=e4031]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4032]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4033]: 35min
+        - cell "2K" [ref=e4034]
+        - cell "33.54㎡" [ref=e4035]
+        - cell "2-407 South (2 Building / 4 Floor)" [ref=e4036]
+        - cell "-" [ref=e4037]
+        - cell "¥39,000" [ref=e4038]
+        - cell "¥39,000" [ref=e4039]
+        - cell "¥1,163" [ref=e4040]
+        - cell "¥39,000" [ref=e4041]
+        - cell "-" [ref=e4042]
+        - 'cell "D: -" [ref=e4043]':
+          - generic [ref=e4044]: "D: -"
+        - cell "View" [ref=e4045]:
+          - link "View" [ref=e4046] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-407/
+      - 'row "☆ B 5/9 79.9 VillageH Kawasaki-ku (川崎区) Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min 2DK 38.46㎡ 3-506 South (3 Building / 5 Floor) - ¥40,600 ¥40,600 ¥1,056 ¥40,600 - D: - View" [ref=e4047]':
+        - cell "☆" [ref=e4048]
+        - cell "B 5/9 79.9" [ref=e4049] [cursor=pointer]:
+          - generic "Good match" [ref=e4050]: B
+          - generic [ref=e4051]: 5/9
+          - text: "79.9"
+        - cell "VillageH" [ref=e4054]:
+          - generic [ref=e4055]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4056]:
+          - generic [ref=e4057]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min" [ref=e4058]:
+          - generic [ref=e4059]: Village House Shimojima Dai 2
+          - generic "Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km" [ref=e4060]:
+            - text: Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km
+            - generic [ref=e4061]: 35min
+        - cell "2DK" [ref=e4062]
+        - cell "38.46㎡" [ref=e4063]
+        - cell "3-506 South (3 Building / 5 Floor)" [ref=e4064]
+        - cell "-" [ref=e4065]
+        - cell "¥40,600" [ref=e4066]
+        - cell "¥40,600" [ref=e4067]
+        - cell "¥1,056" [ref=e4068]
+        - cell "¥40,600" [ref=e4069]
+        - cell "-" [ref=e4070]
+        - 'cell "D: -" [ref=e4071]':
+          - generic [ref=e4072]: "D: -"
+        - cell "View" [ref=e4073]:
+          - link "View" [ref=e4074] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-dai-2-3117/#2DK-3-506/
+      - 'row "☆ B 7/9 79.8 SUUMO Kawaguchi (川口市) 朝日３丁目貸家 Saitama Railway/南鳩ヶ谷 Stn 歩5min 30min 3K 48.48㎡ 1-2F 5 min ¥67,000 ¥70,000 ¥1,444 ¥67,000 63y D: - View" [ref=e4075]':
+        - cell "☆" [ref=e4076]
+        - cell "B 7/9 79.8" [ref=e4077] [cursor=pointer]:
+          - generic "Good match" [ref=e4078]: B
+          - generic [ref=e4079]: 7/9
+          - text: "79.8"
+        - cell "SUUMO" [ref=e4082]:
+          - generic [ref=e4083]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e4084]:
+          - generic [ref=e4085]: Kawaguchi (川口市)
+        - cell "朝日３丁目貸家 Saitama Railway/南鳩ヶ谷 Stn 歩5min 30min" [ref=e4086]:
+          - generic [ref=e4087]: 朝日３丁目貸家
+          - generic "埼玉高速鉄道/南鳩ヶ谷駅 歩5分 / 埼玉高速鉄道/川口元郷駅 歩21分 / 埼玉高速鉄道/鳩ヶ谷駅 歩26分" [ref=e4088]:
+            - text: Saitama Railway/南鳩ヶ谷 Stn 歩5min
+            - generic [ref=e4089]: 30min
+        - cell "3K" [ref=e4090]
+        - cell "48.48㎡" [ref=e4091]
+        - cell "1-2F" [ref=e4092]
+        - cell "5 min" [ref=e4093]
+        - cell "¥67,000" [ref=e4094]
+        - cell "¥70,000" [ref=e4095]
+        - cell "¥1,444" [ref=e4096]
+        - cell "¥67,000" [ref=e4097]
+        - cell "63y" [ref=e4098]
+        - 'cell "D: -" [ref=e4099]':
+          - generic [ref=e4100]: "D: -"
+        - cell "View" [ref=e4101]:
+          - link "View" [ref=e4102] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105787980/?bc=100490896079
+      - 'row "☆ B 7/9 79.8 REJ Edogawa-ku (江戸川区) 2K Apartment Keiseikoiwa Station (2 min. walk) 27min 2K 38.52㎡ 1 / 3F 2 min ¥77,000 ¥77,000 ¥1,999 ¥149,000 29y D: ¥72,000 View" [ref=e4103]':
+        - cell "☆" [ref=e4104]
+        - cell "B 7/9 79.8" [ref=e4105] [cursor=pointer]:
+          - generic "Good match" [ref=e4106]: B
+          - generic [ref=e4107]: 7/9
+          - text: "79.8"
+        - cell "REJ" [ref=e4110]:
+          - generic [ref=e4111]: REJ
+        - cell "Edogawa-ku (江戸川区)" [ref=e4112]:
+          - generic [ref=e4113]: Edogawa-ku (江戸川区)
+        - cell "2K Apartment Keiseikoiwa Station (2 min. walk) 27min" [ref=e4114]:
+          - generic [ref=e4115]: 2K Apartment
+          - generic "Keiseikoiwa Station (2 min. walk)" [ref=e4116]:
+            - text: Keiseikoiwa Station (2 min. walk)
+            - generic [ref=e4117]: 27min
+        - cell "2K" [ref=e4118]
+        - cell "38.52㎡" [ref=e4119]
+        - cell "1 / 3F" [ref=e4120]
+        - cell "2 min" [ref=e4121]
+        - cell "¥77,000" [ref=e4122]
+        - cell "¥77,000" [ref=e4123]
+        - cell "¥1,999" [ref=e4124]
+        - cell "¥149,000" [ref=e4125]
+        - cell "29y" [ref=e4126]
+        - 'cell "D: ¥72,000" [ref=e4127]':
+          - generic [ref=e4128]: "D: ¥72,000"
+        - cell "View" [ref=e4129]:
+          - link "View" [ref=e4130] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/262354?prefecture=JP-13&city=13123&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=7
+      - 'row "☆ B 7/9 79.8 GaijinPot Kita-ku (北区) in Koyama nakamizocho Kyoto-shi Kita-ku, Kyoto Kuramaguchi Station (5 min. walk) 25min 1K 24㎡ 3 / 3F 5 min ¥65,280 ¥65,280 ¥2,720 ¥65,280 24y D: - View" [ref=e4131]':
+        - cell "☆" [ref=e4132]
+        - cell "B 7/9 79.8" [ref=e4133] [cursor=pointer]:
+          - generic "Good match" [ref=e4134]: B
+          - generic [ref=e4135]: 7/9
+          - text: "79.8"
+        - cell "GaijinPot" [ref=e4138]:
+          - generic [ref=e4139]: GaijinPot
+        - cell "Kita-ku (北区)" [ref=e4140]:
+          - generic [ref=e4141]: Kita-ku (北区)
+        - cell "in Koyama nakamizocho Kyoto-shi Kita-ku, Kyoto Kuramaguchi Station (5 min. walk) 25min" [ref=e4142]:
+          - generic [ref=e4143]: in Koyama nakamizocho Kyoto-shi Kita-ku, Kyoto
+          - generic "Kuramaguchi Station (5 min. walk)" [ref=e4144]:
+            - text: Kuramaguchi Station (5 min. walk)
+            - generic [ref=e4145]: 25min
+        - cell "1K" [ref=e4146]
+        - cell "24㎡" [ref=e4147]
+        - cell "3 / 3F" [ref=e4148]
+        - cell "5 min" [ref=e4149]
+        - cell "¥65,280" [ref=e4150]
+        - cell "¥65,280" [ref=e4151]
+        - cell "¥2,720" [ref=e4152]
+        - cell "¥65,280" [ref=e4153]
+        - cell "24y" [ref=e4154]
+        - 'cell "D: -" [ref=e4155]':
+          - generic [ref=e4156]: "D: -"
+        - cell "View" [ref=e4157]:
+          - link "View" [ref=e4158] [cursor=pointer]:
+            - /url: https://apartments.gaijinpot.com/en/rent/view/1325595?max_price=200000&min_price=50000&order=index_ranking-desc&page=55&index=5
+      - 'row "☆ B 5/9 79.6 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 1-208 South (1 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e4159]':
+        - cell "☆" [ref=e4160]
+        - cell "B 5/9 79.6" [ref=e4161] [cursor=pointer]:
+          - generic "Good match" [ref=e4162]: B
+          - generic [ref=e4163]: 5/9
+          - text: "79.6"
+        - cell "VillageH" [ref=e4166]:
+          - generic [ref=e4167]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4168]:
+          - generic [ref=e4169]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4170]:
+          - generic [ref=e4171]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4172]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4173]: 35min
+        - cell "2K" [ref=e4174]
+        - cell "33.54㎡" [ref=e4175]
+        - cell "1-208 South (1 Building / 2 Floor)" [ref=e4176]
+        - cell "-" [ref=e4177]
+        - cell "¥40,800" [ref=e4178]
+        - cell "¥40,800" [ref=e4179]
+        - cell "¥1,216" [ref=e4180]
+        - cell "¥40,800" [ref=e4181]
+        - cell "-" [ref=e4182]
+        - 'cell "D: -" [ref=e4183]':
+          - generic [ref=e4184]: "D: -"
+        - cell "View" [ref=e4185]:
+          - link "View" [ref=e4186] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-1-208/
+      - 'row "☆ B 7/9 79.5 REJ Kawasaki (川崎市) 2DK Apartment Satsukidai Station (4 min. walk) 29min 2DK 42.6㎡ 1 / 2F 4 min ¥73,000 ¥73,000 ¥1,714 ¥73,000 42y D: - View" [ref=e4187]':
+        - cell "☆" [ref=e4188]
+        - cell "B 7/9 79.5" [ref=e4189] [cursor=pointer]:
+          - generic "Good match" [ref=e4190]: B
+          - generic [ref=e4191]: 7/9
+          - text: "79.5"
+        - cell "REJ" [ref=e4194]:
+          - generic [ref=e4195]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e4196]:
+          - generic [ref=e4197]: Kawasaki (川崎市)
+        - cell "2DK Apartment Satsukidai Station (4 min. walk) 29min" [ref=e4198]:
+          - generic [ref=e4199]: 2DK Apartment
+          - generic "Satsukidai Station (4 min. walk)" [ref=e4200]:
+            - text: Satsukidai Station (4 min. walk)
+            - generic [ref=e4201]: 29min
+        - cell "2DK" [ref=e4202]
+        - cell "42.6㎡" [ref=e4203]
+        - cell "1 / 2F" [ref=e4204]
+        - cell "4 min" [ref=e4205]
+        - cell "¥73,000" [ref=e4206]
+        - cell "¥73,000" [ref=e4207]
+        - cell "¥1,714" [ref=e4208]
+        - cell "¥73,000" [ref=e4209]
+        - cell "42y" [ref=e4210]
+        - 'cell "D: -" [ref=e4211]':
+          - generic [ref=e4212]: "D: -"
+        - cell "View" [ref=e4213]:
+          - link "View" [ref=e4214] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1325070?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=8
+      - 'row "☆ B 5/9 79.5 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-205 South (2 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e4215]':
+        - cell "☆" [ref=e4216]
+        - cell "B 5/9 79.5" [ref=e4217] [cursor=pointer]:
+          - generic "Good match" [ref=e4218]: B
+          - generic [ref=e4219]: 5/9
+          - text: "79.5"
+        - cell "VillageH" [ref=e4222]:
+          - generic [ref=e4223]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4224]:
+          - generic [ref=e4225]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4226]:
+          - generic [ref=e4227]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4228]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4229]: 35min
+        - cell "2K" [ref=e4230]
+        - cell "33.54㎡" [ref=e4231]
+        - cell "2-205 South (2 Building / 2 Floor)" [ref=e4232]
+        - cell "-" [ref=e4233]
+        - cell "¥40,800" [ref=e4234]
+        - cell "¥40,800" [ref=e4235]
+        - cell "¥1,216" [ref=e4236]
+        - cell "¥40,800" [ref=e4237]
+        - cell "-" [ref=e4238]
+        - 'cell "D: -" [ref=e4239]':
+          - generic [ref=e4240]: "D: -"
+        - cell "View" [ref=e4241]:
+          - link "View" [ref=e4242] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-205/
+      - 'row "☆ B 5/9 79.5 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 10-101 South (10 Building / 1 Floor) - ¥59,000 ¥59,000 ¥1,199 ¥59,000 - D: - View" [ref=e4243]':
+        - cell "☆" [ref=e4244]
+        - cell "B 5/9 79.5" [ref=e4245] [cursor=pointer]:
+          - generic "Good match" [ref=e4246]: B
+          - generic [ref=e4247]: 5/9
+          - text: "79.5"
+        - cell "VillageH" [ref=e4250]:
+          - generic [ref=e4251]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4252]:
+          - generic [ref=e4253]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e4254]:
+          - generic [ref=e4255]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e4256]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e4257]: 35min
+        - cell "3DK" [ref=e4258]
+        - cell "49.2㎡" [ref=e4259]
+        - cell "10-101 South (10 Building / 1 Floor)" [ref=e4260]
+        - cell "-" [ref=e4261]
+        - cell "¥59,000" [ref=e4262]
+        - cell "¥59,000" [ref=e4263]
+        - cell "¥1,199" [ref=e4264]
+        - cell "¥59,000" [ref=e4265]
+        - cell "-" [ref=e4266]
+        - 'cell "D: -" [ref=e4267]':
+          - generic [ref=e4268]: "D: -"
+        - cell "View" [ref=e4269]:
+          - link "View" [ref=e4270] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-10-101/
+      - 'row "☆ B 5/9 79.5 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-407 South (2 Building / 4 Floor) - ¥39,000 ¥39,000 ¥1,163 ¥39,000 - D: - View" [ref=e4271]':
+        - cell "☆" [ref=e4272]
+        - cell "B 5/9 79.5" [ref=e4273] [cursor=pointer]:
+          - generic "Good match" [ref=e4274]: B
+          - generic [ref=e4275]: 5/9
+          - text: "79.5"
+        - cell "VillageH" [ref=e4278]:
+          - generic [ref=e4279]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4280]:
+          - generic [ref=e4281]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4282]:
+          - generic [ref=e4283]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4284]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4285]: 35min
+        - cell "2K" [ref=e4286]
+        - cell "33.54㎡" [ref=e4287]
+        - cell "2-407 South (2 Building / 4 Floor)" [ref=e4288]
+        - cell "-" [ref=e4289]
+        - cell "¥39,000" [ref=e4290]
+        - cell "¥39,000" [ref=e4291]
+        - cell "¥1,163" [ref=e4292]
+        - cell "¥39,000" [ref=e4293]
+        - cell "-" [ref=e4294]
+        - 'cell "D: -" [ref=e4295]':
+          - generic [ref=e4296]: "D: -"
+        - cell "View" [ref=e4297]:
+          - link "View" [ref=e4298] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-407/
+      - 'row "☆ B 5/9 79.5 VillageH Kawasaki-ku (川崎区) Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min 2DK 38.46㎡ 3-506 South (3 Building / 5 Floor) - ¥40,600 ¥40,600 ¥1,056 ¥40,600 - D: - View" [ref=e4299]':
+        - cell "☆" [ref=e4300]
+        - cell "B 5/9 79.5" [ref=e4301] [cursor=pointer]:
+          - generic "Good match" [ref=e4302]: B
+          - generic [ref=e4303]: 5/9
+          - text: "79.5"
+        - cell "VillageH" [ref=e4306]:
+          - generic [ref=e4307]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4308]:
+          - generic [ref=e4309]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min" [ref=e4310]:
+          - generic [ref=e4311]: Village House Shimojima Dai 2
+          - generic "Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km" [ref=e4312]:
+            - text: Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km
+            - generic [ref=e4313]: 35min
+        - cell "2DK" [ref=e4314]
+        - cell "38.46㎡" [ref=e4315]
+        - cell "3-506 South (3 Building / 5 Floor)" [ref=e4316]
+        - cell "-" [ref=e4317]
+        - cell "¥40,600" [ref=e4318]
+        - cell "¥40,600" [ref=e4319]
+        - cell "¥1,056" [ref=e4320]
+        - cell "¥40,600" [ref=e4321]
+        - cell "-" [ref=e4322]
+        - 'cell "D: -" [ref=e4323]':
+          - generic [ref=e4324]: "D: -"
+        - cell "View" [ref=e4325]:
+          - link "View" [ref=e4326] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-dai-2-3117/#2DK-3-506/
+      - 'row "☆ B 7/9 79.3 SUUMO Kawaguchi (川口市) 朝日３丁目貸家 Saitama Railway/南鳩ヶ谷 Stn 歩5min 30min 3K 48.48㎡ - 5 min ¥69,000 ¥72,000 ¥1,485 ¥69,000 63y D: - View" [ref=e4327]':
+        - cell "☆" [ref=e4328]
+        - cell "B 7/9 79.3" [ref=e4329] [cursor=pointer]:
+          - generic "Good match" [ref=e4330]: B
+          - generic [ref=e4331]: 7/9
+          - text: "79.3"
+        - cell "SUUMO" [ref=e4334]:
+          - generic [ref=e4335]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e4336]:
+          - generic [ref=e4337]: Kawaguchi (川口市)
+        - cell "朝日３丁目貸家 Saitama Railway/南鳩ヶ谷 Stn 歩5min 30min" [ref=e4338]:
+          - generic [ref=e4339]: 朝日３丁目貸家
+          - generic "埼玉高速鉄道/南鳩ヶ谷駅 歩5分 / 埼玉高速鉄道/川口元郷駅 歩21分 / 埼玉高速鉄道/鳩ヶ谷駅 歩26分" [ref=e4340]:
+            - text: Saitama Railway/南鳩ヶ谷 Stn 歩5min
+            - generic [ref=e4341]: 30min
+        - cell "3K" [ref=e4342]
+        - cell "48.48㎡" [ref=e4343]
+        - cell "-" [ref=e4344]
+        - cell "5 min" [ref=e4345]
+        - cell "¥69,000" [ref=e4346]
+        - cell "¥72,000" [ref=e4347]
+        - cell "¥1,485" [ref=e4348]
+        - cell "¥69,000" [ref=e4349]
+        - cell "63y" [ref=e4350]
+        - 'cell "D: -" [ref=e4351]':
+          - generic [ref=e4352]: "D: -"
+        - cell "View" [ref=e4353]:
+          - link "View" [ref=e4354] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105146803/?bc=100493688732
+      - 'row "☆ B 5/9 79.3 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 8-105 South (8 Building / 1 Floor) - ¥59,200 ¥59,200 ¥1,203 ¥59,200 - D: - View" [ref=e4355]':
+        - cell "☆" [ref=e4356]
+        - cell "B 5/9 79.3" [ref=e4357] [cursor=pointer]:
+          - generic "Good match" [ref=e4358]: B
+          - generic [ref=e4359]: 5/9
+          - text: "79.3"
+        - cell "VillageH" [ref=e4362]:
+          - generic [ref=e4363]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4364]:
+          - generic [ref=e4365]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e4366]:
+          - generic [ref=e4367]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e4368]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e4369]: 35min
+        - cell "3DK" [ref=e4370]
+        - cell "49.2㎡" [ref=e4371]
+        - cell "8-105 South (8 Building / 1 Floor)" [ref=e4372]
+        - cell "-" [ref=e4373]
+        - cell "¥59,200" [ref=e4374]
+        - cell "¥59,200" [ref=e4375]
+        - cell "¥1,203" [ref=e4376]
+        - cell "¥59,200" [ref=e4377]
+        - cell "-" [ref=e4378]
+        - 'cell "D: -" [ref=e4379]':
+          - generic [ref=e4380]: "D: -"
+        - cell "View" [ref=e4381]:
+          - link "View" [ref=e4382] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-8-105/
+      - 'row "☆ B 7/9 79.2 SUUMO Kawaguchi (川口市) 埼玉高速鉄道 南鳩ヶ谷駅 地上2階建 築63年 Saitama Railway/南鳩ヶ谷 Stn 歩5min 30min 3K 48.48㎡ 1-2F 5 min ¥69,000 ¥72,000 ¥1,485 ¥69,000 63y D: - View" [ref=e4383]':
+        - cell "☆" [ref=e4384]
+        - cell "B 7/9 79.2" [ref=e4385] [cursor=pointer]:
+          - generic "Good match" [ref=e4386]: B
+          - generic [ref=e4387]: 7/9
+          - text: "79.2"
+        - cell "SUUMO" [ref=e4390]:
+          - generic [ref=e4391]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e4392]:
+          - generic [ref=e4393]: Kawaguchi (川口市)
+        - cell "埼玉高速鉄道 南鳩ヶ谷駅 地上2階建 築63年 Saitama Railway/南鳩ヶ谷 Stn 歩5min 30min" [ref=e4394]:
+          - generic [ref=e4395]: 埼玉高速鉄道 南鳩ヶ谷駅 地上2階建 築63年
+          - generic "埼玉高速鉄道/南鳩ヶ谷駅 歩5分 / 埼玉高速鉄道/川口元郷駅 歩19分 / 埼玉高速鉄道/鳩ヶ谷駅 歩26分" [ref=e4396]:
+            - text: Saitama Railway/南鳩ヶ谷 Stn 歩5min
+            - generic [ref=e4397]: 30min
+        - cell "3K" [ref=e4398]
+        - cell "48.48㎡" [ref=e4399]
+        - cell "1-2F" [ref=e4400]
+        - cell "5 min" [ref=e4401]
+        - cell "¥69,000" [ref=e4402]
+        - cell "¥72,000" [ref=e4403]
+        - cell "¥1,485" [ref=e4404]
+        - cell "¥69,000" [ref=e4405]
+        - cell "63y" [ref=e4406]
+        - 'cell "D: -" [ref=e4407]':
+          - generic [ref=e4408]: "D: -"
+        - cell "View" [ref=e4409]:
+          - link "View" [ref=e4410] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105307537/?bc=100492349525
+      - 'row "☆ B 7/9 79.1 REJ Kawasaki (川崎市) 2DK Apartment Musashi-kosugi Station (2 min. walk) 27min 2DK 44.5㎡ 2 / 3F 2 min ¥81,000 ¥81,000 ¥1,820 ¥81,000 52y D: - View" [ref=e4411]':
+        - cell "☆" [ref=e4412]
+        - cell "B 7/9 79.1" [ref=e4413] [cursor=pointer]:
+          - generic "Good match" [ref=e4414]: B
+          - generic [ref=e4415]: 7/9
+          - text: "79.1"
+        - cell "REJ" [ref=e4418]:
+          - generic [ref=e4419]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e4420]:
+          - generic [ref=e4421]: Kawasaki (川崎市)
+        - cell "2DK Apartment Musashi-kosugi Station (2 min. walk) 27min" [ref=e4422]:
+          - generic [ref=e4423]: 2DK Apartment
+          - generic "Musashi-kosugi Station (2 min. walk)" [ref=e4424]:
+            - text: Musashi-kosugi Station (2 min. walk)
+            - generic [ref=e4425]: 27min
+        - cell "2DK" [ref=e4426]
+        - cell "44.5㎡" [ref=e4427]
+        - cell "2 / 3F" [ref=e4428]
+        - cell "2 min" [ref=e4429]
+        - cell "¥81,000" [ref=e4430]
+        - cell "¥81,000" [ref=e4431]
+        - cell "¥1,820" [ref=e4432]
+        - cell "¥81,000" [ref=e4433]
+        - cell "52y" [ref=e4434]
+        - 'cell "D: -" [ref=e4435]':
+          - generic [ref=e4436]: "D: -"
+        - cell "View" [ref=e4437]:
+          - link "View" [ref=e4438] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/889261?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=14
+      - 'row "☆ B 5/9 79.1 VillageH Kawasaki-ku (川崎区) Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min 3DK 66.14㎡ 2-405 South (2 Building / 4 Floor) - ¥63,100 ¥63,100 ¥954 ¥63,100 - D: - View" [ref=e4439]':
+        - cell "☆" [ref=e4440]
+        - cell "B 5/9 79.1" [ref=e4441] [cursor=pointer]:
+          - generic "Good match" [ref=e4442]: B
+          - generic [ref=e4443]: 5/9
+          - text: "79.1"
+        - cell "VillageH" [ref=e4446]:
+          - generic [ref=e4447]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4448]:
+          - generic [ref=e4449]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min" [ref=e4450]:
+          - generic [ref=e4451]: Village House Shimojima
+          - generic "Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km" [ref=e4452]:
+            - text: Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km
+            - generic [ref=e4453]: 35min
+        - cell "3DK" [ref=e4454]
+        - cell "66.14㎡" [ref=e4455]
+        - cell "2-405 South (2 Building / 4 Floor)" [ref=e4456]
+        - cell "-" [ref=e4457]
+        - cell "¥63,100" [ref=e4458]
+        - cell "¥63,100" [ref=e4459]
+        - cell "¥954" [ref=e4460]
+        - cell "¥63,100" [ref=e4461]
+        - cell "-" [ref=e4462]
+        - 'cell "D: -" [ref=e4463]':
+          - generic [ref=e4464]: "D: -"
+        - cell "View" [ref=e4465]:
+          - link "View" [ref=e4466] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-3091/#3DK-2-405/
+      - 'row "☆ B 5/9 79.1 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 1-208 South (1 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e4467]':
+        - cell "☆" [ref=e4468]
+        - cell "B 5/9 79.1" [ref=e4469] [cursor=pointer]:
+          - generic "Good match" [ref=e4470]: B
+          - generic [ref=e4471]: 5/9
+          - text: "79.1"
+        - cell "VillageH" [ref=e4474]:
+          - generic [ref=e4475]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4476]:
+          - generic [ref=e4477]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4478]:
+          - generic [ref=e4479]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4480]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4481]: 35min
+        - cell "2K" [ref=e4482]
+        - cell "33.54㎡" [ref=e4483]
+        - cell "1-208 South (1 Building / 2 Floor)" [ref=e4484]
+        - cell "-" [ref=e4485]
+        - cell "¥40,800" [ref=e4486]
+        - cell "¥40,800" [ref=e4487]
+        - cell "¥1,216" [ref=e4488]
+        - cell "¥40,800" [ref=e4489]
+        - cell "-" [ref=e4490]
+        - 'cell "D: -" [ref=e4491]':
+          - generic [ref=e4492]: "D: -"
+        - cell "View" [ref=e4493]:
+          - link "View" [ref=e4494] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-1-208/
+      - 'row "☆ B 5/9 79.1 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-205 South (2 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e4495]':
+        - cell "☆" [ref=e4496]
+        - cell "B 5/9 79.1" [ref=e4497] [cursor=pointer]:
+          - generic "Good match" [ref=e4498]: B
+          - generic [ref=e4499]: 5/9
+          - text: "79.1"
+        - cell "VillageH" [ref=e4502]:
+          - generic [ref=e4503]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4504]:
+          - generic [ref=e4505]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4506]:
+          - generic [ref=e4507]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4508]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4509]: 35min
+        - cell "2K" [ref=e4510]
+        - cell "33.54㎡" [ref=e4511]
+        - cell "2-205 South (2 Building / 2 Floor)" [ref=e4512]
+        - cell "-" [ref=e4513]
+        - cell "¥40,800" [ref=e4514]
+        - cell "¥40,800" [ref=e4515]
+        - cell "¥1,216" [ref=e4516]
+        - cell "¥40,800" [ref=e4517]
+        - cell "-" [ref=e4518]
+        - 'cell "D: -" [ref=e4519]':
+          - generic [ref=e4520]: "D: -"
+        - cell "View" [ref=e4521]:
+          - link "View" [ref=e4522] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-205/
+      - 'row "☆ B 5/9 79.1 VillageH Kawasaki-ku (川崎区) Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min 2DK 38.46㎡ 3-506 South (3 Building / 5 Floor) - ¥40,600 ¥40,600 ¥1,056 ¥40,600 - D: - View" [ref=e4523]':
+        - cell "☆" [ref=e4524]
+        - cell "B 5/9 79.1" [ref=e4525] [cursor=pointer]:
+          - generic "Good match" [ref=e4526]: B
+          - generic [ref=e4527]: 5/9
+          - text: "79.1"
+        - cell "VillageH" [ref=e4530]:
+          - generic [ref=e4531]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4532]:
+          - generic [ref=e4533]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min" [ref=e4534]:
+          - generic [ref=e4535]: Village House Shimojima Dai 2
+          - generic "Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km" [ref=e4536]:
+            - text: Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km
+            - generic [ref=e4537]: 35min
+        - cell "2DK" [ref=e4538]
+        - cell "38.46㎡" [ref=e4539]
+        - cell "3-506 South (3 Building / 5 Floor)" [ref=e4540]
+        - cell "-" [ref=e4541]
+        - cell "¥40,600" [ref=e4542]
+        - cell "¥40,600" [ref=e4543]
+        - cell "¥1,056" [ref=e4544]
+        - cell "¥40,600" [ref=e4545]
+        - cell "-" [ref=e4546]
+        - 'cell "D: -" [ref=e4547]':
+          - generic [ref=e4548]: "D: -"
+        - cell "View" [ref=e4549]:
+          - link "View" [ref=e4550] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-dai-2-3117/#2DK-3-506/
+      - 'row "☆ B 7/9 79 REJ Itabashi-ku (板橋区) 2DK Apartment Shimura-sakaue Station (1 min. walk) 21min 2DK 35.55㎡ 3 / 10F 1 min ¥79,000 ¥79,000 ¥2,222 ¥154,000 47y D: ¥75,000 View" [ref=e4551]':
+        - cell "☆" [ref=e4552]
+        - cell "B 7/9 79" [ref=e4553] [cursor=pointer]:
+          - generic "Good match" [ref=e4554]: B
+          - generic [ref=e4555]: 7/9
+          - text: "79"
+        - cell "REJ" [ref=e4558]:
+          - generic [ref=e4559]: REJ
+        - cell "Itabashi-ku (板橋区)" [ref=e4560]:
+          - generic [ref=e4561]: Itabashi-ku (板橋区)
+        - cell "2DK Apartment Shimura-sakaue Station (1 min. walk) 21min" [ref=e4562]:
+          - generic [ref=e4563]: 2DK Apartment
+          - generic "Shimura-sakaue Station (1 min. walk)" [ref=e4564]:
+            - text: Shimura-sakaue Station (1 min. walk)
+            - generic [ref=e4565]: 21min
+        - cell "2DK" [ref=e4566]
+        - cell "35.55㎡" [ref=e4567]
+        - cell "3 / 10F" [ref=e4568]
+        - cell "1 min" [ref=e4569]
+        - cell "¥79,000" [ref=e4570]
+        - cell "¥79,000" [ref=e4571]
+        - cell "¥2,222" [ref=e4572]
+        - cell "¥154,000" [ref=e4573]
+        - cell "47y" [ref=e4574]
+        - 'cell "D: ¥75,000" [ref=e4575]':
+          - generic [ref=e4576]: "D: ¥75,000"
+        - cell "View" [ref=e4577]:
+          - link "View" [ref=e4578] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/851750?prefecture=JP-13&city=13119&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=8
+      - 'row "☆ B 5/9 79 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 10-101 South (10 Building / 1 Floor) - ¥59,000 ¥59,000 ¥1,199 ¥59,000 - D: - View" [ref=e4579]':
+        - cell "☆" [ref=e4580]
+        - cell "B 5/9 79" [ref=e4581] [cursor=pointer]:
+          - generic "Good match" [ref=e4582]: B
+          - generic [ref=e4583]: 5/9
+          - text: "79"
+        - cell "VillageH" [ref=e4586]:
+          - generic [ref=e4587]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4588]:
+          - generic [ref=e4589]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e4590]:
+          - generic [ref=e4591]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e4592]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e4593]: 35min
+        - cell "3DK" [ref=e4594]
+        - cell "49.2㎡" [ref=e4595]
+        - cell "10-101 South (10 Building / 1 Floor)" [ref=e4596]
+        - cell "-" [ref=e4597]
+        - cell "¥59,000" [ref=e4598]
+        - cell "¥59,000" [ref=e4599]
+        - cell "¥1,199" [ref=e4600]
+        - cell "¥59,000" [ref=e4601]
+        - cell "-" [ref=e4602]
+        - 'cell "D: -" [ref=e4603]':
+          - generic [ref=e4604]: "D: -"
+        - cell "View" [ref=e4605]:
+          - link "View" [ref=e4606] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-10-101/
+      - 'row "☆ B 5/9 79 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-407 South (2 Building / 4 Floor) - ¥39,000 ¥39,000 ¥1,163 ¥39,000 - D: - View" [ref=e4607]':
+        - cell "☆" [ref=e4608]
+        - cell "B 5/9 79" [ref=e4609] [cursor=pointer]:
+          - generic "Good match" [ref=e4610]: B
+          - generic [ref=e4611]: 5/9
+          - text: "79"
+        - cell "VillageH" [ref=e4614]:
+          - generic [ref=e4615]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4616]:
+          - generic [ref=e4617]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4618]:
+          - generic [ref=e4619]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4620]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4621]: 35min
+        - cell "2K" [ref=e4622]
+        - cell "33.54㎡" [ref=e4623]
+        - cell "2-407 South (2 Building / 4 Floor)" [ref=e4624]
+        - cell "-" [ref=e4625]
+        - cell "¥39,000" [ref=e4626]
+        - cell "¥39,000" [ref=e4627]
+        - cell "¥1,163" [ref=e4628]
+        - cell "¥39,000" [ref=e4629]
+        - cell "-" [ref=e4630]
+        - 'cell "D: -" [ref=e4631]':
+          - generic [ref=e4632]: "D: -"
+        - cell "View" [ref=e4633]:
+          - link "View" [ref=e4634] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-407/
+      - 'row "☆ B 5/9 78.9 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 8-105 South (8 Building / 1 Floor) - ¥59,200 ¥59,200 ¥1,203 ¥59,200 - D: - View" [ref=e4635]':
+        - cell "☆" [ref=e4636]
+        - cell "B 5/9 78.9" [ref=e4637] [cursor=pointer]:
+          - generic "Good match" [ref=e4638]: B
+          - generic [ref=e4639]: 5/9
+          - text: "78.9"
+        - cell "VillageH" [ref=e4642]:
+          - generic [ref=e4643]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4644]:
+          - generic [ref=e4645]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e4646]:
+          - generic [ref=e4647]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e4648]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e4649]: 35min
+        - cell "3DK" [ref=e4650]
+        - cell "49.2㎡" [ref=e4651]
+        - cell "8-105 South (8 Building / 1 Floor)" [ref=e4652]
+        - cell "-" [ref=e4653]
+        - cell "¥59,200" [ref=e4654]
+        - cell "¥59,200" [ref=e4655]
+        - cell "¥1,203" [ref=e4656]
+        - cell "¥59,200" [ref=e4657]
+        - cell "-" [ref=e4658]
+        - 'cell "D: -" [ref=e4659]':
+          - generic [ref=e4660]: "D: -"
+        - cell "View" [ref=e4661]:
+          - link "View" [ref=e4662] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-8-105/
+      - 'row "☆ B 7/9 78.8 REJ Kawasaki (川崎市) 2DK Apartment Satsukidai Station (4 min. walk) 29min 2DK 39.66㎡ 2 / 2F 4 min ¥73,440 ¥73,440 ¥1,852 ¥73,440 39y D: - View" [ref=e4663]':
+        - cell "☆" [ref=e4664]
+        - cell "B 7/9 78.8" [ref=e4665] [cursor=pointer]:
+          - generic "Good match" [ref=e4666]: B
+          - generic [ref=e4667]: 7/9
+          - text: "78.8"
+        - cell "REJ" [ref=e4670]:
+          - generic [ref=e4671]: REJ
+        - cell "Kawasaki (川崎市)" [ref=e4672]:
+          - generic [ref=e4673]: Kawasaki (川崎市)
+        - cell "2DK Apartment Satsukidai Station (4 min. walk) 29min" [ref=e4674]:
+          - generic [ref=e4675]: 2DK Apartment
+          - generic "Satsukidai Station (4 min. walk)" [ref=e4676]:
+            - text: Satsukidai Station (4 min. walk)
+            - generic [ref=e4677]: 29min
+        - cell "2DK" [ref=e4678]
+        - cell "39.66㎡" [ref=e4679]
+        - cell "2 / 2F" [ref=e4680]
+        - cell "4 min" [ref=e4681]
+        - cell "¥73,440" [ref=e4682]
+        - cell "¥73,440" [ref=e4683]
+        - cell "¥1,852" [ref=e4684]
+        - cell "¥73,440" [ref=e4685]
+        - cell "39y" [ref=e4686]
+        - 'cell "D: -" [ref=e4687]':
+          - generic [ref=e4688]: "D: -"
+        - cell "View" [ref=e4689]:
+          - link "View" [ref=e4690] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1325432?prefecture=JP-14&city=14130&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=9
+      - 'row "☆ B 7/9 78.8 GaijinPot Kawasaki (川崎市) in Gorikida Kawasaki-shi Asao-ku, Kanagawa Satsukidai Station (4 min. walk) 29min 2DK 42.6㎡ 1 / 2F 4 min ¥73,000 ¥73,000 ¥1,714 ¥73,000 42y D: - View" [ref=e4691]':
+        - cell "☆" [ref=e4692]
+        - cell "B 7/9 78.8" [ref=e4693] [cursor=pointer]:
+          - generic "Good match" [ref=e4694]: B
+          - generic [ref=e4695]: 7/9
+          - text: "78.8"
+        - cell "GaijinPot" [ref=e4698]:
+          - generic [ref=e4699]: GaijinPot
+        - cell "Kawasaki (川崎市)" [ref=e4700]:
+          - generic [ref=e4701]: Kawasaki (川崎市)
+        - cell "in Gorikida Kawasaki-shi Asao-ku, Kanagawa Satsukidai Station (4 min. walk) 29min" [ref=e4702]:
+          - generic [ref=e4703]: in Gorikida Kawasaki-shi Asao-ku, Kanagawa
+          - generic "Satsukidai Station (4 min. walk)" [ref=e4704]:
+            - text: Satsukidai Station (4 min. walk)
+            - generic [ref=e4705]: 29min
+        - cell "2DK" [ref=e4706]
+        - cell "42.6㎡" [ref=e4707]
+        - cell "1 / 2F" [ref=e4708]
+        - cell "4 min" [ref=e4709]
+        - cell "¥73,000" [ref=e4710]
+        - cell "¥73,000" [ref=e4711]
+        - cell "¥1,714" [ref=e4712]
+        - cell "¥73,000" [ref=e4713]
+        - cell "42y" [ref=e4714]
+        - 'cell "D: -" [ref=e4715]':
+          - generic [ref=e4716]: "D: -"
+        - cell "View" [ref=e4717]:
+          - link "View" [ref=e4718] [cursor=pointer]:
+            - /url: https://apartments.gaijinpot.com/en/rent/view/1325070?max_price=200000&min_price=50000&order=index_ranking-desc&page=8&index=12
+      - 'row "☆ B 5/9 78.7 VillageH Kawasaki-ku (川崎区) Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min 3DK 66.14㎡ 2-405 South (2 Building / 4 Floor) - ¥63,100 ¥63,100 ¥954 ¥63,100 - D: - View" [ref=e4719]':
+        - cell "☆" [ref=e4720]
+        - cell "B 5/9 78.7" [ref=e4721] [cursor=pointer]:
+          - generic "Good match" [ref=e4722]: B
+          - generic [ref=e4723]: 5/9
+          - text: "78.7"
+        - cell "VillageH" [ref=e4726]:
+          - generic [ref=e4727]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4728]:
+          - generic [ref=e4729]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min" [ref=e4730]:
+          - generic [ref=e4731]: Village House Shimojima
+          - generic "Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km" [ref=e4732]:
+            - text: Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km
+            - generic [ref=e4733]: 35min
+        - cell "3DK" [ref=e4734]
+        - cell "66.14㎡" [ref=e4735]
+        - cell "2-405 South (2 Building / 4 Floor)" [ref=e4736]
+        - cell "-" [ref=e4737]
+        - cell "¥63,100" [ref=e4738]
+        - cell "¥63,100" [ref=e4739]
+        - cell "¥954" [ref=e4740]
+        - cell "¥63,100" [ref=e4741]
+        - cell "-" [ref=e4742]
+        - 'cell "D: -" [ref=e4743]':
+          - generic [ref=e4744]: "D: -"
+        - cell "View" [ref=e4745]:
+          - link "View" [ref=e4746] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-3091/#3DK-2-405/
+      - 'row "☆ B 7/9 78.6 SUUMO Kawaguchi (川口市) アメジスト東川口 Saitama Railway/戸塚安行 Stn 歩5min 30min 3DK 55.02㎡ 3F 5 min ¥78,000 ¥83,000 ¥1,509 ¥206,000 29y D: ¥50,000 / K: ¥78,000 View" [ref=e4747]':
+        - cell "☆" [ref=e4748]
+        - cell "B 7/9 78.6" [ref=e4749] [cursor=pointer]:
+          - generic "Good match" [ref=e4750]: B
+          - generic [ref=e4751]: 7/9
+          - text: "78.6"
+        - cell "SUUMO" [ref=e4754]:
+          - generic [ref=e4755]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e4756]:
+          - generic [ref=e4757]: Kawaguchi (川口市)
+        - cell "アメジスト東川口 Saitama Railway/戸塚安行 Stn 歩5min 30min" [ref=e4758]:
+          - generic [ref=e4759]: アメジスト東川口
+          - generic "埼玉高速鉄道/戸塚安行駅 歩5分 / /" [ref=e4760]:
+            - text: Saitama Railway/戸塚安行 Stn 歩5min
+            - generic [ref=e4761]: 30min
+        - cell "3DK" [ref=e4762]
+        - cell "55.02㎡" [ref=e4763]
+        - cell "3F" [ref=e4764]
+        - cell "5 min" [ref=e4765]
+        - cell "¥78,000" [ref=e4766]
+        - cell "¥83,000" [ref=e4767]
+        - cell "¥1,509" [ref=e4768]
+        - cell "¥206,000" [ref=e4769]
+        - cell "29y" [ref=e4770]
+        - 'cell "D: ¥50,000 / K: ¥78,000" [ref=e4771]':
+          - generic [ref=e4772]: "D: ¥50,000 / K: ¥78,000"
+        - cell "View" [ref=e4773]:
+          - link "View" [ref=e4774] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000097191972/?bc=100429950374
+      - 'row "☆ B 7/9 78.6 REJ Kawaguchi (川口市) 2K Apartment Hatogaya Station (1 min. walk) 26min 2K 35.02㎡ 5 / 10F 1 min ¥86,000 ¥86,000 ¥2,456 ¥86,000 23y D: - View" [ref=e4775]':
+        - cell "☆" [ref=e4776]
+        - cell "B 7/9 78.6" [ref=e4777] [cursor=pointer]:
+          - generic "Good match" [ref=e4778]: B
+          - generic [ref=e4779]: 7/9
+          - text: "78.6"
+        - cell "REJ" [ref=e4782]:
+          - generic [ref=e4783]: REJ
+        - cell "Kawaguchi (川口市)" [ref=e4784]:
+          - generic [ref=e4785]: Kawaguchi (川口市)
+        - cell "2K Apartment Hatogaya Station (1 min. walk) 26min" [ref=e4786]:
+          - generic [ref=e4787]: 2K Apartment
+          - generic "Hatogaya Station (1 min. walk)" [ref=e4788]:
+            - text: Hatogaya Station (1 min. walk)
+            - generic [ref=e4789]: 26min
+        - cell "2K" [ref=e4790]
+        - cell "35.02㎡" [ref=e4791]
+        - cell "5 / 10F" [ref=e4792]
+        - cell "1 min" [ref=e4793]
+        - cell "¥86,000" [ref=e4794]
+        - cell "¥86,000" [ref=e4795]
+        - cell "¥2,456" [ref=e4796]
+        - cell "¥86,000" [ref=e4797]
+        - cell "23y" [ref=e4798]
+        - 'cell "D: -" [ref=e4799]':
+          - generic [ref=e4800]: "D: -"
+        - cell "View" [ref=e4801]:
+          - link "View" [ref=e4802] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1292027?prefecture=JP-11&city=11203&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=1&index=5
+      - 'row "☆ B 5/9 78.6 VillageH Kawasaki-ku (川崎区) Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min 2K 33.09㎡ 1-302 South (1 Building / 3 Floor) - ¥46,800 ¥46,800 ¥1,414 ¥46,800 - D: - View" [ref=e4803]':
+        - cell "☆" [ref=e4804]
+        - cell "B 5/9 78.6" [ref=e4805] [cursor=pointer]:
+          - generic "Good match" [ref=e4806]: B
+          - generic [ref=e4807]: 5/9
+          - text: "78.6"
+        - cell "VillageH" [ref=e4810]:
+          - generic [ref=e4811]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4812]:
+          - generic [ref=e4813]: Kawasaki-ku (川崎区)
+        - cell "Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min" [ref=e4814]:
+          - generic [ref=e4815]: Village House Sanda
+          - generic "Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km" [ref=e4816]:
+            - text: Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km
+            - generic [ref=e4817]: 35min
+        - cell "2K" [ref=e4818]
+        - cell "33.09㎡" [ref=e4819]
+        - cell "1-302 South (1 Building / 3 Floor)" [ref=e4820]
+        - cell "-" [ref=e4821]
+        - cell "¥46,800" [ref=e4822]
+        - cell "¥46,800" [ref=e4823]
+        - cell "¥1,414" [ref=e4824]
+        - cell "¥46,800" [ref=e4825]
+        - cell "-" [ref=e4826]
+        - 'cell "D: -" [ref=e4827]':
+          - generic [ref=e4828]: "D: -"
+        - cell "View" [ref=e4829]:
+          - link "View" [ref=e4830] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/atsugi-shi-142123/sanda-3087/#2K-1-302/
+      - 'row "☆ B 5/9 78.6 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 9-203 South (9 Building / 2 Floor) - ¥62,300 ¥62,300 ¥1,266 ¥62,300 - D: - View" [ref=e4831]':
+        - cell "☆" [ref=e4832]
+        - cell "B 5/9 78.6" [ref=e4833] [cursor=pointer]:
+          - generic "Good match" [ref=e4834]: B
+          - generic [ref=e4835]: 5/9
+          - text: "78.6"
+        - cell "VillageH" [ref=e4838]:
+          - generic [ref=e4839]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4840]:
+          - generic [ref=e4841]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e4842]:
+          - generic [ref=e4843]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e4844]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e4845]: 35min
+        - cell "3DK" [ref=e4846]
+        - cell "49.2㎡" [ref=e4847]
+        - cell "9-203 South (9 Building / 2 Floor)" [ref=e4848]
+        - cell "-" [ref=e4849]
+        - cell "¥62,300" [ref=e4850]
+        - cell "¥62,300" [ref=e4851]
+        - cell "¥1,266" [ref=e4852]
+        - cell "¥62,300" [ref=e4853]
+        - cell "-" [ref=e4854]
+        - 'cell "D: -" [ref=e4855]':
+          - generic [ref=e4856]: "D: -"
+        - cell "View" [ref=e4857]:
+          - link "View" [ref=e4858] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-9-203/
+      - 'row "☆ B 5/9 78.6 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 1-208 South (1 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e4859]':
+        - cell "☆" [ref=e4860]
+        - cell "B 5/9 78.6" [ref=e4861] [cursor=pointer]:
+          - generic "Good match" [ref=e4862]: B
+          - generic [ref=e4863]: 5/9
+          - text: "78.6"
+        - cell "VillageH" [ref=e4866]:
+          - generic [ref=e4867]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4868]:
+          - generic [ref=e4869]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4870]:
+          - generic [ref=e4871]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4872]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4873]: 35min
+        - cell "2K" [ref=e4874]
+        - cell "33.54㎡" [ref=e4875]
+        - cell "1-208 South (1 Building / 2 Floor)" [ref=e4876]
+        - cell "-" [ref=e4877]
+        - cell "¥40,800" [ref=e4878]
+        - cell "¥40,800" [ref=e4879]
+        - cell "¥1,216" [ref=e4880]
+        - cell "¥40,800" [ref=e4881]
+        - cell "-" [ref=e4882]
+        - 'cell "D: -" [ref=e4883]':
+          - generic [ref=e4884]: "D: -"
+        - cell "View" [ref=e4885]:
+          - link "View" [ref=e4886] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-1-208/
+      - 'row "☆ B 5/9 78.6 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-205 South (2 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e4887]':
+        - cell "☆" [ref=e4888]
+        - cell "B 5/9 78.6" [ref=e4889] [cursor=pointer]:
+          - generic "Good match" [ref=e4890]: B
+          - generic [ref=e4891]: 5/9
+          - text: "78.6"
+        - cell "VillageH" [ref=e4894]:
+          - generic [ref=e4895]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4896]:
+          - generic [ref=e4897]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4898]:
+          - generic [ref=e4899]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4900]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4901]: 35min
+        - cell "2K" [ref=e4902]
+        - cell "33.54㎡" [ref=e4903]
+        - cell "2-205 South (2 Building / 2 Floor)" [ref=e4904]
+        - cell "-" [ref=e4905]
+        - cell "¥40,800" [ref=e4906]
+        - cell "¥40,800" [ref=e4907]
+        - cell "¥1,216" [ref=e4908]
+        - cell "¥40,800" [ref=e4909]
+        - cell "-" [ref=e4910]
+        - 'cell "D: -" [ref=e4911]':
+          - generic [ref=e4912]: "D: -"
+        - cell "View" [ref=e4913]:
+          - link "View" [ref=e4914] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-205/
+      - 'row "☆ B 5/9 78.6 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 10-101 South (10 Building / 1 Floor) - ¥59,000 ¥59,000 ¥1,199 ¥59,000 - D: - View" [ref=e4915]':
+        - cell "☆" [ref=e4916]
+        - cell "B 5/9 78.6" [ref=e4917] [cursor=pointer]:
+          - generic "Good match" [ref=e4918]: B
+          - generic [ref=e4919]: 5/9
+          - text: "78.6"
+        - cell "VillageH" [ref=e4922]:
+          - generic [ref=e4923]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4924]:
+          - generic [ref=e4925]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e4926]:
+          - generic [ref=e4927]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e4928]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e4929]: 35min
+        - cell "3DK" [ref=e4930]
+        - cell "49.2㎡" [ref=e4931]
+        - cell "10-101 South (10 Building / 1 Floor)" [ref=e4932]
+        - cell "-" [ref=e4933]
+        - cell "¥59,000" [ref=e4934]
+        - cell "¥59,000" [ref=e4935]
+        - cell "¥1,199" [ref=e4936]
+        - cell "¥59,000" [ref=e4937]
+        - cell "-" [ref=e4938]
+        - 'cell "D: -" [ref=e4939]':
+          - generic [ref=e4940]: "D: -"
+        - cell "View" [ref=e4941]:
+          - link "View" [ref=e4942] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-10-101/
+      - 'row "☆ B 5/9 78.6 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-407 South (2 Building / 4 Floor) - ¥39,000 ¥39,000 ¥1,163 ¥39,000 - D: - View" [ref=e4943]':
+        - cell "☆" [ref=e4944]
+        - cell "B 5/9 78.6" [ref=e4945] [cursor=pointer]:
+          - generic "Good match" [ref=e4946]: B
+          - generic [ref=e4947]: 5/9
+          - text: "78.6"
+        - cell "VillageH" [ref=e4950]:
+          - generic [ref=e4951]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4952]:
+          - generic [ref=e4953]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e4954]:
+          - generic [ref=e4955]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e4956]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e4957]: 35min
+        - cell "2K" [ref=e4958]
+        - cell "33.54㎡" [ref=e4959]
+        - cell "2-407 South (2 Building / 4 Floor)" [ref=e4960]
+        - cell "-" [ref=e4961]
+        - cell "¥39,000" [ref=e4962]
+        - cell "¥39,000" [ref=e4963]
+        - cell "¥1,163" [ref=e4964]
+        - cell "¥39,000" [ref=e4965]
+        - cell "-" [ref=e4966]
+        - 'cell "D: -" [ref=e4967]':
+          - generic [ref=e4968]: "D: -"
+        - cell "View" [ref=e4969]:
+          - link "View" [ref=e4970] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-407/
+      - 'row "☆ B 5/9 78.6 VillageH Kawasaki-ku (川崎区) Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min 2DK 38.46㎡ 3-506 South (3 Building / 5 Floor) - ¥40,600 ¥40,600 ¥1,056 ¥40,600 - D: - View" [ref=e4971]':
+        - cell "☆" [ref=e4972]
+        - cell "B 5/9 78.6" [ref=e4973] [cursor=pointer]:
+          - generic "Good match" [ref=e4974]: B
+          - generic [ref=e4975]: 5/9
+          - text: "78.6"
+        - cell "VillageH" [ref=e4978]:
+          - generic [ref=e4979]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e4980]:
+          - generic [ref=e4981]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min" [ref=e4982]:
+          - generic [ref=e4983]: Village House Shimojima Dai 2
+          - generic "Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km" [ref=e4984]:
+            - text: Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km
+            - generic [ref=e4985]: 35min
+        - cell "2DK" [ref=e4986]
+        - cell "38.46㎡" [ref=e4987]
+        - cell "3-506 South (3 Building / 5 Floor)" [ref=e4988]
+        - cell "-" [ref=e4989]
+        - cell "¥40,600" [ref=e4990]
+        - cell "¥40,600" [ref=e4991]
+        - cell "¥1,056" [ref=e4992]
+        - cell "¥40,600" [ref=e4993]
+        - cell "-" [ref=e4994]
+        - 'cell "D: -" [ref=e4995]':
+          - generic [ref=e4996]: "D: -"
+        - cell "View" [ref=e4997]:
+          - link "View" [ref=e4998] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-dai-2-3117/#2DK-3-506/
+      - 'row "☆ B 7/9 78.5 SUUMO Wako (和光市) クレエIII Tobu Tojo Line/和光市 Stn bus 7min (bus 停)南一丁目 歩2min 32min 2LDK 62.75㎡ 2F 2 min ¥99,000 ¥105,000 ¥1,673 ¥198,000 19y D: - / K: ¥99,000 View" [ref=e4999]':
+        - cell "☆" [ref=e5000]
+        - cell "B 7/9 78.5" [ref=e5001] [cursor=pointer]:
+          - generic "Good match" [ref=e5002]: B
+          - generic [ref=e5003]: 7/9
+          - text: "78.5"
+        - cell "SUUMO" [ref=e5006]:
+          - generic [ref=e5007]: SUUMO
+        - cell "Wako (和光市)" [ref=e5008]:
+          - generic [ref=e5009]: Wako (和光市)
+        - cell "クレエIII Tobu Tojo Line/和光市 Stn bus 7min (bus 停)南一丁目 歩2min 32min" [ref=e5010]:
+          - generic [ref=e5011]: クレエIII
+          - generic "東武東上線/和光市駅 バス7分 (バス停)南一丁目 歩2分 / 東武東上線/成増駅 バス9分 (バス停)司法研修所 歩4分 / 東京メトロ有楽町線/和光市駅 バス7分 (バス停)南一丁目 歩2分" [ref=e5012]:
+            - text: Tobu Tojo Line/和光市 Stn bus 7min (bus 停)南一丁目 歩2min
+            - generic [ref=e5013]: 32min
+        - cell "2LDK" [ref=e5014]
+        - cell "62.75㎡" [ref=e5015]
+        - cell "2F" [ref=e5016]
+        - cell "2 min" [ref=e5017]
+        - cell "¥99,000" [ref=e5018]
+        - cell "¥105,000" [ref=e5019]
+        - cell "¥1,673" [ref=e5020]
+        - cell "¥198,000" [ref=e5021]
+        - cell "19y" [ref=e5022]
+        - 'cell "D: - / K: ¥99,000" [ref=e5023]':
+          - generic [ref=e5024]: "D: - / K: ¥99,000"
+        - cell "View" [ref=e5025]:
+          - link "View" [ref=e5026] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000104927625/?bc=100489269711
+      - 'row "☆ B 5/9 78.5 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 8-105 South (8 Building / 1 Floor) - ¥59,200 ¥59,200 ¥1,203 ¥59,200 - D: - View" [ref=e5027]':
+        - cell "☆" [ref=e5028]
+        - cell "B 5/9 78.5" [ref=e5029] [cursor=pointer]:
+          - generic "Good match" [ref=e5030]: B
+          - generic [ref=e5031]: 5/9
+          - text: "78.5"
+        - cell "VillageH" [ref=e5034]:
+          - generic [ref=e5035]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5036]:
+          - generic [ref=e5037]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e5038]:
+          - generic [ref=e5039]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e5040]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e5041]: 35min
+        - cell "3DK" [ref=e5042]
+        - cell "49.2㎡" [ref=e5043]
+        - cell "8-105 South (8 Building / 1 Floor)" [ref=e5044]
+        - cell "-" [ref=e5045]
+        - cell "¥59,200" [ref=e5046]
+        - cell "¥59,200" [ref=e5047]
+        - cell "¥1,203" [ref=e5048]
+        - cell "¥59,200" [ref=e5049]
+        - cell "-" [ref=e5050]
+        - 'cell "D: -" [ref=e5051]':
+          - generic [ref=e5052]: "D: -"
+        - cell "View" [ref=e5053]:
+          - link "View" [ref=e5054] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-8-105/
+      - 'row "☆ B 7/9 78.4 SUUMO Kawaguchi (川口市) 埼玉高速鉄道 戸塚安行駅 3階建 築29年 Saitama Railway/戸塚安行 Stn 歩5min 30min 3DK 55.02㎡ 3F 5 min ¥78,000 ¥83,000 ¥1,509 ¥206,000 29y D: ¥50,000 / K: ¥78,000 View" [ref=e5055]':
+        - cell "☆" [ref=e5056]
+        - cell "B 7/9 78.4" [ref=e5057] [cursor=pointer]:
+          - generic "Good match" [ref=e5058]: B
+          - generic [ref=e5059]: 7/9
+          - text: "78.4"
+        - cell "SUUMO" [ref=e5062]:
+          - generic [ref=e5063]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e5064]:
+          - generic [ref=e5065]: Kawaguchi (川口市)
+        - cell "埼玉高速鉄道 戸塚安行駅 3階建 築29年 Saitama Railway/戸塚安行 Stn 歩5min 30min" [ref=e5066]:
+          - generic [ref=e5067]: 埼玉高速鉄道 戸塚安行駅 3階建 築29年
+          - generic "埼玉高速鉄道/戸塚安行駅 歩5分 / ＪＲ武蔵野線/東川口駅 歩26分 / 埼玉高速鉄道/新井宿駅 歩37分" [ref=e5068]:
+            - text: Saitama Railway/戸塚安行 Stn 歩5min
+            - generic [ref=e5069]: 30min
+        - cell "3DK" [ref=e5070]
+        - cell "55.02㎡" [ref=e5071]
+        - cell "3F" [ref=e5072]
+        - cell "5 min" [ref=e5073]
+        - cell "¥78,000" [ref=e5074]
+        - cell "¥83,000" [ref=e5075]
+        - cell "¥1,509" [ref=e5076]
+        - cell "¥206,000" [ref=e5077]
+        - cell "29y" [ref=e5078]
+        - 'cell "D: ¥50,000 / K: ¥78,000" [ref=e5079]':
+          - generic [ref=e5080]: "D: ¥50,000 / K: ¥78,000"
+        - cell "View" [ref=e5081]:
+          - link "View" [ref=e5082] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000097234247/?bc=100485827037
+      - 'row "☆ B 7/9 78.3 SUUMO Kawaguchi (川口市) 赤井ハイツＡ棟 Saitama Railway/鳩ヶ谷 Stn 歩18min 30min 3K 41.4㎡ 1F 5 min ¥65,000 ¥65,000 ¥1,570 ¥195,000 42y D: ¥65,000 / K: ¥65,000 View" [ref=e5083]':
+        - cell "☆" [ref=e5084]
+        - cell "B 7/9 78.3" [ref=e5085] [cursor=pointer]:
+          - generic "Good match" [ref=e5086]: B
+          - generic [ref=e5087]: 7/9
+          - text: "78.3"
+        - cell "SUUMO" [ref=e5090]:
+          - generic [ref=e5091]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e5092]:
+          - generic [ref=e5093]: Kawaguchi (川口市)
+        - cell "赤井ハイツＡ棟 Saitama Railway/鳩ヶ谷 Stn 歩18min 30min" [ref=e5094]:
+          - generic [ref=e5095]: 赤井ハイツＡ棟
+          - generic "埼玉高速鉄道/鳩ヶ谷駅 歩18分 / 埼玉高速鉄道/南鳩ヶ谷駅 歩28分 / ＪＲ京浜東北線/川口駅 バス29分 (バス停)観音橋 歩5分" [ref=e5096]:
+            - text: Saitama Railway/鳩ヶ谷 Stn 歩18min
+            - generic [ref=e5097]: 30min
+        - cell "3K" [ref=e5098]
+        - cell "41.4㎡" [ref=e5099]
+        - cell "1F" [ref=e5100]
+        - cell "5 min" [ref=e5101]
+        - cell "¥65,000" [ref=e5102]
+        - cell "¥65,000" [ref=e5103]
+        - cell "¥1,570" [ref=e5104]
+        - cell "¥195,000" [ref=e5105]
+        - cell "42y" [ref=e5106]
+        - 'cell "D: ¥65,000 / K: ¥65,000" [ref=e5107]':
+          - generic [ref=e5108]: "D: ¥65,000 / K: ¥65,000"
+        - cell "View" [ref=e5109]:
+          - link "View" [ref=e5110] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000103679590/?bc=100479650705
+      - 'row "☆ B 5/9 78.3 VillageH Kawasaki-ku (川崎区) Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min 3DK 66.14㎡ 2-405 South (2 Building / 4 Floor) - ¥63,100 ¥63,100 ¥954 ¥63,100 - D: - View" [ref=e5111]':
+        - cell "☆" [ref=e5112]
+        - cell "B 5/9 78.3" [ref=e5113] [cursor=pointer]:
+          - generic "Good match" [ref=e5114]: B
+          - generic [ref=e5115]: 5/9
+          - text: "78.3"
+        - cell "VillageH" [ref=e5118]:
+          - generic [ref=e5119]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5120]:
+          - generic [ref=e5121]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min" [ref=e5122]:
+          - generic [ref=e5123]: Village House Shimojima
+          - generic "Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km" [ref=e5124]:
+            - text: Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km
+            - generic [ref=e5125]: 35min
+        - cell "3DK" [ref=e5126]
+        - cell "66.14㎡" [ref=e5127]
+        - cell "2-405 South (2 Building / 4 Floor)" [ref=e5128]
+        - cell "-" [ref=e5129]
+        - cell "¥63,100" [ref=e5130]
+        - cell "¥63,100" [ref=e5131]
+        - cell "¥954" [ref=e5132]
+        - cell "¥63,100" [ref=e5133]
+        - cell "-" [ref=e5134]
+        - 'cell "D: -" [ref=e5135]':
+          - generic [ref=e5136]: "D: -"
+        - cell "View" [ref=e5137]:
+          - link "View" [ref=e5138] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-3091/#3DK-2-405/
+      - 'row "☆ B 7/9 78.2 REJ Itabashi-ku (板橋区) 2DK Apartment Takashimadaira Station (5 min. walk) 25min 2DK 48㎡ 7 / 9F 5 min ¥86,000 ¥86,000 ¥1,792 ¥252,000 24y D: ¥166,000 View" [ref=e5139]':
+        - cell "☆" [ref=e5140]
+        - cell "B 7/9 78.2" [ref=e5141] [cursor=pointer]:
+          - generic "Good match" [ref=e5142]: B
+          - generic [ref=e5143]: 7/9
+          - text: "78.2"
+        - cell "REJ" [ref=e5146]:
+          - generic [ref=e5147]: REJ
+        - cell "Itabashi-ku (板橋区)" [ref=e5148]:
+          - generic [ref=e5149]: Itabashi-ku (板橋区)
+        - cell "2DK Apartment Takashimadaira Station (5 min. walk) 25min" [ref=e5150]:
+          - generic [ref=e5151]: 2DK Apartment
+          - generic "Takashimadaira Station (5 min. walk)" [ref=e5152]:
+            - text: Takashimadaira Station (5 min. walk)
+            - generic [ref=e5153]: 25min
+        - cell "2DK" [ref=e5154]
+        - cell "48㎡" [ref=e5155]
+        - cell "7 / 9F" [ref=e5156]
+        - cell "5 min" [ref=e5157]
+        - cell "¥86,000" [ref=e5158]
+        - cell "¥86,000" [ref=e5159]
+        - cell "¥1,792" [ref=e5160]
+        - cell "¥252,000" [ref=e5161]
+        - cell "24y" [ref=e5162]
+        - 'cell "D: ¥166,000" [ref=e5163]':
+          - generic [ref=e5164]: "D: ¥166,000"
+        - cell "View" [ref=e5165]:
+          - link "View" [ref=e5166] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/546531?prefecture=JP-13&city=13119&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=2&index=0
+      - 'row "☆ B 7/9 78.2 REJ Itabashi-ku (板橋区) 2LDK Apartment Takashimadaira Station (7 min. walk) 27min 2LDK 54.13㎡ 2 / 7F 7 min ¥100,000 ¥100,000 ¥1,847 ¥200,000 32y D: ¥100,000 View" [ref=e5167]':
+        - cell "☆" [ref=e5168]
+        - cell "B 7/9 78.2" [ref=e5169] [cursor=pointer]:
+          - generic "Good match" [ref=e5170]: B
+          - generic [ref=e5171]: 7/9
+          - text: "78.2"
+        - cell "REJ" [ref=e5174]:
+          - generic [ref=e5175]: REJ
+        - cell "Itabashi-ku (板橋区)" [ref=e5176]:
+          - generic [ref=e5177]: Itabashi-ku (板橋区)
+        - cell "2LDK Apartment Takashimadaira Station (7 min. walk) 27min" [ref=e5178]:
+          - generic [ref=e5179]: 2LDK Apartment
+          - generic "Takashimadaira Station (7 min. walk)" [ref=e5180]:
+            - text: Takashimadaira Station (7 min. walk)
+            - generic [ref=e5181]: 27min
+        - cell "2LDK" [ref=e5182]
+        - cell "54.13㎡" [ref=e5183]
+        - cell "2 / 7F" [ref=e5184]
+        - cell "7 min" [ref=e5185]
+        - cell "¥100,000" [ref=e5186]
+        - cell "¥100,000" [ref=e5187]
+        - cell "¥1,847" [ref=e5188]
+        - cell "¥200,000" [ref=e5189]
+        - cell "32y" [ref=e5190]
+        - 'cell "D: ¥100,000" [ref=e5191]':
+          - generic [ref=e5192]: "D: ¥100,000"
+        - cell "View" [ref=e5193]:
+          - link "View" [ref=e5194] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1322479?prefecture=JP-13&city=13119&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=2&index=13
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min 2K 33.09㎡ 1-203 South (1 Building / 2 Floor) - ¥48,700 ¥48,700 ¥1,472 ¥48,700 - D: - View" [ref=e5195]':
+        - cell "☆" [ref=e5196]
+        - cell "B 5/9 78.2" [ref=e5197] [cursor=pointer]:
+          - generic "Good match" [ref=e5198]: B
+          - generic [ref=e5199]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5202]:
+          - generic [ref=e5203]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5204]:
+          - generic [ref=e5205]: Kawasaki-ku (川崎区)
+        - cell "Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min" [ref=e5206]:
+          - generic [ref=e5207]: Village House Sanda
+          - generic "Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km" [ref=e5208]:
+            - text: Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km
+            - generic [ref=e5209]: 35min
+        - cell "2K" [ref=e5210]
+        - cell "33.09㎡" [ref=e5211]
+        - cell "1-203 South (1 Building / 2 Floor)" [ref=e5212]
+        - cell "-" [ref=e5213]
+        - cell "¥48,700" [ref=e5214]
+        - cell "¥48,700" [ref=e5215]
+        - cell "¥1,472" [ref=e5216]
+        - cell "¥48,700" [ref=e5217]
+        - cell "-" [ref=e5218]
+        - 'cell "D: -" [ref=e5219]':
+          - generic [ref=e5220]: "D: -"
+        - cell "View" [ref=e5221]:
+          - link "View" [ref=e5222] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/atsugi-shi-142123/sanda-3087/#2K-1-203/
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Kugou Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km 35min 3DK 57.96㎡ 4-401 Southeast (4 Building / 4 Floor) - ¥68,800 ¥68,800 ¥1,187 ¥68,800 - D: - View" [ref=e5223]':
+        - cell "☆" [ref=e5224]
+        - cell "B 5/9 78.2" [ref=e5225] [cursor=pointer]:
+          - generic "Good match" [ref=e5226]: B
+          - generic [ref=e5227]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5230]:
+          - generic [ref=e5231]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5232]:
+          - generic [ref=e5233]: Kawasaki-ku (川崎区)
+        - cell "Village House Kugou Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km 35min" [ref=e5234]:
+          - generic [ref=e5235]: Village House Kugou
+          - generic "Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km" [ref=e5236]:
+            - text: Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km
+            - generic [ref=e5237]: 35min
+        - cell "3DK" [ref=e5238]
+        - cell "57.96㎡" [ref=e5239]
+        - cell "4-401 Southeast (4 Building / 4 Floor)" [ref=e5240]
+        - cell "-" [ref=e5241]
+        - cell "¥68,800" [ref=e5242]
+        - cell "¥68,800" [ref=e5243]
+        - cell "¥1,187" [ref=e5244]
+        - cell "¥68,800" [ref=e5245]
+        - cell "-" [ref=e5246]
+        - 'cell "D: -" [ref=e5247]':
+          - generic [ref=e5248]: "D: -"
+        - cell "View" [ref=e5249]:
+          - link "View" [ref=e5250] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/kugou-3040/#3DK-4-401/
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 9-203 South (9 Building / 2 Floor) - ¥62,300 ¥62,300 ¥1,266 ¥62,300 - D: - View" [ref=e5251]':
+        - cell "☆" [ref=e5252]
+        - cell "B 5/9 78.2" [ref=e5253] [cursor=pointer]:
+          - generic "Good match" [ref=e5254]: B
+          - generic [ref=e5255]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5258]:
+          - generic [ref=e5259]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5260]:
+          - generic [ref=e5261]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e5262]:
+          - generic [ref=e5263]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e5264]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e5265]: 35min
+        - cell "3DK" [ref=e5266]
+        - cell "49.2㎡" [ref=e5267]
+        - cell "9-203 South (9 Building / 2 Floor)" [ref=e5268]
+        - cell "-" [ref=e5269]
+        - cell "¥62,300" [ref=e5270]
+        - cell "¥62,300" [ref=e5271]
+        - cell "¥1,266" [ref=e5272]
+        - cell "¥62,300" [ref=e5273]
+        - cell "-" [ref=e5274]
+        - 'cell "D: -" [ref=e5275]':
+          - generic [ref=e5276]: "D: -"
+        - cell "View" [ref=e5277]:
+          - link "View" [ref=e5278] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-9-203/
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 1-208 South (1 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e5279]':
+        - cell "☆" [ref=e5280]
+        - cell "B 5/9 78.2" [ref=e5281] [cursor=pointer]:
+          - generic "Good match" [ref=e5282]: B
+          - generic [ref=e5283]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5286]:
+          - generic [ref=e5287]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5288]:
+          - generic [ref=e5289]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e5290]:
+          - generic [ref=e5291]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e5292]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e5293]: 35min
+        - cell "2K" [ref=e5294]
+        - cell "33.54㎡" [ref=e5295]
+        - cell "1-208 South (1 Building / 2 Floor)" [ref=e5296]
+        - cell "-" [ref=e5297]
+        - cell "¥40,800" [ref=e5298]
+        - cell "¥40,800" [ref=e5299]
+        - cell "¥1,216" [ref=e5300]
+        - cell "¥40,800" [ref=e5301]
+        - cell "-" [ref=e5302]
+        - 'cell "D: -" [ref=e5303]':
+          - generic [ref=e5304]: "D: -"
+        - cell "View" [ref=e5305]:
+          - link "View" [ref=e5306] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-1-208/
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-205 South (2 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e5307]':
+        - cell "☆" [ref=e5308]
+        - cell "B 5/9 78.2" [ref=e5309] [cursor=pointer]:
+          - generic "Good match" [ref=e5310]: B
+          - generic [ref=e5311]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5314]:
+          - generic [ref=e5315]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5316]:
+          - generic [ref=e5317]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e5318]:
+          - generic [ref=e5319]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e5320]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e5321]: 35min
+        - cell "2K" [ref=e5322]
+        - cell "33.54㎡" [ref=e5323]
+        - cell "2-205 South (2 Building / 2 Floor)" [ref=e5324]
+        - cell "-" [ref=e5325]
+        - cell "¥40,800" [ref=e5326]
+        - cell "¥40,800" [ref=e5327]
+        - cell "¥1,216" [ref=e5328]
+        - cell "¥40,800" [ref=e5329]
+        - cell "-" [ref=e5330]
+        - 'cell "D: -" [ref=e5331]':
+          - generic [ref=e5332]: "D: -"
+        - cell "View" [ref=e5333]:
+          - link "View" [ref=e5334] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-205/
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 10-101 South (10 Building / 1 Floor) - ¥59,000 ¥59,000 ¥1,199 ¥59,000 - D: - View" [ref=e5335]':
+        - cell "☆" [ref=e5336]
+        - cell "B 5/9 78.2" [ref=e5337] [cursor=pointer]:
+          - generic "Good match" [ref=e5338]: B
+          - generic [ref=e5339]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5342]:
+          - generic [ref=e5343]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5344]:
+          - generic [ref=e5345]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e5346]:
+          - generic [ref=e5347]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e5348]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e5349]: 35min
+        - cell "3DK" [ref=e5350]
+        - cell "49.2㎡" [ref=e5351]
+        - cell "10-101 South (10 Building / 1 Floor)" [ref=e5352]
+        - cell "-" [ref=e5353]
+        - cell "¥59,000" [ref=e5354]
+        - cell "¥59,000" [ref=e5355]
+        - cell "¥1,199" [ref=e5356]
+        - cell "¥59,000" [ref=e5357]
+        - cell "-" [ref=e5358]
+        - 'cell "D: -" [ref=e5359]':
+          - generic [ref=e5360]: "D: -"
+        - cell "View" [ref=e5361]:
+          - link "View" [ref=e5362] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-10-101/
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-407 South (2 Building / 4 Floor) - ¥39,000 ¥39,000 ¥1,163 ¥39,000 - D: - View" [ref=e5363]':
+        - cell "☆" [ref=e5364]
+        - cell "B 5/9 78.2" [ref=e5365] [cursor=pointer]:
+          - generic "Good match" [ref=e5366]: B
+          - generic [ref=e5367]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5370]:
+          - generic [ref=e5371]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5372]:
+          - generic [ref=e5373]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e5374]:
+          - generic [ref=e5375]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e5376]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e5377]: 35min
+        - cell "2K" [ref=e5378]
+        - cell "33.54㎡" [ref=e5379]
+        - cell "2-407 South (2 Building / 4 Floor)" [ref=e5380]
+        - cell "-" [ref=e5381]
+        - cell "¥39,000" [ref=e5382]
+        - cell "¥39,000" [ref=e5383]
+        - cell "¥1,163" [ref=e5384]
+        - cell "¥39,000" [ref=e5385]
+        - cell "-" [ref=e5386]
+        - 'cell "D: -" [ref=e5387]':
+          - generic [ref=e5388]: "D: -"
+        - cell "View" [ref=e5389]:
+          - link "View" [ref=e5390] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-407/
+      - 'row "☆ B 5/9 78.2 VillageH Kawasaki-ku (川崎区) Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min 2DK 38.46㎡ 3-506 South (3 Building / 5 Floor) - ¥40,600 ¥40,600 ¥1,056 ¥40,600 - D: - View" [ref=e5391]':
+        - cell "☆" [ref=e5392]
+        - cell "B 5/9 78.2" [ref=e5393] [cursor=pointer]:
+          - generic "Good match" [ref=e5394]: B
+          - generic [ref=e5395]: 5/9
+          - text: "78.2"
+        - cell "VillageH" [ref=e5398]:
+          - generic [ref=e5399]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5400]:
+          - generic [ref=e5401]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Dai 2 Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km 35min" [ref=e5402]:
+          - generic [ref=e5403]: Village House Shimojima Dai 2
+          - generic "Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km" [ref=e5404]:
+            - text: Isehara Station - Odakyū Line - 51.0 minutes walk, 4.0～4.1 km
+            - generic [ref=e5405]: 35min
+        - cell "2DK" [ref=e5406]
+        - cell "38.46㎡" [ref=e5407]
+        - cell "3-506 South (3 Building / 5 Floor)" [ref=e5408]
+        - cell "-" [ref=e5409]
+        - cell "¥40,600" [ref=e5410]
+        - cell "¥40,600" [ref=e5411]
+        - cell "¥1,056" [ref=e5412]
+        - cell "¥40,600" [ref=e5413]
+        - cell "-" [ref=e5414]
+        - 'cell "D: -" [ref=e5415]':
+          - generic [ref=e5416]: "D: -"
+        - cell "View" [ref=e5417]:
+          - link "View" [ref=e5418] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-dai-2-3117/#2DK-3-506/
+      - 'row "☆ B 7/9 78.1 SUUMO Wako (和光市) ガナール 都営三田線/西高島平 Stn 歩18min 32min 2LDK 58.11㎡ 1F 2 min ¥98,000 ¥104,000 ¥1,790 ¥196,000 16y D: - / K: ¥98,000 View" [ref=e5419]':
+        - cell "☆" [ref=e5420]
+        - cell "B 7/9 78.1" [ref=e5421] [cursor=pointer]:
+          - generic "Good match" [ref=e5422]: B
+          - generic [ref=e5423]: 7/9
+          - text: "78.1"
+        - cell "SUUMO" [ref=e5426]:
+          - generic [ref=e5427]: SUUMO
+        - cell "Wako (和光市)" [ref=e5428]:
+          - generic [ref=e5429]: Wako (和光市)
+        - cell "ガナール 都営三田線/西高島平 Stn 歩18min 32min" [ref=e5430]:
+          - generic [ref=e5431]: ガナール
+          - generic "都営三田線/西高島平駅 歩18分 / 東武東上線/和光市駅 バス7分 (バス停)和光市駅北口行 歩2分 / 東京メトロ副都心線/和光市駅 バス7分 (バス停)和光市駅北口行 歩2分" [ref=e5432]:
+            - text: 都営三田線/西高島平 Stn 歩18min
+            - generic [ref=e5433]: 32min
+        - cell "2LDK" [ref=e5434]
+        - cell "58.11㎡" [ref=e5435]
+        - cell "1F" [ref=e5436]
+        - cell "2 min" [ref=e5437]
+        - cell "¥98,000" [ref=e5438]
+        - cell "¥104,000" [ref=e5439]
+        - cell "¥1,790" [ref=e5440]
+        - cell "¥196,000" [ref=e5441]
+        - cell "16y" [ref=e5442]
+        - 'cell "D: - / K: ¥98,000" [ref=e5443]':
+          - generic [ref=e5444]: "D: - / K: ¥98,000"
+        - cell "View" [ref=e5445]:
+          - link "View" [ref=e5446] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000104918603/?bc=100489196275
+      - 'row "☆ B 7/9 78.1 SUUMO Wako (和光市) 諏訪原団地 1-８号棟 Tobu Tojo Line/成増 Stn bus 7min (bus 停)諏訪原住宅 歩2min 32min 3DK 56.36㎡ 5F 2 min ¥69,000 ¥74,000 ¥1,313 ¥207,000 59y D: ¥138,000 View" [ref=e5447]':
+        - cell "☆" [ref=e5448]
+        - cell "B 7/9 78.1" [ref=e5449] [cursor=pointer]:
+          - generic "Good match" [ref=e5450]: B
+          - generic [ref=e5451]: 7/9
+          - text: "78.1"
+        - cell "SUUMO" [ref=e5454]:
+          - generic [ref=e5455]: SUUMO
+        - cell "Wako (和光市)" [ref=e5456]:
+          - generic [ref=e5457]: Wako (和光市)
+        - cell "諏訪原団地 1-８号棟 Tobu Tojo Line/成増 Stn bus 7min (bus 停)諏訪原住宅 歩2min 32min" [ref=e5458]:
+          - generic [ref=e5459]: 諏訪原団地 1-８号棟
+          - generic "東武東上線/成増駅 バス7分 (バス停)諏訪原住宅 歩2分 / /" [ref=e5460]:
+            - text: Tobu Tojo Line/成増 Stn bus 7min (bus 停)諏訪原住宅 歩2min
+            - generic [ref=e5461]: 32min
+        - cell "3DK" [ref=e5462]
+        - cell "56.36㎡" [ref=e5463]
+        - cell "5F" [ref=e5464]
+        - cell "2 min" [ref=e5465]
+        - cell "¥69,000" [ref=e5466]
+        - cell "¥74,000" [ref=e5467]
+        - cell "¥1,313" [ref=e5468]
+        - cell "¥207,000" [ref=e5469]
+        - cell "59y" [ref=e5470]
+        - 'cell "D: ¥138,000" [ref=e5471]':
+          - generic [ref=e5472]: "D: ¥138,000"
+        - cell "View" [ref=e5473]:
+          - link "View" [ref=e5474] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000104613571/?bc=100476700447
+      - 'row "☆ B 5/9 78.1 VillageH Kawasaki-ku (川崎区) Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min 2K 33.09㎡ 1-302 South (1 Building / 3 Floor) - ¥46,800 ¥46,800 ¥1,414 ¥46,800 - D: - View" [ref=e5475]':
+        - cell "☆" [ref=e5476]
+        - cell "B 5/9 78.1" [ref=e5477] [cursor=pointer]:
+          - generic "Good match" [ref=e5478]: B
+          - generic [ref=e5479]: 5/9
+          - text: "78.1"
+        - cell "VillageH" [ref=e5482]:
+          - generic [ref=e5483]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5484]:
+          - generic [ref=e5485]: Kawasaki-ku (川崎区)
+        - cell "Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min" [ref=e5486]:
+          - generic [ref=e5487]: Village House Sanda
+          - generic "Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km" [ref=e5488]:
+            - text: Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km
+            - generic [ref=e5489]: 35min
+        - cell "2K" [ref=e5490]
+        - cell "33.09㎡" [ref=e5491]
+        - cell "1-302 South (1 Building / 3 Floor)" [ref=e5492]
+        - cell "-" [ref=e5493]
+        - cell "¥46,800" [ref=e5494]
+        - cell "¥46,800" [ref=e5495]
+        - cell "¥1,414" [ref=e5496]
+        - cell "¥46,800" [ref=e5497]
+        - cell "-" [ref=e5498]
+        - 'cell "D: -" [ref=e5499]':
+          - generic [ref=e5500]: "D: -"
+        - cell "View" [ref=e5501]:
+          - link "View" [ref=e5502] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/atsugi-shi-142123/sanda-3087/#2K-1-302/
+      - 'row "☆ B 5/9 78.1 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 8-105 South (8 Building / 1 Floor) - ¥59,200 ¥59,200 ¥1,203 ¥59,200 - D: - View" [ref=e5503]':
+        - cell "☆" [ref=e5504]
+        - cell "B 5/9 78.1" [ref=e5505] [cursor=pointer]:
+          - generic "Good match" [ref=e5506]: B
+          - generic [ref=e5507]: 5/9
+          - text: "78.1"
+        - cell "VillageH" [ref=e5510]:
+          - generic [ref=e5511]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5512]:
+          - generic [ref=e5513]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e5514]:
+          - generic [ref=e5515]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e5516]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e5517]: 35min
+        - cell "3DK" [ref=e5518]
+        - cell "49.2㎡" [ref=e5519]
+        - cell "8-105 South (8 Building / 1 Floor)" [ref=e5520]
+        - cell "-" [ref=e5521]
+        - cell "¥59,200" [ref=e5522]
+        - cell "¥59,200" [ref=e5523]
+        - cell "¥1,203" [ref=e5524]
+        - cell "¥59,200" [ref=e5525]
+        - cell "-" [ref=e5526]
+        - 'cell "D: -" [ref=e5527]':
+          - generic [ref=e5528]: "D: -"
+        - cell "View" [ref=e5529]:
+          - link "View" [ref=e5530] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-8-105/
+      - 'row "☆ B 7/9 78 REJ Itabashi-ku (板橋区) 2LDK Apartment Takashimadaira Station (3 min. walk) 23min 2LDK 55.24㎡ 2 / 6F 3 min ¥108,000 ¥108,000 ¥1,955 ¥312,000 37y D: ¥102,000 / K: ¥102,000 View" [ref=e5531]':
+        - cell "☆" [ref=e5532]
+        - cell "B 7/9 78" [ref=e5533] [cursor=pointer]:
+          - generic "Good match" [ref=e5534]: B
+          - generic [ref=e5535]: 7/9
+          - text: "78"
+        - cell "REJ" [ref=e5538]:
+          - generic [ref=e5539]: REJ
+        - cell "Itabashi-ku (板橋区)" [ref=e5540]:
+          - generic [ref=e5541]: Itabashi-ku (板橋区)
+        - cell "2LDK Apartment Takashimadaira Station (3 min. walk) 23min" [ref=e5542]:
+          - generic [ref=e5543]: 2LDK Apartment
+          - generic "Takashimadaira Station (3 min. walk)" [ref=e5544]:
+            - text: Takashimadaira Station (3 min. walk)
+            - generic [ref=e5545]: 23min
+        - cell "2LDK" [ref=e5546]
+        - cell "55.24㎡" [ref=e5547]
+        - cell "2 / 6F" [ref=e5548]
+        - cell "3 min" [ref=e5549]
+        - cell "¥108,000" [ref=e5550]
+        - cell "¥108,000" [ref=e5551]
+        - cell "¥1,955" [ref=e5552]
+        - cell "¥312,000" [ref=e5553]
+        - cell "37y" [ref=e5554]
+        - 'cell "D: ¥102,000 / K: ¥102,000" [ref=e5555]':
+          - generic [ref=e5556]: "D: ¥102,000 / K: ¥102,000"
+        - cell "View" [ref=e5557]:
+          - link "View" [ref=e5558] [cursor=pointer]:
+            - /url: https://realestate.co.jp/en/rent/view/1295320?prefecture=JP-13&city=13119&building_type=mansion-apartment&rooms=20&order=total_monthly_cost_ranking-asc&max_price=200000&min_price=60000&page=3&index=9
+      - 'row "☆ B 7/9 78 GaijinPot Kawasaki (川崎市) in Katahira Kawasaki-shi Asao-ku, Kanagawa Satsukidai Station (4 min. walk) 29min 2DK 39.66㎡ 2 / 2F 4 min ¥73,440 ¥73,440 ¥1,852 ¥73,440 39y D: - View" [ref=e5559]':
+        - cell "☆" [ref=e5560]
+        - cell "B 7/9 78" [ref=e5561] [cursor=pointer]:
+          - generic "Good match" [ref=e5562]: B
+          - generic [ref=e5563]: 7/9
+          - text: "78"
+        - cell "GaijinPot" [ref=e5566]:
+          - generic [ref=e5567]: GaijinPot
+        - cell "Kawasaki (川崎市)" [ref=e5568]:
+          - generic [ref=e5569]: Kawasaki (川崎市)
+        - cell "in Katahira Kawasaki-shi Asao-ku, Kanagawa Satsukidai Station (4 min. walk) 29min" [ref=e5570]:
+          - generic [ref=e5571]: in Katahira Kawasaki-shi Asao-ku, Kanagawa
+          - generic "Satsukidai Station (4 min. walk)" [ref=e5572]:
+            - text: Satsukidai Station (4 min. walk)
+            - generic [ref=e5573]: 29min
+        - cell "2DK" [ref=e5574]
+        - cell "39.66㎡" [ref=e5575]
+        - cell "2 / 2F" [ref=e5576]
+        - cell "4 min" [ref=e5577]
+        - cell "¥73,440" [ref=e5578]
+        - cell "¥73,440" [ref=e5579]
+        - cell "¥1,852" [ref=e5580]
+        - cell "¥73,440" [ref=e5581]
+        - cell "39y" [ref=e5582]
+        - 'cell "D: -" [ref=e5583]':
+          - generic [ref=e5584]: "D: -"
+        - cell "View" [ref=e5585]:
+          - link "View" [ref=e5586] [cursor=pointer]:
+            - /url: https://apartments.gaijinpot.com/en/rent/view/1325432?max_price=200000&min_price=50000&order=index_ranking-desc&page=74&index=1
+      - 'row "☆ B 7/9 77.9 SUUMO Kawaguchi (川口市) 平田レジデンス ＪＲ京浜東北線/蕨 Stn 歩5min 30min 3DK 54.68㎡ 2F 5 min ¥76,000 ¥80,000 ¥1,463 ¥152,000 42y D: ¥76,000 View" [ref=e5587]':
+        - cell "☆" [ref=e5588]
+        - cell "B 7/9 77.9" [ref=e5589] [cursor=pointer]:
+          - generic "Good match" [ref=e5590]: B
+          - generic [ref=e5591]: 7/9
+          - text: "77.9"
+        - cell "SUUMO" [ref=e5594]:
+          - generic [ref=e5595]: SUUMO
+        - cell "Kawaguchi (川口市)" [ref=e5596]:
+          - generic [ref=e5597]: Kawaguchi (川口市)
+        - cell "平田レジデンス ＪＲ京浜東北線/蕨 Stn 歩5min 30min" [ref=e5598]:
+          - generic [ref=e5599]: 平田レジデンス
+          - generic "ＪＲ京浜東北線/蕨駅 歩5分 / ＪＲ京浜東北線/南浦和駅 歩40分 / ＪＲ埼京線/戸田駅 歩34分" [ref=e5600]:
+            - text: ＪＲ京浜東北線/蕨 Stn 歩5min
+            - generic [ref=e5601]: 30min
+        - cell "3DK" [ref=e5602]
+        - cell "54.68㎡" [ref=e5603]
+        - cell "2F" [ref=e5604]
+        - cell "5 min" [ref=e5605]
+        - cell "¥76,000" [ref=e5606]
+        - cell "¥80,000" [ref=e5607]
+        - cell "¥1,463" [ref=e5608]
+        - cell "¥152,000" [ref=e5609]
+        - cell "42y" [ref=e5610]
+        - 'cell "D: ¥76,000" [ref=e5611]':
+          - generic [ref=e5612]: "D: ¥76,000"
+        - cell "View" [ref=e5613]:
+          - link "View" [ref=e5614] [cursor=pointer]:
+            - /url: https://suumo.jp/chintai/jnc_000105778275/?bc=100493405833
+      - 'row "☆ B 7/9 77.8 GaijinPot Kita-ku (北区) in Iwabuchimachi Kita-ku, Tokyo Akabaneiwabuchi Station (6 min. walk) 26min 1R 14.04㎡ 2 / 2F 6 min ¥60,000 ¥60,000 ¥4,274 ¥60,000 5y D: - View" [ref=e5615]':
+        - cell "☆" [ref=e5616]
+        - cell "B 7/9 77.8" [ref=e5617] [cursor=pointer]:
+          - generic "Good match" [ref=e5618]: B
+          - generic [ref=e5619]: 7/9
+          - text: "77.8"
+        - cell "GaijinPot" [ref=e5622]:
+          - generic [ref=e5623]: GaijinPot
+        - cell "Kita-ku (北区)" [ref=e5624]:
+          - generic [ref=e5625]: Kita-ku (北区)
+        - cell "in Iwabuchimachi Kita-ku, Tokyo Akabaneiwabuchi Station (6 min. walk) 26min" [ref=e5626]:
+          - generic [ref=e5627]: in Iwabuchimachi Kita-ku, Tokyo
+          - generic "Akabaneiwabuchi Station (6 min. walk)" [ref=e5628]:
+            - text: Akabaneiwabuchi Station (6 min. walk)
+            - generic [ref=e5629]: 26min
+        - cell "1R" [ref=e5630]
+        - cell "14.04㎡" [ref=e5631]
+        - cell "2 / 2F" [ref=e5632]
+        - cell "6 min" [ref=e5633]
+        - cell "¥60,000" [ref=e5634]
+        - cell "¥60,000" [ref=e5635]
+        - cell "¥4,274" [ref=e5636]
+        - cell "¥60,000" [ref=e5637]
+        - cell "5y" [ref=e5638]
+        - 'cell "D: -" [ref=e5639]':
+          - generic [ref=e5640]: "D: -"
+        - cell "View" [ref=e5641]:
+          - link "View" [ref=e5642] [cursor=pointer]:
+            - /url: https://apartments.gaijinpot.com/en/rent/view/1327878?max_price=200000&min_price=50000&order=index_ranking-desc&page=66&index=5
+      - 'row "☆ B 7/9 77.8 GaijinPot Kita-ku (北区) in Akabane Kita-ku, Tokyo Akabaneiwabuchi Station (6 min. walk) 26min 1K 20.09㎡ 2 / 3F 6 min ¥60,000 ¥60,000 ¥2,987 ¥60,000 33y D: - View" [ref=e5643]':
+        - cell "☆" [ref=e5644]
+        - cell "B 7/9 77.8" [ref=e5645] [cursor=pointer]:
+          - generic "Good match" [ref=e5646]: B
+          - generic [ref=e5647]: 7/9
+          - text: "77.8"
+        - cell "GaijinPot" [ref=e5650]:
+          - generic [ref=e5651]: GaijinPot
+        - cell "Kita-ku (北区)" [ref=e5652]:
+          - generic [ref=e5653]: Kita-ku (北区)
+        - cell "in Akabane Kita-ku, Tokyo Akabaneiwabuchi Station (6 min. walk) 26min" [ref=e5654]:
+          - generic [ref=e5655]: in Akabane Kita-ku, Tokyo
+          - generic "Akabaneiwabuchi Station (6 min. walk)" [ref=e5656]:
+            - text: Akabaneiwabuchi Station (6 min. walk)
+            - generic [ref=e5657]: 26min
+        - cell "1K" [ref=e5658]
+        - cell "20.09㎡" [ref=e5659]
+        - cell "2 / 3F" [ref=e5660]
+        - cell "6 min" [ref=e5661]
+        - cell "¥60,000" [ref=e5662]
+        - cell "¥60,000" [ref=e5663]
+        - cell "¥2,987" [ref=e5664]
+        - cell "¥60,000" [ref=e5665]
+        - cell "33y" [ref=e5666]
+        - 'cell "D: -" [ref=e5667]':
+          - generic [ref=e5668]: "D: -"
+        - cell "View" [ref=e5669]:
+          - link "View" [ref=e5670] [cursor=pointer]:
+            - /url: https://apartments.gaijinpot.com/en/rent/view/1326086?max_price=200000&min_price=50000&order=index_ranking-desc&page=95&index=1
+      - 'row "☆ B 5/9 77.8 VillageH Kawasaki-ku (川崎区) Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min 2K 33.09㎡ 1-203 South (1 Building / 2 Floor) - ¥48,700 ¥48,700 ¥1,472 ¥48,700 - D: - View" [ref=e5671]':
+        - cell "☆" [ref=e5672]
+        - cell "B 5/9 77.8" [ref=e5673] [cursor=pointer]:
+          - generic "Good match" [ref=e5674]: B
+          - generic [ref=e5675]: 5/9
+          - text: "77.8"
+        - cell "VillageH" [ref=e5678]:
+          - generic [ref=e5679]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5680]:
+          - generic [ref=e5681]: Kawasaki-ku (川崎区)
+        - cell "Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min" [ref=e5682]:
+          - generic [ref=e5683]: Village House Sanda
+          - generic "Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km" [ref=e5684]:
+            - text: Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km
+            - generic [ref=e5685]: 35min
+        - cell "2K" [ref=e5686]
+        - cell "33.09㎡" [ref=e5687]
+        - cell "1-203 South (1 Building / 2 Floor)" [ref=e5688]
+        - cell "-" [ref=e5689]
+        - cell "¥48,700" [ref=e5690]
+        - cell "¥48,700" [ref=e5691]
+        - cell "¥1,472" [ref=e5692]
+        - cell "¥48,700" [ref=e5693]
+        - cell "-" [ref=e5694]
+        - 'cell "D: -" [ref=e5695]':
+          - generic [ref=e5696]: "D: -"
+        - cell "View" [ref=e5697]:
+          - link "View" [ref=e5698] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/atsugi-shi-142123/sanda-3087/#2K-1-203/
+      - 'row "☆ B 5/9 77.8 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 9-203 South (9 Building / 2 Floor) - ¥62,300 ¥62,300 ¥1,266 ¥62,300 - D: - View" [ref=e5699]':
+        - cell "☆" [ref=e5700]
+        - cell "B 5/9 77.8" [ref=e5701] [cursor=pointer]:
+          - generic "Good match" [ref=e5702]: B
+          - generic [ref=e5703]: 5/9
+          - text: "77.8"
+        - cell "VillageH" [ref=e5706]:
+          - generic [ref=e5707]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5708]:
+          - generic [ref=e5709]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e5710]:
+          - generic [ref=e5711]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e5712]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e5713]: 35min
+        - cell "3DK" [ref=e5714]
+        - cell "49.2㎡" [ref=e5715]
+        - cell "9-203 South (9 Building / 2 Floor)" [ref=e5716]
+        - cell "-" [ref=e5717]
+        - cell "¥62,300" [ref=e5718]
+        - cell "¥62,300" [ref=e5719]
+        - cell "¥1,266" [ref=e5720]
+        - cell "¥62,300" [ref=e5721]
+        - cell "-" [ref=e5722]
+        - 'cell "D: -" [ref=e5723]':
+          - generic [ref=e5724]: "D: -"
+        - cell "View" [ref=e5725]:
+          - link "View" [ref=e5726] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-9-203/
+      - 'row "☆ B 5/9 77.8 VillageH Kawasaki-ku (川崎区) Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min 3DK 66.14㎡ 2-405 South (2 Building / 4 Floor) - ¥63,100 ¥63,100 ¥954 ¥63,100 - D: - View" [ref=e5727]':
+        - cell "☆" [ref=e5728]
+        - cell "B 5/9 77.8" [ref=e5729] [cursor=pointer]:
+          - generic "Good match" [ref=e5730]: B
+          - generic [ref=e5731]: 5/9
+          - text: "77.8"
+        - cell "VillageH" [ref=e5734]:
+          - generic [ref=e5735]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5736]:
+          - generic [ref=e5737]: Kawasaki-ku (川崎区)
+        - cell "Village House Shimojima Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km 35min" [ref=e5738]:
+          - generic [ref=e5739]: Village House Shimojima
+          - generic "Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km" [ref=e5740]:
+            - text: Samukawa Station - JR Sagami Line - 58.0 minutes walk, 4.6 km
+            - generic [ref=e5741]: 35min
+        - cell "3DK" [ref=e5742]
+        - cell "66.14㎡" [ref=e5743]
+        - cell "2-405 South (2 Building / 4 Floor)" [ref=e5744]
+        - cell "-" [ref=e5745]
+        - cell "¥63,100" [ref=e5746]
+        - cell "¥63,100" [ref=e5747]
+        - cell "¥954" [ref=e5748]
+        - cell "¥63,100" [ref=e5749]
+        - cell "-" [ref=e5750]
+        - 'cell "D: -" [ref=e5751]':
+          - generic [ref=e5752]: "D: -"
+        - cell "View" [ref=e5753]:
+          - link "View" [ref=e5754] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hiratsuka-shi-142034/shimojima-3091/#3DK-2-405/
+      - 'row "☆ B 5/9 77.8 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 1-208 South (1 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e5755]':
+        - cell "☆" [ref=e5756]
+        - cell "B 5/9 77.8" [ref=e5757] [cursor=pointer]:
+          - generic "Good match" [ref=e5758]: B
+          - generic [ref=e5759]: 5/9
+          - text: "77.8"
+        - cell "VillageH" [ref=e5762]:
+          - generic [ref=e5763]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5764]:
+          - generic [ref=e5765]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e5766]:
+          - generic [ref=e5767]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e5768]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e5769]: 35min
+        - cell "2K" [ref=e5770]
+        - cell "33.54㎡" [ref=e5771]
+        - cell "1-208 South (1 Building / 2 Floor)" [ref=e5772]
+        - cell "-" [ref=e5773]
+        - cell "¥40,800" [ref=e5774]
+        - cell "¥40,800" [ref=e5775]
+        - cell "¥1,216" [ref=e5776]
+        - cell "¥40,800" [ref=e5777]
+        - cell "-" [ref=e5778]
+        - 'cell "D: -" [ref=e5779]':
+          - generic [ref=e5780]: "D: -"
+        - cell "View" [ref=e5781]:
+          - link "View" [ref=e5782] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-1-208/
+      - 'row "☆ B 5/9 77.8 VillageH Kawasaki-ku (川崎区) Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min 2K 33.54㎡ 2-205 South (2 Building / 2 Floor) - ¥40,800 ¥40,800 ¥1,216 ¥40,800 - D: - View" [ref=e5783]':
+        - cell "☆" [ref=e5784]
+        - cell "B 5/9 77.8" [ref=e5785] [cursor=pointer]:
+          - generic "Good match" [ref=e5786]: B
+          - generic [ref=e5787]: 5/9
+          - text: "77.8"
+        - cell "VillageH" [ref=e5790]:
+          - generic [ref=e5791]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5792]:
+          - generic [ref=e5793]: Kawasaki-ku (川崎区)
+        - cell "Village House Togawa Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km 35min" [ref=e5794]:
+          - generic [ref=e5795]: Village House Togawa
+          - generic "Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km" [ref=e5796]:
+            - text: Shibusawa Station - Odakyū Line - 31.0 minutes walk, 2.4 km
+            - generic [ref=e5797]: 35min
+        - cell "2K" [ref=e5798]
+        - cell "33.54㎡" [ref=e5799]
+        - cell "2-205 South (2 Building / 2 Floor)" [ref=e5800]
+        - cell "-" [ref=e5801]
+        - cell "¥40,800" [ref=e5802]
+        - cell "¥40,800" [ref=e5803]
+        - cell "¥1,216" [ref=e5804]
+        - cell "¥40,800" [ref=e5805]
+        - cell "-" [ref=e5806]
+        - 'cell "D: -" [ref=e5807]':
+          - generic [ref=e5808]: "D: -"
+        - cell "View" [ref=e5809]:
+          - link "View" [ref=e5810] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/hadano-shi-142115/togawa-3109/#2K-2-205/
+      - 'row "☆ B 5/9 77.7 VillageH Kawasaki-ku (川崎区) Village House Iriyamazu Kinugasa Station - JR Yokosuka Line - 14.0～16.0 minutes walk, 1.1～1.2 km 35min 3DK 57.96㎡ 4-405 South (4 Building / 4 Floor) - ¥71,800 ¥71,800 ¥1,239 ¥71,800 - D: - View" [ref=e5811]':
+        - cell "☆" [ref=e5812]
+        - cell "B 5/9 77.7" [ref=e5813] [cursor=pointer]:
+          - generic "Good match" [ref=e5814]: B
+          - generic [ref=e5815]: 5/9
+          - text: "77.7"
+        - cell "VillageH" [ref=e5818]:
+          - generic [ref=e5819]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5820]:
+          - generic [ref=e5821]: Kawasaki-ku (川崎区)
+        - cell "Village House Iriyamazu Kinugasa Station - JR Yokosuka Line - 14.0～16.0 minutes walk, 1.1～1.2 km 35min" [ref=e5822]:
+          - generic [ref=e5823]: Village House Iriyamazu
+          - generic "Kinugasa Station - JR Yokosuka Line - 14.0～16.0 minutes walk, 1.1～1.2 km" [ref=e5824]:
+            - text: Kinugasa Station - JR Yokosuka Line - 14.0～16.0 minutes walk, 1.1～1.2 km
+            - generic [ref=e5825]: 35min
+        - cell "3DK" [ref=e5826]
+        - cell "57.96㎡" [ref=e5827]
+        - cell "4-405 South (4 Building / 4 Floor)" [ref=e5828]
+        - cell "-" [ref=e5829]
+        - cell "¥71,800" [ref=e5830]
+        - cell "¥71,800" [ref=e5831]
+        - cell "¥1,239" [ref=e5832]
+        - cell "¥71,800" [ref=e5833]
+        - cell "-" [ref=e5834]
+        - 'cell "D: -" [ref=e5835]':
+          - generic [ref=e5836]: "D: -"
+        - cell "View" [ref=e5837]:
+          - link "View" [ref=e5838] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/iriyamazu-3035/#3DK-4-405/
+      - 'row "☆ B 5/9 77.7 VillageH Kawasaki-ku (川崎区) Village House Kugou Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km 35min 3DK 57.96㎡ 4-401 Southeast (4 Building / 4 Floor) - ¥68,800 ¥68,800 ¥1,187 ¥68,800 - D: - View" [ref=e5839]':
+        - cell "☆" [ref=e5840]
+        - cell "B 5/9 77.7" [ref=e5841] [cursor=pointer]:
+          - generic "Good match" [ref=e5842]: B
+          - generic [ref=e5843]: 5/9
+          - text: "77.7"
+        - cell "VillageH" [ref=e5846]:
+          - generic [ref=e5847]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5848]:
+          - generic [ref=e5849]: Kawasaki-ku (川崎区)
+        - cell "Village House Kugou Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km 35min" [ref=e5850]:
+          - generic [ref=e5851]: Village House Kugou
+          - generic "Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km" [ref=e5852]:
+            - text: Kenritsu Daigaku Station - Keikyū Main Line - 14.0～16.0 minutes walk, 1.1～1.2 km
+            - generic [ref=e5853]: 35min
+        - cell "3DK" [ref=e5854]
+        - cell "57.96㎡" [ref=e5855]
+        - cell "4-401 Southeast (4 Building / 4 Floor)" [ref=e5856]
+        - cell "-" [ref=e5857]
+        - cell "¥68,800" [ref=e5858]
+        - cell "¥68,800" [ref=e5859]
+        - cell "¥1,187" [ref=e5860]
+        - cell "¥68,800" [ref=e5861]
+        - cell "-" [ref=e5862]
+        - 'cell "D: -" [ref=e5863]':
+          - generic [ref=e5864]: "D: -"
+        - cell "View" [ref=e5865]:
+          - link "View" [ref=e5866] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/kugou-3040/#3DK-4-401/
+      - 'row "☆ B 5/9 77.7 VillageH Kawasaki-ku (川崎区) Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min 2K 33.09㎡ 1-302 South (1 Building / 3 Floor) - ¥46,800 ¥46,800 ¥1,414 ¥46,800 - D: - View" [ref=e5867]':
+        - cell "☆" [ref=e5868]
+        - cell "B 5/9 77.7" [ref=e5869] [cursor=pointer]:
+          - generic "Good match" [ref=e5870]: B
+          - generic [ref=e5871]: 5/9
+          - text: "77.7"
+        - cell "VillageH" [ref=e5874]:
+          - generic [ref=e5875]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5876]:
+          - generic [ref=e5877]: Kawasaki-ku (川崎区)
+        - cell "Village House Sanda Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km 35min" [ref=e5878]:
+          - generic [ref=e5879]: Village House Sanda
+          - generic "Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km" [ref=e5880]:
+            - text: Sobudaishita Station - JR Sagami Line - 65.0～66.0 minutes walk, 5.1～5.2 km
+            - generic [ref=e5881]: 35min
+        - cell "2K" [ref=e5882]
+        - cell "33.09㎡" [ref=e5883]
+        - cell "1-302 South (1 Building / 3 Floor)" [ref=e5884]
+        - cell "-" [ref=e5885]
+        - cell "¥46,800" [ref=e5886]
+        - cell "¥46,800" [ref=e5887]
+        - cell "¥1,414" [ref=e5888]
+        - cell "¥46,800" [ref=e5889]
+        - cell "-" [ref=e5890]
+        - 'cell "D: -" [ref=e5891]':
+          - generic [ref=e5892]: "D: -"
+        - cell "View" [ref=e5893]:
+          - link "View" [ref=e5894] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/atsugi-shi-142123/sanda-3087/#2K-1-302/
+      - 'row "☆ B 5/9 77.7 VillageH Kawasaki-ku (川崎区) Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min 3DK 49.2㎡ 10-101 South (10 Building / 1 Floor) - ¥59,000 ¥59,000 ¥1,199 ¥59,000 - D: - View" [ref=e5895]':
+        - cell "☆" [ref=e5896]
+        - cell "B 5/9 77.7" [ref=e5897] [cursor=pointer]:
+          - generic "Good match" [ref=e5898]: B
+          - generic [ref=e5899]: 5/9
+          - text: "77.7"
+        - cell "VillageH" [ref=e5902]:
+          - generic [ref=e5903]: VillageH
+        - cell "Kawasaki-ku (川崎区)" [ref=e5904]:
+          - generic [ref=e5905]: Kawasaki-ku (川崎区)
+        - cell "Village House Uraga Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km 35min" [ref=e5906]:
+          - generic [ref=e5907]: Village House Uraga
+          - generic "Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km" [ref=e5908]:
+            - text: Uraga Station - Keikyū Main Line - 12.0～13.0 minutes walk, 0.9～1.0 km
+            - generic [ref=e5909]: 35min
+        - cell "3DK" [ref=e5910]
+        - cell "49.2㎡" [ref=e5911]
+        - cell "10-101 South (10 Building / 1 Floor)" [ref=e5912]
+        - cell "-" [ref=e5913]
+        - cell "¥59,000" [ref=e5914]
+        - cell "¥59,000" [ref=e5915]
+        - cell "¥1,199" [ref=e5916]
+        - cell "¥59,000" [ref=e5917]
+        - cell "-" [ref=e5918]
+        - 'cell "D: -" [ref=e5919]':
+          - generic [ref=e5920]: "D: -"
+        - cell "View" [ref=e5921]:
+          - link "View" [ref=e5922] [cursor=pointer]:
+            - /url: https://www.villagehouse.jp/en/rent/kanto/kanagawa/yokosuka-shi-142018/uraga-3023/#3DK-10-101/
+  - generic [ref=e2927]:
+    - button "‹ Prev" [disabled] [ref=e2928]
+    - generic [ref=e2929]: Page 1 of 28 (2,733 results)
+    - button "Next ›" [ref=e2930] [cursor=pointer]

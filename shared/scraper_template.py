@@ -21,6 +21,7 @@ from shared.cli import build_arg_parser, filter_areas
 from shared.config import get_areas_for_source, Area
 from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
+from shared.parsers import parse_walk_minutes, parse_size_sqm
 
 
 # ---------------------------------------------------------------------------
@@ -89,6 +90,7 @@ class StandardRoom:
     layout: str
     size: str
     detail_url: str
+    size_display: str = ""  # original display string e.g. "42.5m²"
 
 
 @dataclass
@@ -180,33 +182,52 @@ class BaseScraper(ABC):
 
         return all_properties
 
+    def to_flat_rooms(self, all_properties: List[StandardProperty]) -> List[dict]:
+        """Convert StandardProperty list to flat room dicts for JSON output.
+
+        Each room becomes a standalone dict with building-level fields
+        (name, address, access, etc.) merged in. This is the normalized
+        output format consumed directly by the viewer.
+        """
+        rooms = []
+        for prop in all_properties:
+            walk_minutes = parse_walk_minutes(prop.access)
+            for room in prop.rooms:
+                size_sqm = parse_size_sqm(room.size)
+                rooms.append({
+                    "source": self.SOURCE_NAME,
+                    "area": prop.area_name,
+                    "prefecture": prop.prefecture,
+                    "building": prop.name,
+                    "address": prop.address,
+                    "access": prop.access,
+                    "room_type": room.layout,
+                    "floor": room.floor,
+                    "size_sqm": size_sqm,
+                    "size_display": room.size_display or room.size,
+                    "building_age_years": prop.building_age_years,
+                    "rent": room.rent_value,
+                    "admin_fee": room.admin_fee_value,
+                    "total_monthly": room.total_value,
+                    "deposit": room.deposit_value,
+                    "key_money": room.key_money_value,
+                    "walk_minutes": walk_minutes,
+                    "url": room.detail_url,
+                })
+        return rooms
+
     def save_results(self, all_properties: List[StandardProperty],
                      filename: str = "") -> None:
-        """Save structured results to JSON, compatible with viewer."""
+        """Save flat room-per-row results to JSON, compatible with viewer."""
         filename = filename or self.OUTPUT_FILE
+        rooms = self.to_flat_rooms(all_properties)
         data = {
             "source": self.SOURCE_NAME,
             "search_date": time.strftime("%Y-%m-%d %H:%M:%S"),
             "room_type_filter": self.ROOM_TYPE_FILTER,
-            "total_properties": len(all_properties),
-            "total_rooms": sum(len(p.rooms) for p in all_properties),
-            "areas": {},
+            "total_rooms": len(rooms),
+            "rooms": rooms,
         }
-
-        for prop in all_properties:
-            area = prop.area_name
-            if area not in data["areas"]:
-                data["areas"][area] = []
-
-            prop_dict = {
-                "name": prop.name,
-                "address": prop.address,
-                "access": prop.access,
-                "building_age": prop.building_age,
-                "building_age_years": prop.building_age_years,
-                "rooms": [asdict(r) for r in prop.rooms],
-            }
-            data["areas"][area].append(prop_dict)
 
         safe_write_json(data, filename)
 

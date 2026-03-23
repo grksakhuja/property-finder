@@ -12,14 +12,14 @@ import json
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from urllib.parse import quote
 
 import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate
 
-from shared.parsers import parse_yen, parse_building_age, parse_size_sqm
+from shared.parsers import parse_yen, parse_building_age, parse_size_sqm, parse_walk_minutes
 from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
 from shared.config import Area, get_areas_for_source, get_target_room_types
@@ -317,31 +317,38 @@ def print_results(all_properties: list[Property]):
 
 
 def save_results(all_properties: list[Property], filename: str = "results_suumo.json"):
-    """Save structured results to JSON, compatible with viewer.html."""
+    """Save flat rooms list to JSON, compatible with the pipeline."""
+    flat_rooms = []
+    for prop in all_properties:
+        for room in prop.rooms:
+            flat_rooms.append({
+                "source": "suumo",
+                "area": prop.area_name,
+                "prefecture": prop.prefecture,
+                "building": prop.name,
+                "address": prop.address,
+                "access": prop.access,
+                "room_type": room.layout,
+                "floor": room.floor,
+                "size_sqm": parse_size_sqm(room.size),
+                "size_display": room.size,
+                "building_age_years": prop.building_age_years,
+                "rent": room.rent_value,
+                "admin_fee": room.admin_fee_value,
+                "total_monthly": room.total_value,
+                "deposit": room.deposit_value,
+                "key_money": room.key_money_value,
+                "walk_minutes": parse_walk_minutes(prop.access),
+                "url": room.detail_url,
+            })
+
     data = {
         "source": "suumo",
         "search_date": time.strftime("%Y-%m-%d %H:%M:%S"),
         "room_type_filter": ROOM_TYPE_FILTER,
-        "total_properties": len(all_properties),
-        "total_rooms": sum(len(p.rooms) for p in all_properties),
-        "areas": {},
+        "total_rooms": len(flat_rooms),
+        "rooms": flat_rooms,
     }
-
-    for prop in all_properties:
-        area = prop.area_name
-        if area not in data["areas"]:
-            data["areas"][area] = []
-
-        prop_dict = {
-            "name": prop.name,
-            "address": prop.address,
-            "access": prop.access,
-            "building_age": prop.building_age,
-            "building_age_years": prop.building_age_years,
-            "total_floors": prop.total_floors,
-            "rooms": [asdict(r) for r in prop.rooms],
-        }
-        data["areas"][area].append(prop_dict)
 
     safe_write_json(data, filename)
 

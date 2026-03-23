@@ -21,7 +21,7 @@ import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate
 
-from shared.parsers import parse_yen
+from shared.parsers import parse_yen, parse_size_sqm, parse_walk_minutes
 from shared.http_client import create_session, fetch_page
 from shared.logging_setup import setup_logging
 from shared.config import Area, get_areas_for_source
@@ -304,17 +304,8 @@ def print_results(all_areas: dict[str, list[Room]]):
 
 def save_results(all_areas: dict[str, list[Room]], area_lookup: dict,
                  filename: str = "results_realestate_jp.json"):
-    """Save structured results to JSON, compatible with viewer.html."""
-    total_rooms = sum(len(rooms) for rooms in all_areas.values())
-
-    data = {
-        "source": "realestate_jp",
-        "search_date": time.strftime("%Y-%m-%d %H:%M:%S"),
-        "room_type_filter": ["2LDK+"],
-        "total_properties": total_rooms,  # Each listing is a unit
-        "total_rooms": total_rooms,
-        "areas": {},
-    }
+    """Save flat room list to JSON, compatible with the new pipeline format."""
+    flat_rooms = []
 
     for area_name, rooms in all_areas.items():
         if not rooms:
@@ -322,33 +313,38 @@ def save_results(all_areas: dict[str, list[Room]], area_lookup: dict,
         area_info = area_lookup.get(area_name)
         pref = area_info.prefecture if area_info else "unknown"
 
-        listings = []
         for room in rooms:
-            listing = {
-                "name": f"{room.layout} {room.building_type}".strip(),
+            size_sqm = parse_size_sqm(room.size)
+            walk_minutes = parse_walk_minutes(room.station)
+
+            flat_rooms.append({
+                "source": "realestate_jp",
+                "area": area_name,
+                "prefecture": pref,
+                "building": f"{room.layout} {room.building_type}".strip(),
                 "address": room.neighborhood,
                 "access": room.station,
-                "building_age": room.year_built,
+                "room_type": room.layout,
+                "floor": room.floor,
+                "size_sqm": size_sqm,
+                "size_display": room.size,
                 "building_age_years": (datetime.datetime.now().year - room.year_built_int) if room.year_built_int > 0 else -1,
-                "rooms": [{
-                    "floor": room.floor,
-                    "rent": room.monthly_cost,
-                    "rent_value": room.monthly_cost_value,
-                    "admin_fee": "",
-                    "admin_fee_value": 0,
-                    "total_value": room.monthly_cost_value,
-                    "deposit": room.deposit,
-                    "deposit_value": room.deposit_value,
-                    "key_money": room.key_money,
-                    "key_money_value": room.key_money_value,
-                    "layout": room.layout,
-                    "size": room.size,
-                    "detail_url": room.detail_url,
-                }],
-            }
-            listings.append(listing)
+                "rent": room.monthly_cost_value,
+                "admin_fee": 0,
+                "total_monthly": room.monthly_cost_value,
+                "deposit": room.deposit_value,
+                "key_money": room.key_money_value,
+                "walk_minutes": walk_minutes,
+                "url": room.detail_url,
+            })
 
-        data["areas"][area_name] = listings
+    data = {
+        "source": "realestate_jp",
+        "search_date": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "room_type_filter": ["2LDK+"],
+        "total_rooms": len(flat_rooms),
+        "rooms": flat_rooms,
+    }
 
     safe_write_json(data, filename)
 

@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 from shared.config import AREAS, Area
 from shared.cli import build_arg_parser, filter_areas
 from shared.http_client import create_session, fetch_page
-from shared.parsers import parse_digits_as_yen
+from shared.parsers import parse_digits_as_yen, parse_year_to_age
 from shared.scraper_template import BaseScraper, StandardProperty, StandardRoom
 
 BASE_URL = "https://wagaya-japan.com"
@@ -117,6 +117,10 @@ class WagayaScraper(BaseScraper):
         layout = item.get("heytype", "") or item.get("madori", "")
         listing_id = item.get("icd", "") or item.get("id", "")
 
+        # Building age: "2004/5（21years）" → extract year → compute age
+        tikyy = item.get("tikyy", "")
+        building_age_years = parse_year_to_age(tikyy) if tikyy else -1
+
         # Parse rent: "￥50,000" or "50,000" → 50000
         rent_value = parse_digits_as_yen(price_text)
         if rent_value <= 0:
@@ -155,8 +159,8 @@ class WagayaScraper(BaseScraper):
             name=name,
             address=address,
             access=station_info,
-            building_age="",
-            building_age_years=-1,
+            building_age=tikyy,
+            building_age_years=building_age_years,
             area_name=area.name,
             prefecture=area.prefecture,
             rooms=[room],

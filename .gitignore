@@ -26,6 +26,12 @@ results*.2*T*.json
 # Best estate checkpoint (crash recovery)
 results_best_estate_checkpoint.json
 
+# Pipeline output data (except hazard_data gitkeep)
+data/*.json
+!data/hazard_data/
+data/hazard_data/*
+!data/hazard_data/.gitkeep
+
 # Tool state
 .playwright-mcp/
 .backup/

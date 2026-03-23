@@ -75,6 +75,29 @@ def parse_year_to_age(text: Optional[str]) -> int:
     return -1
 
 
+def parse_walk_minutes(text: Optional[str]) -> Optional[int]:
+    """Extract walk time in minutes from access strings.
+
+    Handles:
+      - "JR京浜東北線 川口駅 徒歩8分" → 8
+      - "5 min walk" or "5-min walk" → 5
+      - "8 min. walk" → 8
+      - "徒歩16～19分" → 16 (takes first/min)
+      - Multiple access lines separated by " / " → returns shortest
+      - "" / None / no walk info → None
+    """
+    if not text:
+        return None
+    matches = []
+    # JP: 徒歩8分, 歩5分
+    for m in re.finditer(r'(?:徒歩|歩)(\d+)', text):
+        matches.append(int(m.group(1)))
+    # EN: "6 min walk", "6-min walk", "6 min. walk"
+    for m in re.finditer(r'(\d+)\s*(?:-\s*)?min\.?\s*walk', text, re.IGNORECASE):
+        matches.append(int(m.group(1)))
+    return min(matches) if matches else None
+
+
 def parse_digits_as_yen(text: Optional[str]) -> int:
     """Strip non-digits and return integer yen.
 

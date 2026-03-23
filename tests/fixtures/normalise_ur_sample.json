@@ -1,0 +1,46 @@
+{
+  "search_date": "2026-03-16",
+  "total_properties": 1,
+  "total_rooms": 2,
+  "areas": {
+    "Kawaguchi (川口市)": [
+      {
+        "name": "コンフォール川口",
+        "address": "川口市本町2丁目5-8",
+        "access": "埼玉高速鉄道「新井宿」駅 徒歩11分",
+        "property_code": "50_4070",
+        "url": "https://www.ur-net.go.jp/chintai/kanto/saitama/50_4070.html",
+        "rooms": [
+          {
+            "room_id": "000010507",
+            "room_name": "1号棟 507号室",
+            "room_type": "2LDK",
+            "floor": "5階",
+            "floorspace": "48㎡",
+            "rent": "93,800円",
+            "rent_value": 93800,
+            "commonfee": "7,100円",
+            "commonfee_value": 7100,
+            "total_value": 100900,
+            "shikikin": "2か月",
+            "url": "https://www.ur-net.go.jp/chintai/room1.html"
+          },
+          {
+            "room_id": "000020301",
+            "room_name": "2号棟 301号室",
+            "room_type": "3LDK",
+            "floor": "3階",
+            "floorspace": "75㎡",
+            "rent": "125,600円",
+            "rent_value": 125600,
+            "commonfee": "8,000円",
+            "commonfee_value": 8000,
+            "total_value": 133600,
+            "shikikin": "2か月",
+            "url": "https://www.ur-net.go.jp/chintai/room2.html"
+          }
+        ]
+      }
+    ]
+  }
+}

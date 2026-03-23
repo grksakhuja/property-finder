@@ -4,7 +4,7 @@ import datetime
 
 from shared.parsers import (
     parse_yen, parse_building_age, parse_size_sqm,
-    parse_year_to_age, parse_digits_as_yen,
+    parse_year_to_age, parse_digits_as_yen, parse_walk_minutes,
 )
 
 
@@ -149,3 +149,31 @@ class TestParseDigitsAsYen:
 
     def test_yen_zero(self):
         assert parse_digits_as_yen("¥0") == 0
+
+
+# --- parse_walk_minutes ---
+
+class TestParseWalkMinutes:
+    def test_jp_walk_format(self):
+        assert parse_walk_minutes("JR京浜東北線 川口駅 徒歩8分") == 8
+
+    def test_en_walk_format(self):
+        assert parse_walk_minutes("5 min walk to station") == 5
+
+    def test_en_walk_with_dot(self):
+        assert parse_walk_minutes("8 min. walk") == 8
+
+    def test_en_walk_hyphenated(self):
+        assert parse_walk_minutes("6-min walk") == 6
+
+    def test_multiple_access_lines_returns_shortest(self):
+        assert parse_walk_minutes("徒歩12分 / 徒歩5分") == 5
+
+    def test_none_returns_none(self):
+        assert parse_walk_minutes(None) is None
+
+    def test_empty_returns_none(self):
+        assert parse_walk_minutes("") is None
+
+    def test_no_walk_info_returns_none(self):
+        assert parse_walk_minutes("Bus 15min to station") is None
