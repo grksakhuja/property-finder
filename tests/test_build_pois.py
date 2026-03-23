@@ -79,6 +79,46 @@ class TestCategorizeElement:
         }
         assert categorize_element(el) is None
 
+    def test_convenience_store(self):
+        el = {
+            "lat": 35.8, "lon": 139.7,
+            "tags": {"shop": "convenience", "name": "7-Eleven"},
+        }
+        result = categorize_element(el)
+        assert result["cat"] == "convenience"
+
+    def test_restaurant(self):
+        el = {
+            "lat": 35.8, "lon": 139.7,
+            "tags": {"amenity": "restaurant", "name": "Gusto"},
+        }
+        result = categorize_element(el)
+        assert result["cat"] == "dining"
+
+    def test_cafe(self):
+        el = {
+            "lat": 35.8, "lon": 139.7,
+            "tags": {"amenity": "cafe", "name": "Starbucks"},
+        }
+        result = categorize_element(el)
+        assert result["cat"] == "dining"
+
+    def test_library(self):
+        el = {
+            "lat": 35.8, "lon": 139.7,
+            "tags": {"amenity": "library", "name": "Central Library"},
+        }
+        result = categorize_element(el)
+        assert result["cat"] == "culture"
+
+    def test_cinema(self):
+        el = {
+            "lat": 35.8, "lon": 139.7,
+            "tags": {"amenity": "cinema", "name": "TOHO Cinemas"},
+        }
+        result = categorize_element(el)
+        assert result["cat"] == "culture"
+
     def test_script_in_name_escaped(self):
         el = {
             "lat": 35.8, "lon": 139.7,

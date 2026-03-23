@@ -78,6 +78,12 @@ def build_batch_query():
   way["shop"="department_store"];
   node["amenity"="hospital"]["name"];
   way["amenity"="hospital"]["name"];
+  node["shop"="convenience"]["name"];
+  way["shop"="convenience"]["name"];
+  node["amenity"~"restaurant|cafe"]["name"];
+  way["amenity"~"restaurant|cafe"]["name"];
+  node["amenity"~"library|cinema|theatre"]["name"];
+  way["amenity"~"library|cinema|theatre"]["name"];
 );
 out center;
 """
@@ -135,6 +141,15 @@ def categorize_element(el):
         return result
     elif tags.get("amenity") == "hospital":
         result["cat"] = "hospital"
+        return result
+    elif tags.get("shop") == "convenience":
+        result["cat"] = "convenience"
+        return result
+    elif tags.get("amenity") in ("restaurant", "cafe"):
+        result["cat"] = "dining"
+        return result
+    elif tags.get("amenity") in ("library", "cinema", "theatre"):
+        result["cat"] = "culture"
         return result
     return None
 

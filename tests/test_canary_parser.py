@@ -53,7 +53,7 @@ class TestCanarySSRParser:
         for prop in self.props:
             for room in prop.rooms:
                 assert room.detail_url, "Detail URL should not be empty"
-                assert "canary-app.jp" in room.detail_url
+                assert "canary-app.jp/chintai/rooms/" in room.detail_url
 
     def test_rent_in_valid_range(self):
         for prop in self.props:
@@ -167,7 +167,7 @@ class TestCanaryAPIParser:
 
     def test_detail_url(self):
         props = self.scraper._parse_api_response(self.api_data, AREA)
-        assert "canary-app.jp/chintai/room/room-001" in props[0].rooms[0].detail_url
+        assert "canary-app.jp/chintai/rooms/room-001/" in props[0].rooms[0].detail_url
 
     def test_deposit_and_key_money(self):
         props = self.scraper._parse_api_response(self.api_data, AREA)

@@ -49,12 +49,8 @@
       <div class="prefs-section">
         <div class="prefs-section-title">Budget (yen/mo)</div>
         <div class="prefs-row">
-          <label>Ideal Min<input type="number" id="prefBudgetIdealMin" step="10000" class="prefs-input"></label>
           <label>Ideal Max<input type="number" id="prefBudgetIdealMax" step="10000" class="prefs-input"></label>
-        </div>
-        <div class="prefs-row">
           <label>Hard Max<input type="number" id="prefBudgetHardMax" step="10000" class="prefs-input"></label>
-          <label>Move-in Max<input type="number" id="prefBudgetMoveInMax" step="10000" class="prefs-input"></label>
         </div>
       </div>
 
@@ -89,17 +85,12 @@
         </div>
       </div>
 
-      <div class="prefs-section prefs-section-half">
-        <div class="prefs-section-title">Room Type Multipliers</div>
-        <div id="roomTypeSliders"></div>
-      </div>
-
-      <div class="prefs-section prefs-section-half">
-        <div class="prefs-section-title">Prefecture Scores <span class="prefs-hint">(0.5 intervals)</span></div>
-        <div class="prefs-slider-row"><span class="prefs-slider-label">Saitama</span><input type="range" id="prefPS_saitama" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">8.0</span></div>
-        <div class="prefs-slider-row"><span class="prefs-slider-label">Chiba</span><input type="range" id="prefPS_chiba" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">6.5</span></div>
-        <div class="prefs-slider-row"><span class="prefs-slider-label">Kanagawa</span><input type="range" id="prefPS_kanagawa" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">6.5</span></div>
-        <div class="prefs-slider-row"><span class="prefs-slider-label">Tokyo</span><input type="range" id="prefPS_tokyo" min="0" max="10" step="0.5" class="prefs-slider"><span class="prefs-slider-val">6.5</span></div>
+      <div class="prefs-section">
+        <div class="prefs-section-title">Hazard Penalties</div>
+        <div class="prefs-row">
+          <label>High risk<input type="number" id="prefHazardHigh" step="5" class="prefs-input"></label>
+          <label>Moderate risk<input type="number" id="prefHazardModerate" step="5" class="prefs-input"></label>
+        </div>
       </div>
 
       <div class="prefs-section prefs-section-wide">
@@ -119,9 +110,16 @@
     <div class="control-group">
       <input type="text" id="filterSearch" placeholder="Search properties..." style="min-width:200px">
     </div>
-    <div class="col-toggle-wrap">
-      <button class="btn-col-toggle" id="btnColToggle">Columns</button>
-      <div class="col-toggle-dropdown" id="colToggleDropdown" style="display:none"></div>
+    <div class="sort-wrap">
+      <label class="sort-label">Sort:</label>
+      <select id="sortDropdown">
+        <option value="score">Score</option>
+        <option value="total">Rent</option>
+        <option value="size">Size</option>
+        <option value="walk">Walk</option>
+        <option value="age">Age</option>
+      </select>
+      <button id="sortDirBtn" class="sort-dir-btn" title="Toggle direction">&#9660;</button>
     </div>
     <button class="btn-fav" id="btnFavOnly">★ Favourites (0)</button>
     <button class="btn-reset" id="btnReset">Reset</button>
@@ -188,36 +186,67 @@
         <option value="50">C (50+)</option>
       </select>
     </div>
+    <div class="control-group">
+      <label><input type="checkbox" id="filterNoDeposit"> No deposit/key money</label>
+    </div>
+    <div class="control-group">
+      <label>Min Floor</label>
+      <input type="number" id="filterMinFloor" placeholder="e.g. 2" step="1" min="1">
+    </div>
+    <div class="control-group">
+      <label id="commuteLabel">Max Commute (min)</label>
+      <select id="filterMaxCommute">
+        <option value="">Any</option>
+        <option value="20">20</option>
+        <option value="25">25</option>
+        <option value="30">30</option>
+        <option value="35">35</option>
+        <option value="40">40</option>
+        <option value="45">45</option>
+        <option value="50">50</option>
+        <option value="60">60</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Max Transfers</label>
+      <select id="filterMaxTransfers">
+        <option value="">Any</option>
+        <option value="0">0 (direct)</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+      </select>
+    </div>
   </div>
 </div>
 
 <div id="mainContent">
-  <div class="main-left">
+  <div class="map-panel">
+    <div class="map-toolbar" id="mapToolbar">
+      <button class="toolbar-btn" id="btnPrefsGear" title="Scoring preferences">&#9881;</button>
+    </div>
     <div id="mapContainer">
       <div id="map"></div>
     </div>
-    <div id="areaCards"></div>
   </div>
 
   <div class="resize-handle" id="resizeHandle"></div>
 
-  <div class="main-right">
-    <div class="table-wrap">
-    <table>
-      <thead>
-        <tr id="tableHead"></tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-    </div>
+  <div class="side-panel">
+    <div id="areaCards"></div>
+    <div class="card-list" id="cardList"></div>
 
     <div class="empty-state" id="emptyState" style="display:none">
       <p>No rooms match your filters.</p>
     </div>
 
+    <div class="card-load-more" id="loadMoreWrap" style="display:none">
+      <button id="btnLoadMore">Load more</button>
+      <span class="page-info" id="pageInfo"></span>
+    </div>
+
     <div class="pagination" id="pagination" style="display:none">
       <button id="btnPrev">&#8249; Prev</button>
-      <span class="page-info" id="pageInfo"></span>
+      <span class="page-info" id="paginationInfo"></span>
       <button id="btnNext">Next &#8250;</button>
     </div>
   </div>

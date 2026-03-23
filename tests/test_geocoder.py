@@ -10,6 +10,7 @@ from geocode_properties import (
     _guess_prefecture,
     _is_japanese_address,
     _simplify_japanese_address,
+    extract_addresses_from_results,
     geocode_address,
     geocode_address_csis,
     is_path_safe,
@@ -338,3 +339,101 @@ class TestGeocodeAddressCsis:
             result = geocode_address_csis(session, "東京都北区赤羽", last_time)
 
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# extract_addresses_from_results
+# ---------------------------------------------------------------------------
+
+class TestExtractAddresses:
+    """Test extract_addresses_from_results reads both flat and legacy formats."""
+
+    def test_reads_flat_rooms_format(self, tmp_path):
+        """Flat format: { source, rooms: [{address, ...}] }"""
+        results = {
+            "source": "canary",
+            "rooms": [
+                {"address": "埼玉県川口市幸町１丁目3-14", "area": "Kawaguchi (川口市)", "prefecture": "saitama"},
+                {"address": "埼玉県川口市西川口3丁目", "area": "Kawaguchi (川口市)", "prefecture": "saitama"},
+            ]
+        }
+        results_file = tmp_path / "results_canary.json"
+        results_file.write_text(json.dumps(results, ensure_ascii=False), encoding="utf-8")
+        with patch("geocode_properties.PROJECT_ROOT", str(tmp_path)):
+            addresses = extract_addresses_from_results()
+        assert len(addresses) == 2
+        assert "埼玉県川口市幸町１丁目3-14" in addresses
+        assert addresses["埼玉県川口市幸町１丁目3-14"]["source"] == "canary"
+        assert addresses["埼玉県川口市幸町１丁目3-14"]["prefecture"] == "saitama"
+
+    def test_reads_flat_format_guesses_prefecture(self, tmp_path):
+        """When room has no prefecture field, guess from area name."""
+        results = {
+            "source": "best_estate",
+            "rooms": [
+                {"address": "千葉県市川市1丁目", "area": "Ichikawa (市川市)"},
+            ]
+        }
+        results_file = tmp_path / "results_best_estate.json"
+        results_file.write_text(json.dumps(results, ensure_ascii=False), encoding="utf-8")
+        with patch("geocode_properties.PROJECT_ROOT", str(tmp_path)):
+            addresses = extract_addresses_from_results()
+        assert addresses["千葉県市川市1丁目"]["prefecture"] == "chiba"
+
+    def test_skips_rooms_without_address(self, tmp_path):
+        """Rooms missing address field should be skipped."""
+        results = {
+            "source": "canary",
+            "rooms": [
+                {"area": "Kawaguchi (川口市)"},
+                {"address": "", "area": "Kawaguchi (川口市)"},
+                {"address": "埼玉県川口市1丁目", "area": "Kawaguchi (川口市)"},
+            ]
+        }
+        results_file = tmp_path / "results_canary.json"
+        results_file.write_text(json.dumps(results, ensure_ascii=False), encoding="utf-8")
+        with patch("geocode_properties.PROJECT_ROOT", str(tmp_path)):
+            addresses = extract_addresses_from_results()
+        assert len(addresses) == 1
+
+    def test_deduplicates_addresses(self, tmp_path):
+        """Same address from multiple rooms should appear once."""
+        results = {
+            "source": "canary",
+            "rooms": [
+                {"address": "埼玉県川口市1丁目", "area": "Kawaguchi (川口市)"},
+                {"address": "埼玉県川口市1丁目", "area": "Kawaguchi (川口市)"},
+            ]
+        }
+        results_file = tmp_path / "results_canary.json"
+        results_file.write_text(json.dumps(results, ensure_ascii=False), encoding="utf-8")
+        with patch("geocode_properties.PROJECT_ROOT", str(tmp_path)):
+            addresses = extract_addresses_from_results()
+        assert len(addresses) == 1
+
+    def test_handles_malformed_rooms_gracefully(self, tmp_path):
+        """Non-list rooms value should not crash."""
+        results = {"source": "broken", "rooms": "not a list"}
+        results_file = tmp_path / "results_broken.json"
+        results_file.write_text(json.dumps(results), encoding="utf-8")
+        with patch("geocode_properties.PROJECT_ROOT", str(tmp_path)):
+            addresses = extract_addresses_from_results()
+        assert len(addresses) == 0
+
+    def test_reads_both_formats_together(self, tmp_path):
+        """Both flat and legacy formats in different files should both be read."""
+        flat_file = tmp_path / "results_canary.json"
+        flat_file.write_text(json.dumps({
+            "source": "canary",
+            "rooms": [{"address": "埼玉県川口市1丁目", "area": "Kawaguchi (川口市)"}]
+        }, ensure_ascii=False), encoding="utf-8")
+        legacy_file = tmp_path / "results_suumo.json"
+        legacy_file.write_text(json.dumps({
+            "source": "suumo",
+            "areas": {"Kawaguchi": [{"address": "埼玉県川口市2丁目"}]}
+        }, ensure_ascii=False), encoding="utf-8")
+        with patch("geocode_properties.PROJECT_ROOT", str(tmp_path)):
+            addresses = extract_addresses_from_results()
+        assert len(addresses) == 2
+        assert addresses["埼玉県川口市1丁目"]["source"] == "canary"
+        assert addresses["埼玉県川口市2丁目"]["source"] == "suumo"

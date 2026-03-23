@@ -121,13 +121,12 @@ const BRIEF = {
     },
     prefectureDefault: { saitama: { min: 45, transfers: 1 }, chiba: { min: 45, transfers: 1 }, kanagawa: { min: 50, transfers: 1 }, tokyo: { min: 25, transfers: 1 } },
   },
-  budget: { idealMin: 100000, idealMax: 150000, hardMax: 200000, moveInMax: 600000 },
+  budget: { idealMax: 150000, hardMax: 200000 },
   size: { idealMin: 38, idealMax: 48, okMin: 33, okMax: 55 },
   walk: { great: 5, good: 10, ok: 15, max: 20 },
-  roomType: { '1LDK': 1.0, '2LDK': 0.7, '2SLDK': 0.65, '3LDK': 0.5, '3SLDK': 0.2, '3DK': 0.3, '3K': 0.2 },
-  prefScores: { saitama: 8.0, chiba: 6.5, kanagawa: 6.5, tokyo: 6.5 },
   buildingAge: { ideal: 15, ok: 25, old: 35 },
-  weights: { area: 18, budget: 18, size: 11, roomType: 32, walkTime: 8, moveIn: 7, buildAge: 6, amenities: 0 },
+  hazard: { high: -15, moderate: -5 },
+  weights: { area: 30, budget: 25, size: 20, walkTime: 15, buildAge: 10 },
 };
 const BRIEF_DEFAULTS = JSON.parse(JSON.stringify(BRIEF));
 let scoringConfigOverrides = null;
@@ -209,7 +208,7 @@ function computeScore(room) {
   const breakdown = {};
   const W = BRIEF.weights;
 
-  // 1. Area/Commute (25pts)
+  // 1. Commute
   const commData = BRIEF.commute.known[normalizeArea(room.area)] || BRIEF.commute.prefectureDefault[room.prefecture] || { min: 55, transfers: 1 };
   const commuteMin = commData.min;
   let commuteRatio;
@@ -218,20 +217,17 @@ function computeScore(room) {
   else if (commuteMin <= 45) commuteRatio = 0.85 - (commuteMin - 30) * 0.025;
   else if (commuteMin <= 60) commuteRatio = 0.475 - (commuteMin - 45) * 0.025;
   else commuteRatio = 0.1;
-  const prefComposite = (BRIEF.prefScores[room.prefecture] || 5) / 10;
-  let areaRatio = commuteRatio * 0.6 + prefComposite * 0.4;
+  let areaRatio = commuteRatio;
   if (commData.transfers === 0) areaRatio = Math.min(1, areaRatio + 0.1);
   const areaScore = round1(areaRatio * W.area);
-  breakdown.area = { score: areaScore, max: W.area, commute: commuteMin, transfers: commData.transfers, line: commData.line || '', prefScore: BRIEF.prefScores[room.prefecture] || 5 };
+  breakdown.area = { score: areaScore, max: W.area, commute: commuteMin, transfers: commData.transfers, line: commData.line || '' };
 
-  // 2. Budget (25pts)
+  // 2. Budget
   let budgetRatio = 0;
   const totalRent = room.total_value;
   if (totalRent > 0) {
-    if (totalRent <= BRIEF.budget.idealMax && totalRent >= BRIEF.budget.idealMin) {
+    if (totalRent <= BRIEF.budget.idealMax) {
       budgetRatio = 1.0;
-    } else if (totalRent < BRIEF.budget.idealMin) {
-      budgetRatio = 0.85 + 0.15 * (totalRent / BRIEF.budget.idealMin);
     } else if (totalRent <= BRIEF.budget.hardMax) {
       budgetRatio = 1.0 - (totalRent - BRIEF.budget.idealMax) / (BRIEF.budget.hardMax - BRIEF.budget.idealMax);
     } else {
@@ -241,7 +237,7 @@ function computeScore(room) {
   const budgetScore = round1(budgetRatio * W.budget);
   breakdown.budget = { score: budgetScore, max: W.budget, rent: totalRent };
 
-  // 3. Size (15pts)
+  // 3. Size
   const sqm = parseSize(room.floorspace || room.size);
   let sizeRatio = 0;
   if (sqm > 0) {
@@ -260,16 +256,7 @@ function computeScore(room) {
   const sizeScore = round1(sizeRatio * W.size);
   breakdown.size = { score: sizeScore, max: W.size, sqm };
 
-  // 4. Room Type (10pts)
-  const rt = room.room_type || room.layout || '';
-  let typeRatio = 0.3; // default for unknown
-  for (const [key, val] of Object.entries(BRIEF.roomType)) {
-    if (rt.includes(key)) { typeRatio = val; break; }
-  }
-  const typeScore = round1(typeRatio * W.roomType);
-  breakdown.roomType = { score: typeScore, max: W.roomType, type: rt };
-
-  // 5. Walk Time (10pts)
+  // 4. Walk Time
   let walkMin = room._walkMin != null ? room._walkMin : parseWalkTime(room);
   let walkRatio = 0.3; // unknown default
   if (walkMin > 0) {
@@ -282,21 +269,7 @@ function computeScore(room) {
   const walkScore = round1(walkRatio * W.walkTime);
   breakdown.walkTime = { score: walkScore, max: W.walkTime, walkMin };
 
-  // 6. Move-in Cost (8pts)
-  let moveInRatio = 0.5; // default for unknown/UR
-  if (room.source === 'ur') {
-    moveInRatio = 1.0; // UR has no key money, low move-in
-  } else if (room.move_in_cost > 0) {
-    if (room.move_in_cost <= BRIEF.budget.moveInMax) {
-      moveInRatio = 1.0;
-    } else {
-      moveInRatio = Math.max(0, 1.0 - (room.move_in_cost - BRIEF.budget.moveInMax) / BRIEF.budget.moveInMax);
-    }
-  }
-  const moveInScore = round1(moveInRatio * W.moveIn);
-  breakdown.moveIn = { score: moveInScore, max: W.moveIn, cost: room.move_in_cost };
-
-  // 7. Building Age (7pts)
+  // 5. Building Age
   let ageRatio = 0.4; // unknown default
   if (room.building_age_years >= 0) {
     const age = room.building_age_years;
@@ -313,26 +286,17 @@ function computeScore(room) {
   const ageScore = round1(ageRatio * W.buildAge);
   breakdown.buildAge = { score: ageScore, max: W.buildAge, years: room.building_age_years };
 
-  // 8. Amenities / Convenience
-  let amenitiesRatio = 0.5; // neutral default when no data
-  if (room._amenities && room._amenities.convenience_score != null) {
-    amenitiesRatio = Math.min(1, Math.max(0, room._amenities.convenience_score / 10));
-  }
-  const amenitiesWeight = W.amenities || 0;
-  const amenitiesScore = round1(amenitiesRatio * amenitiesWeight);
-  breakdown.amenities = { score: amenitiesScore, max: amenitiesWeight, convScore: room._amenities ? room._amenities.convenience_score : null };
-
-  // Hazard penalty
+  // Hazard penalty (configurable)
   let hazardPenalty = 0;
   if (room._hazard && room._hazard.data_available) {
     const high = ['flood_risk', 'liquefaction_risk', 'landslide_risk'].some(k => room._hazard[k] === 'high');
     const moderate = ['flood_risk', 'liquefaction_risk', 'landslide_risk'].some(k => room._hazard[k] === 'moderate');
-    if (high) hazardPenalty = -15;
-    else if (moderate) hazardPenalty = -5;
+    if (high) hazardPenalty = BRIEF.hazard.high;
+    else if (moderate) hazardPenalty = BRIEF.hazard.moderate;
   }
   breakdown.hazardPenalty = hazardPenalty;
 
-  const total = Math.max(0, Math.min(100, Math.round(areaScore + budgetScore + sizeScore + typeScore + walkScore + moveInScore + ageScore + amenitiesScore + hazardPenalty)));
+  const total = Math.max(0, Math.min(100, Math.round(areaScore + budgetScore + sizeScore + walkScore + ageScore + hazardPenalty)));
   return { total, breakdown };
 }
 
@@ -584,9 +548,16 @@ async function loadData() {
       const cfg = await cfgResp.json();
       scoringConfigOverrides = cfg;
       deepMerge(BRIEF, cfg);
+      sanitiseBrief();
     }
   } catch (e) {
     console.log('Could not load scoring_config.json — using defaults:', e.message);
+  }
+
+  // Set commute label from config
+  if (BRIEF.commute && BRIEF.commute.station) {
+    const label = document.getElementById('commuteLabel');
+    if (label) label.textContent = 'Commute to ' + BRIEF.commute.station;
   }
 
   // Load amenities sidecar (optional)
@@ -621,8 +592,6 @@ async function loadData() {
   document.getElementById('subtitle').textContent =
     `Loaded: ${loaded.join(' | ')} (${allRooms.length} total rooms)`;
 
-  // Build table header once (sort arrows updated in render())
-  buildTableHeader();
 
   // Restore state from URL hash before first render
   restoreHashState();
@@ -642,39 +611,6 @@ async function loadData() {
   populatePrefsProfileDropdown();
 }
 
-let tableHeaderListenerAdded = false;
-
-function buildTableHeader() {
-  const head = document.getElementById('tableHead');
-  head.innerHTML = COLUMNS.map(col => {
-    const cls = col.sortFn ? 'sortable' : '';
-    return `<th class="${cls}" data-sort-key="${col.key}">${col.label}<span class="sort-arrow"></span></th>`;
-  }).join('');
-  // Event delegation for sort clicks (attach only once — survives innerHTML rebuilds)
-  if (!tableHeaderListenerAdded) {
-    head.addEventListener('click', (e) => {
-      const th = e.target.closest('th[data-sort-key]');
-      if (th) toggleSort(th.dataset.sortKey);
-    });
-    tableHeaderListenerAdded = true;
-  }
-}
-
-function updateSortArrows() {
-  const ths = document.getElementById('tableHead').querySelectorAll('th[data-sort-key]');
-  for (const th of ths) {
-    const key = th.dataset.sortKey;
-    const col = COLUMNS.find(c => c.key === key);
-    const arrow = th.querySelector('.sort-arrow');
-    if (key === sortCol && col && col.sortFn) {
-      th.classList.add('sorted');
-      arrow.innerHTML = sortAsc ? '&#9650;' : '&#9660;';
-    } else {
-      th.classList.remove('sorted');
-      arrow.innerHTML = col && col.sortFn ? '&#9650;' : '';
-    }
-  }
-}
 
 function getFiltered() {
   const source = document.getElementById('filterSource').value;
@@ -687,6 +623,10 @@ function getFiltered() {
   const maxWalk = parseInt(document.getElementById('filterMaxWalk').value) || 0;
   const minGrade = parseInt(document.getElementById('filterMinGrade').value) || 0;
   const search = document.getElementById('filterSearch').value.toLowerCase().trim();
+  const noDeposit = document.getElementById('filterNoDeposit').checked;
+  const minFloor = parseInt(document.getElementById('filterMinFloor').value) || 0;
+  const maxCommute = parseInt(document.getElementById('filterMaxCommute').value) || 0;
+  const maxTransfers = document.getElementById('filterMaxTransfers').value;
 
   return allRooms.filter(r => {
     if (source && r.source !== source) return false;
@@ -699,6 +639,16 @@ function getFiltered() {
     if (maxWalk && r._walkMin > 0 && r._walkMin > maxWalk) return false;
     if (minGrade && r.score < minGrade) return false;
     if (search && !r._searchText.includes(search)) return false;
+    if (noDeposit && (r.deposit_value !== 0 || r.key_money_value !== 0)) return false;
+    if (minFloor && parseFloor(r.floor) < minFloor) return false;
+    if (maxCommute || maxTransfers !== '') {
+      const commData = (BRIEF.commute.known && BRIEF.commute.known[normalizeArea(r.area)])
+        || (BRIEF.commute.prefectureDefault && BRIEF.commute.prefectureDefault[r.prefecture]);
+      if (commData) {
+        if (maxCommute && commData.min > maxCommute) return false;
+        if (maxTransfers !== '' && commData.transfers > parseInt(maxTransfers)) return false;
+      }
+    }
     if (showFavOnly && !favourites.has(r._favKey)) return false;
     if (mapBoundsFilter && geocodedData) {
       const geo = geocodedData[r.address];
@@ -726,17 +676,71 @@ function getSorted(rooms) {
 // =====================================================================
 const SOURCE_LABELS = { ur: 'UR', suumo: 'SUUMO', rej: 'REJ', best_estate: 'BestEstate', gaijinpot: 'GaijinPot', wagaya: 'Wagaya', villagehouse: 'VillageH', canary: 'Canary' };
 
+function renderCard(r) {
+  const grade = r._grade;
+  const isFav = favourites.has(r._favKey);
+  const validUrl = safeUrl(r.url);
+  const roomType = r.room_type || r.layout || '';
+  const sizeDisplay = r.floorspace || r.size || '';
+  const walkDisplay = r._walkMin > 0 ? `${r._walkMin}min` : '';
+  const walkClass = r._walkMin > 0 ? (r._walkMin <= 5 ? 'walk-great' : r._walkMin <= 10 ? 'walk-good' : r._walkMin <= 15 ? 'walk-ok' : 'walk-far') : '';
+  const totalDisplay = r.total_value > 0 ? `&yen;${r.total_value.toLocaleString()}` : 'Inquiry';
+  let totalClass = '';
+  if (r.total_value > 0 && r.total_value > BRIEF.budget.hardMax) totalClass = ' rent-over-hard';
+  else if (r.total_value > 0 && r.total_value > BRIEF.budget.idealMax) totalClass = ' rent-over-ideal';
+
+  let ageDisplay = '';
+  if (r.building_age_years >= 0) ageDisplay = `${r.building_age_years}y`;
+  else if (r.building_age) ageDisplay = escHtml(r.building_age);
+
+  const nameHtml = validUrl
+    ? `<a class="card-name" href="${escHtml(validUrl)}" target="_blank" rel="noopener noreferrer">${escHtml(r.property)}</a>`
+    : `<span class="card-name">${escHtml(r.property)}</span>`;
+
+  return `<div class="property-card grade-border-${grade.letter}" data-address="${escHtml(r.address || '')}" data-room-idx="${r._idx}">
+    <div class="card-header">
+      <span class="fav-star ${isFav ? 'starred' : ''}" data-favkey="${escHtml(r._favKey)}">${isFav ? '\u2605' : '\u2606'}</span>
+      <span class="grade-badge ${grade.cls}">${grade.letter}<span class="score-num">${r.score}</span></span>
+      ${nameHtml}
+      <span class="source-tag source-${r.source}">${SOURCE_LABELS[r.source] || escHtml(r.source)}</span>
+    </div>
+    <div class="card-details">
+      <span class="area-tag pref-${r.prefecture}">${escHtml(r.area)}</span>
+      <span class="card-detail">${escHtml(roomType)}</span>
+      <span class="card-detail">${escHtml(sizeDisplay)}</span>
+      ${walkDisplay ? `<span class="card-detail ${walkClass}">${walkDisplay}</span>` : ''}
+      ${ageDisplay ? `<span class="card-detail">${ageDisplay}</span>` : ''}
+      <span class="card-detail${totalClass}" style="font-weight:600">${totalDisplay}</span>
+    </div>
+    <div class="card-access">${escHtml(r._accessEn)}</div>
+  </div>`;
+}
+
+function renderCardBreakdown(r) {
+  if (!r._breakdown) return '';
+  const dims = [
+    { key: 'area', label: 'Commute' },
+    { key: 'budget', label: 'Budget' },
+    { key: 'size', label: 'Size' },
+    { key: 'walkTime', label: 'Walk Time' },
+    { key: 'buildAge', label: 'Building Age' },
+  ];
+  const bars = dims.map(d => {
+    const dim = r._breakdown[d.key];
+    const val = dim ? dim.score : 0;
+    const max = dim ? dim.max : (BRIEF.weights[d.key] || 10);
+    const pct = Math.min(100, (val / max) * 100);
+    return `<div class="bd-row"><span class="bd-label">${d.label}</span><div class="bd-bar"><div class="bd-fill" style="width:${pct}%"></div></div><span class="bd-val">${round1(val)}/${max}</span></div>`;
+  }).join('');
+  const hazard = r._breakdown.hazardPenalty || 0;
+  const hazardLine = hazard < 0 ? `<div class="bd-row bd-hazard"><span class="bd-label">Hazard</span><span class="bd-val">${hazard}</span></div>` : '';
+  const depositInfo = r.deposit_value !== undefined ? `Deposit: &yen;${(r.deposit_value || 0).toLocaleString()} / Key: &yen;${(r.key_money_value || 0).toLocaleString()}` : '';
+  return `${bars}${hazardLine}<div class="bd-extra">${escHtml(r._floorEn)} &middot; ${depositInfo}</div>`;
+}
+
 function render(paginationOnly = false) {
   const filtered = getFiltered();
   const sorted = getSorted(filtered);
-
-  // Clamp page
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  if (currentPage >= totalPages) currentPage = totalPages - 1;
-  if (currentPage < 0) currentPage = 0;
-
-  const pageStart = currentPage * PAGE_SIZE;
-  const pageSlice = sorted.slice(pageStart, pageStart + PAGE_SIZE);
 
   // Stats
   const statsEl = document.getElementById('stats');
@@ -777,93 +781,32 @@ function render(paginationOnly = false) {
 
   // Stat card click handlers are bound once via event delegation (see below render())
 
-  // Update sort arrows (header built once in loadData)
-  updateSortArrows();
-
-  // Table body — only render current page slice (Step 2)
-  const body = document.getElementById('tableBody');
+  // Card list rendering
+  const cardList = document.getElementById('cardList');
   const empty = document.getElementById('emptyState');
   if (sorted.length === 0) {
-    body.innerHTML = '';
+    cardList.innerHTML = '';
     empty.style.display = 'block';
     document.getElementById('pagination').style.display = 'none';
+    document.getElementById('loadMoreWrap').style.display = 'none';
     return;
   }
   empty.style.display = 'none';
 
-  body.innerHTML = pageSlice.map(r => {
-    const prefClass = `pref-${r.prefecture}`;
-    const sourceClass = `source-${r.source}`;
-    const grade = r._grade;
-    const scoreClass = r.score >= 80 ? 'score-high' : r.score >= 65 ? 'score-med' : 'score-low';
-    const scorePct = Math.min(100, r.score);
-    const yenPerSqm = r._yenPerSqm;
-    const roomType = r.room_type || r.layout || '';
-    const sizeDisplay = r.floorspace || r.size || '';
-    const isFav = favourites.has(r._favKey);
+  // Pagination: show PAGE_SIZE cards per page
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  if (currentPage < 0) currentPage = 0;
+  const pageStart = currentPage * PAGE_SIZE;
+  const pageSlice = sorted.slice(pageStart, pageStart + PAGE_SIZE);
 
-    const rentDisplay = r.rent_value > 0 ? `<span class="money">${escHtml(r.rent)}</span>` : '<span class="rent-tbd">Inquiry</span>';
-    // Total rent tint: only flag out-of-range values
-    let totalTintClass = '';
-    if (r.total_value > 0 && r.total_value > BRIEF.budget.hardMax) totalTintClass = ' rent-over-hard';
-    else if (r.total_value > 0 && r.total_value > BRIEF.budget.idealMax) totalTintClass = ' rent-over-ideal';
-    const totalDisplay = r.total_value > 0 ? `<span class="money">&yen;${r.total_value.toLocaleString()}</span>` : '<span class="rent-tbd">TBD</span>';
-    const yenDisplay = yenPerSqm ? `<span class="money">&yen;${yenPerSqm.toLocaleString()}</span>` : '-';
-    const validUrl = safeUrl(r.url);
-    const hasGeo = geocodedData && geocodedData[r.address];
-    const mapPin = hasGeo ? '<span class="map-pin-icon" title="On map">\u{1F4CD}</span>' : '';
-    const linkDisplay = validUrl ? `${mapPin}<a class="view-link" href="${escHtml(validUrl)}" target="_blank" rel="noopener noreferrer">View</a>` : (mapPin || '-');
+  cardList.innerHTML = pageSlice.map(r => renderCard(r)).join('');
 
-    let moveInDisplay = '-';
-    if (r.source !== 'ur' && r.move_in_cost > 0) {
-      moveInDisplay = `<span class="money">&yen;${r.move_in_cost.toLocaleString()}</span>`;
-    }
-
-    let ageDisplay = '-';
-    if (r.building_age_years >= 0) {
-      ageDisplay = `${r.building_age_years}y`;
-    } else if (r.building_age) {
-      ageDisplay = escHtml(r.building_age);
-    }
-
-    const amenityDisplay = r._amenities && r._amenities.konbini_500m > 0
-      ? `<span class="amenity-badge" title="Konbini within 500m">${r._amenities.konbini_500m}</span>`
-      : '';
-
-    // Size color class
-    const sqm = r._sqm;
-    let sizeClass = 'size-cell';
-    if (sqm > 0) {
-      if (sqm >= BRIEF.size.idealMin && sqm <= BRIEF.size.idealMax) sizeClass += ' size-ideal';
-      else if (sqm >= BRIEF.size.okMin && sqm <= BRIEF.size.okMax) sizeClass += ' size-ok';
-      else sizeClass += ' size-out';
-    }
-
-    return `<tr class="${isFav ? 'fav-row' : ''}" data-address="${escHtml(r.address || '')}">
-      <td><span class="fav-star ${isFav ? 'starred' : ''}" data-favkey="${escHtml(r._favKey)}">${isFav ? '\u2605' : '\u2606'}</span></td>
-      <td class="score-cell" data-room-idx="${r._idx}" style="cursor:pointer"><span class="grade-badge ${grade.cls}" title="${escHtml(grade.label)}">${grade.letter}</span><div class="priority-bar ${scoreClass}"><div class="priority-fill" style="width:${scorePct}%"></div></div><span class="score-num">${r.score}</span></td>
-      <td class="col-secondary"><span class="source-tag ${sourceClass}">${SOURCE_LABELS[r.source] || escHtml(r.source)}</span></td>
-      <td><span class="area-tag area-tag-clickable ${prefClass}" data-filter-area="${escHtml(r.area)}">${escHtml(r.area)}</span></td>
-      <td><div class="prop-name">${escHtml(r.property)}</div><div class="prop-access" title="${escHtml(r.access || '')}">${escHtml(r._accessEn)}${amenityDisplay ? ' ' + amenityDisplay : ''}</div></td>
-      <td>${escHtml(roomType)}</td>
-      <td class="${sizeClass}">${escHtml(sizeDisplay)}</td>
-      <td class="col-secondary">${escHtml(r._floorEn)}</td>
-      <td class="walk-cell ${r._walkMin > 0 ? (r._walkMin <= 5 ? 'walk-great' : r._walkMin <= 10 ? 'walk-good' : r._walkMin <= 15 ? 'walk-ok' : 'walk-far') : ''}">${r._walkMin > 0 ? r._walkMin + ' min' : '-'}</td>
-      <td>${rentDisplay}</td>
-      <td class="total-cell${totalTintClass}">${totalDisplay}</td>
-      <td class="col-secondary">${yenDisplay}</td>
-      <td class="col-secondary">${moveInDisplay}</td>
-      <td>${ageDisplay}</td>
-      <td class="col-secondary"><div class="${r._depositNone ? 'deposit-none' : ''}">${escHtml(r._depositDisplay)}</div></td>
-      <td>${linkDisplay}</td>
-    </tr>`;
-  }).join('');
-
-  // Pagination bar (Step 2)
+  // Pagination bar
   const paginationEl = document.getElementById('pagination');
   if (totalPages > 1) {
     paginationEl.style.display = 'flex';
-    document.getElementById('pageInfo').textContent =
+    document.getElementById('paginationInfo').textContent =
       `Page ${currentPage + 1} of ${totalPages} (${sorted.length.toLocaleString()} results)`;
     document.getElementById('btnPrev').disabled = currentPage === 0;
     document.getElementById('btnNext').disabled = currentPage >= totalPages - 1;
@@ -880,8 +823,6 @@ function render(paginationOnly = false) {
     updateMarkerColours(filtered);
   }
 
-  // Apply column visibility after table body is rendered
-  if (typeof applyColVisibility === 'function') applyColVisibility();
 }
 
 // =====================================================================
@@ -910,6 +851,14 @@ function pushHashState() {
   if (maxWalk) params.set('maxWalk', maxWalk);
   if (minGrade) params.set('minGrade', minGrade);
   if (search) params.set('search', search);
+  const noDeposit = document.getElementById('filterNoDeposit').checked;
+  if (noDeposit) params.set('noDeposit', '1');
+  const minFloor = document.getElementById('filterMinFloor').value;
+  if (minFloor) params.set('minFloor', minFloor);
+  const maxCommute = document.getElementById('filterMaxCommute').value;
+  if (maxCommute) params.set('maxCommute', maxCommute);
+  const maxTransfers = document.getElementById('filterMaxTransfers').value;
+  if (maxTransfers) params.set('maxTransfers', maxTransfers);
   if (sortCol !== 'score') params.set('sort', sortCol);
   if (sortAsc) params.set('asc', '1');
   if (currentPage > 0) params.set('p', String(currentPage));
@@ -937,11 +886,21 @@ function restoreHashState() {
   if (params.has('maxWalk')) document.getElementById('filterMaxWalk').value = params.get('maxWalk');
   if (params.has('minGrade')) document.getElementById('filterMinGrade').value = params.get('minGrade');
   if (params.has('search')) document.getElementById('filterSearch').value = params.get('search');
+  if (params.has('noDeposit')) document.getElementById('filterNoDeposit').checked = params.get('noDeposit') === '1';
+  if (params.has('minFloor')) document.getElementById('filterMinFloor').value = params.get('minFloor');
+  if (params.has('maxCommute')) document.getElementById('filterMaxCommute').value = params.get('maxCommute');
+  if (params.has('maxTransfers')) document.getElementById('filterMaxTransfers').value = params.get('maxTransfers');
   if (params.has('sort')) {
     const sortVal = params.get('sort');
     if (COLUMNS.some(c => c.key === sortVal)) sortCol = sortVal;
+    const sortDD = document.getElementById('sortDropdown');
+    if (sortDD) sortDD.value = sortCol;
   }
-  if (params.has('asc')) sortAsc = params.get('asc') === '1';
+  if (params.has('asc')) {
+    sortAsc = params.get('asc') === '1';
+    const dirBtn = document.getElementById('sortDirBtn');
+    if (dirBtn) dirBtn.innerHTML = sortAsc ? '&#9650;' : '&#9660;';
+  }
   if (params.has('p')) currentPage = parseInt(params.get('p')) || 0;
   if (params.has('fav')) {
     showFavOnly = params.get('fav') === '1';
@@ -958,16 +917,12 @@ function showBreakdown(idx) {
   const b = r._breakdown;
   const grade = r._grade;
 
-  const amenitiesDetail = b.amenities.convScore != null ? `Score: ${b.amenities.convScore}/10` : 'No data (neutral)';
   const dims = [
-    { key: 'area', label: 'Area', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}` },
+    { key: 'area', label: 'Commute', detail: `${b.area.commute}min, ${b.area.transfers} transfer${b.area.transfers !== 1 ? 's' : ''}${b.area.line ? ' (' + b.area.line + ')' : ''}` },
     { key: 'budget', label: 'Budget', detail: b.budget.rent > 0 ? `¥${b.budget.rent.toLocaleString()}/mo` : 'Unknown' },
     { key: 'size', label: 'Size', detail: b.size.sqm > 0 ? `${b.size.sqm}㎡` : 'Unknown' },
-    { key: 'roomType', label: 'Type', detail: b.roomType.type || 'Unknown' },
     { key: 'walkTime', label: 'Walk', detail: b.walkTime.walkMin > 0 ? `${b.walkTime.walkMin} min to station` : 'Unknown' },
-    { key: 'moveIn', label: 'Move-in', detail: b.moveIn.cost > 0 ? `¥${b.moveIn.cost.toLocaleString()}` : (r.source === 'ur' ? 'UR (low cost)' : 'Unknown') },
     { key: 'buildAge', label: 'Age', detail: b.buildAge.years >= 0 ? `${b.buildAge.years} years` : 'Unknown' },
-    { key: 'amenities', label: 'Convenience', detail: amenitiesDetail },
   ];
 
   const barColor = (score, max) => {
@@ -1116,54 +1071,71 @@ const debouncedRender = debounce(() => {
 // Event bindings
 // =====================================================================
 
-// Table body — event delegation for favourites, score breakdowns, row clicks, area tags
-document.getElementById('tableBody').addEventListener('click', (e) => {
+// Card list — event delegation for favourites, score breakdowns, card clicks, area tags
+document.getElementById('cardList').addEventListener('click', (e) => {
   const star = e.target.closest('.fav-star');
   if (star) { toggleFavourite(star.dataset.favkey); return; }
-  const scoreCell = e.target.closest('.score-cell');
-  if (scoreCell) { showBreakdown(parseInt(scoreCell.dataset.roomIdx)); return; }
-  const viewLink = e.target.closest('.view-link');
+  const viewLink = e.target.closest('.card-name[href]');
   if (viewLink) return; // let link navigate normally
   // Clickable area tag → filter + zoom
-  const areaTag = e.target.closest('.area-tag-clickable');
-  if (areaTag) { filterToArea(areaTag.dataset.filterArea); return; }
-  // Click table row → pan map to property
-  const tr = e.target.closest('tr[data-address]');
-  if (tr && tr.dataset.address && geocodedData) {
-    const geo = geocodedData[tr.dataset.address];
-    if (geo && leafletMap) {
-      leafletMap.flyTo([geo.lat, geo.lng], 15, { duration: 0.6 });
-      const marker = propertyMarkersMap[tr.dataset.address];
-      if (marker) {
-        setTimeout(() => {
-          const filtered = allRooms.filter(r => r.address === tr.dataset.address);
-          marker.unbindPopup();
-          marker.bindPopup(buildPropertyPopup(filtered), { maxWidth: 280, maxHeight: 320 }).openPopup();
-        }, 700);
+  const areaTag = e.target.closest('.area-tag');
+  if (areaTag) { filterToArea(areaTag.textContent.trim()); return; }
+  // Click card → expand/collapse score breakdown + pan map
+  const card = e.target.closest('.property-card');
+  if (card) {
+    const idx = parseInt(card.dataset.roomIdx);
+    // Toggle expanded state
+    const wasExpanded = card.classList.contains('expanded');
+    // Collapse all other expanded cards
+    document.querySelectorAll('.property-card.expanded').forEach(c => {
+      c.classList.remove('expanded');
+      const bd = c.querySelector('.card-breakdown');
+      if (bd) bd.remove();
+    });
+    if (!wasExpanded) {
+      card.classList.add('expanded');
+      const r = allRooms[idx];
+      if (r && r._breakdown) {
+        const bd = document.createElement('div');
+        bd.className = 'card-breakdown';
+        bd.innerHTML = renderCardBreakdown(r);
+        card.appendChild(bd);
       }
-      // Scroll map into view on narrow screens
-      const mapEl = document.getElementById('mapContainer');
-      if (mapEl) mapEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    // Pan map to property
+    if (card.dataset.address && geocodedData) {
+      const geo = geocodedData[card.dataset.address];
+      if (geo && leafletMap) {
+        leafletMap.flyTo([geo.lat, geo.lng], 15, { duration: 0.6 });
+        const marker = propertyMarkersMap[card.dataset.address];
+        if (marker) {
+          setTimeout(() => {
+            const filtered = allRooms.filter(r => r.address === card.dataset.address);
+            marker.unbindPopup();
+            marker.bindPopup(buildPropertyPopup(filtered), { maxWidth: 280, maxHeight: 320 }).openPopup();
+          }, 700);
+        }
+      }
     }
   }
 });
 
-// Table hover → highlight marker on map (3a)
+// Card hover → highlight marker on map
 let hoveredMarker = null;
 let hoveredMarkerOrigStyle = null;
-document.getElementById('tableBody').addEventListener('mouseenter', (e) => {
-  const tr = e.target.closest('tr[data-address]');
-  if (!tr || !tr.dataset.address || !geocodedData) return;
-  const marker = propertyMarkersMap[tr.dataset.address];
+document.getElementById('cardList').addEventListener('mouseenter', (e) => {
+  const card = e.target.closest('.property-card');
+  if (!card || !card.dataset.address || !geocodedData) return;
+  const marker = propertyMarkersMap[card.dataset.address];
   if (!marker) return;
   hoveredMarkerOrigStyle = { radius: marker.getRadius(), fillOpacity: marker.options.fillOpacity };
   marker.setStyle({ fillOpacity: 1 });
   marker.setRadius(10);
   hoveredMarker = marker;
 }, true);
-document.getElementById('tableBody').addEventListener('mouseleave', (e) => {
-  const tr = e.target.closest('tr[data-address]');
-  if (!tr) return;
+document.getElementById('cardList').addEventListener('mouseleave', (e) => {
+  const card = e.target.closest('.property-card');
+  if (!card) return;
   if (hoveredMarker && hoveredMarkerOrigStyle) {
     hoveredMarker.setStyle({ fillOpacity: hoveredMarkerOrigStyle.fillOpacity });
     hoveredMarker.setRadius(hoveredMarkerOrigStyle.radius);
@@ -1171,6 +1143,21 @@ document.getElementById('tableBody').addEventListener('mouseleave', (e) => {
     hoveredMarkerOrigStyle = null;
   }
 }, true);
+
+// Sort dropdown + direction toggle
+document.getElementById('sortDropdown').addEventListener('change', (e) => {
+  sortCol = e.target.value;
+  currentPage = 0;
+  render();
+  pushHashState();
+});
+document.getElementById('sortDirBtn').addEventListener('click', () => {
+  sortAsc = !sortAsc;
+  document.getElementById('sortDirBtn').innerHTML = sortAsc ? '&#9650;' : '&#9660;';
+  currentPage = 0;
+  render();
+  pushHashState();
+});
 
 // Map popup & area card clicks — event delegation for filterToArea + profile links + show in table
 document.addEventListener('click', (e) => {
@@ -1192,7 +1179,7 @@ document.getElementById('stats').addEventListener('click', (e) => {
 });
 
 // Dropdowns — instant
-['filterSource', 'filterType', 'filterMinGrade'].forEach(id => {
+['filterSource', 'filterType', 'filterMinGrade', 'filterMaxCommute', 'filterMaxTransfers'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
     currentPage = 0;
     syncQuickFilterChips();
@@ -1219,8 +1206,14 @@ document.getElementById('filterArea').addEventListener('change', () => {
 });
 
 // Number inputs + text search — debounced (Step 3 + Step 6)
-['filterMaxRent', 'filterMinSize', 'filterMaxAge', 'filterMaxWalk', 'filterSearch'].forEach(id => {
+['filterMaxRent', 'filterMinSize', 'filterMaxAge', 'filterMaxWalk', 'filterMinFloor', 'filterSearch'].forEach(id => {
   document.getElementById(id).addEventListener('input', debouncedRender);
+});
+document.getElementById('filterNoDeposit').addEventListener('change', () => {
+  currentPage = 0;
+  syncQuickFilterChips();
+  render();
+  pushHashState();
 });
 
 // Favourites toggle
@@ -1243,6 +1236,10 @@ document.getElementById('btnReset').addEventListener('click', () => {
   document.getElementById('filterMaxWalk').value = '';
   document.getElementById('filterMinGrade').value = '';
   document.getElementById('filterSearch').value = '';
+  document.getElementById('filterNoDeposit').checked = false;
+  document.getElementById('filterMinFloor').value = '';
+  document.getElementById('filterMaxCommute').value = '';
+  document.getElementById('filterMaxTransfers').value = '';
   showFavOnly = false;
   mapBoundsFilter = null;
   populateAreaDropdown();
@@ -1266,6 +1263,7 @@ const QUICK_PRESETS = [
   { label: '40\u33a1+', filters: { minSize: 40 } },
   { label: 'Under \u00a5100k', filters: { maxRent: 100000 } },
   { label: 'New build (\u226410y)', filters: { maxAge: 10 } },
+  { label: 'No deposit', filters: { noDeposit: true } },
 ];
 
 const FILTER_MAP = {
@@ -1275,6 +1273,10 @@ const FILTER_MAP = {
   maxWalk: { id: 'filterMaxWalk', type: 'number' },
   minSize: { id: 'filterMinSize', type: 'number' },
   maxAge: { id: 'filterMaxAge', type: 'number' },
+  noDeposit: { id: 'filterNoDeposit', type: 'checkbox' },
+  minFloor: { id: 'filterMinFloor', type: 'number' },
+  maxCommute: { id: 'filterMaxCommute', type: 'select' },
+  maxTransfers: { id: 'filterMaxTransfers', type: 'select' },
 };
 
 function initQuickFilters() {
@@ -1299,7 +1301,9 @@ function initQuickFilters() {
       if (!mapping) continue;
       const el = document.getElementById(mapping.id);
       if (!el) continue;
-      if (isActive) {
+      if (mapping.type === 'checkbox') {
+        el.checked = !isActive && !!value;
+      } else if (isActive) {
         el.value = '';
       } else {
         el.value = String(value);
@@ -1327,7 +1331,14 @@ function syncQuickFilterChips() {
       if (!mapping) { active = false; break; }
       const el = document.getElementById(mapping.id);
       if (!el) { active = false; break; }
-      const curVal = mapping.type === 'number' ? (parseInt(el.value) || 0) : el.value;
+      let curVal;
+      if (mapping.type === 'checkbox') {
+        curVal = el.checked;
+      } else if (mapping.type === 'number') {
+        curVal = parseInt(el.value) || 0;
+      } else {
+        curVal = el.value;
+      }
       if (String(curVal) !== String(value)) { active = false; break; }
     }
     chip.classList.toggle('active', active);
@@ -1339,13 +1350,16 @@ function updateFilterCount() {
   const countEl = document.getElementById('filterCount');
   if (!countEl) return;
   let count = 0;
-  const ids = ['filterSource', 'filterPref', 'filterArea', 'filterType', 'filterMaxRent', 'filterMinSize', 'filterMaxAge', 'filterMaxWalk', 'filterMinGrade'];
+  const ids = ['filterSource', 'filterPref', 'filterArea', 'filterType', 'filterMaxRent', 'filterMinSize', 'filterMaxAge', 'filterMaxWalk', 'filterMinGrade', 'filterMaxCommute', 'filterMaxTransfers'];
   for (const id of ids) {
     const el = document.getElementById(id);
     if (el && el.value) count++;
   }
   const search = document.getElementById('filterSearch');
   if (search && search.value.trim()) count++;
+  if (document.getElementById('filterNoDeposit').checked) count++;
+  const minFloorEl = document.getElementById('filterMinFloor');
+  if (minFloorEl && minFloorEl.value) count++;
   countEl.textContent = count > 0 ? count : '';
 }
 
@@ -1364,12 +1378,12 @@ function initCollapsibleFilters() {
 
 // Pagination buttons
 function scrollTableToTop() {
-  const mainRight = document.querySelector('.main-right');
-  if (mainRight && window.matchMedia('(min-width: 1400px)').matches) {
-    mainRight.scrollTop = 0;
+  const sidePanel = document.querySelector('.side-panel');
+  if (sidePanel && window.matchMedia('(min-width: 1024px)').matches) {
+    sidePanel.scrollTop = 0;
   } else {
-    const tableWrap = document.querySelector('.table-wrap');
-    if (tableWrap) tableWrap.scrollIntoView({ behavior: 'auto', block: 'start' });
+    const cardList = document.getElementById('cardList');
+    if (cardList) cardList.scrollIntoView({ behavior: 'auto', block: 'start' });
   }
 }
 document.getElementById('btnPrev').addEventListener('click', () => {
@@ -1400,6 +1414,7 @@ const POI_CATEGORIES = [
   { key: 'park', label: 'Parks' },
   { key: 'hospital', label: 'Medical' },
   { key: 'expat', label: 'Expat Services' },
+  { key: 'convenience', label: 'Convenience' },
   { key: 'dining', label: 'Dining' },
   { key: 'culture', label: 'Culture' },
   { key: 'transit', label: 'Transit' },
@@ -1419,6 +1434,7 @@ const POI_ICONS = {
   park: '\u{1F333}',
   hospital: '\u{1F3E5}',
   expat: '\u{1F30D}',
+  convenience: '\u{1F3EA}',
   dining: '\u{1F37B}',
   culture: '\u{1F3DB}',
   transit: '\u{1F686}',
@@ -1767,19 +1783,31 @@ function addPOIControl() {
       panel.style.display = panel.style.display === 'none' ? '' : 'none';
     });
 
+    // All On / All Off buttons
+    const btnRow = L.DomUtil.create('div', 'poi-control-btn-row', panel);
+    const btnAllOn = L.DomUtil.create('button', 'poi-btn-all', btnRow);
+    btnAllOn.textContent = 'All On';
+    const btnAllOff = L.DomUtil.create('button', 'poi-btn-all', btnRow);
+    btnAllOff.textContent = 'All Off';
+
+    const checkboxes = [];
+
     for (const cat of POI_CATEGORIES) {
       const group = poiLayerGroups[cat.key];
       if (!group) continue;
+      const count = group.getLayers().length;
       // Skip categories with no markers
-      if (group.getLayers().length === 0) continue;
+      if (count === 0) continue;
 
       const item = L.DomUtil.create('label', 'poi-control-item', panel);
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.checked = poiLayerPrefs[cat.key] !== false;
+      cb.dataset.catKey = cat.key;
       const emoji = POI_ICONS[cat.key] || '';
       item.appendChild(cb);
-      item.appendChild(document.createTextNode(` ${emoji} ${cat.label}`));
+      item.appendChild(document.createTextNode(` ${emoji} ${cat.label} (${count})`));
+      checkboxes.push(cb);
 
       cb.addEventListener('change', () => {
         poiLayerPrefs[cat.key] = cb.checked;
@@ -1787,6 +1815,17 @@ function addPOIControl() {
         updatePOIVisibility();
       });
     }
+
+    btnAllOn.addEventListener('click', () => {
+      for (const cb of checkboxes) { cb.checked = true; poiLayerPrefs[cb.dataset.catKey] = true; }
+      savePOILayerPrefs();
+      updatePOIVisibility();
+    });
+    btnAllOff.addEventListener('click', () => {
+      for (const cb of checkboxes) { cb.checked = false; poiLayerPrefs[cb.dataset.catKey] = false; }
+      savePOILayerPrefs();
+      updatePOIVisibility();
+    });
 
     return container;
   };
@@ -1843,13 +1882,13 @@ function scrollToAddress(address) {
   currentPage = targetPage;
   render(true);
   pushHashState();
-  // Flash-highlight matching rows after render
+  // Flash-highlight matching cards after render
   setTimeout(() => {
-    const rows = document.querySelectorAll(`tr[data-address="${CSS.escape(address)}"]`);
-    for (const row of rows) {
-      row.classList.add('row-highlight');
-      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => row.classList.remove('row-highlight'), 2000);
+    const cards = document.querySelectorAll(`.property-card[data-address="${CSS.escape(address)}"]`);
+    for (const card of cards) {
+      card.classList.add('card-highlight');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => card.classList.remove('card-highlight'), 2000);
     }
   }, 50);
 }
@@ -2029,7 +2068,11 @@ function renderAreaCards(areaStats) {
 
 // Map resize observer (map init happens in loadData after POI data is fetched)
 if (typeof ResizeObserver !== 'undefined' && typeof L !== 'undefined' && L !== null) {
-  new ResizeObserver(() => leafletMap && leafletMap.invalidateSize()).observe(document.getElementById('map'));
+  let resizeTimer;
+  new ResizeObserver(() => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => leafletMap && leafletMap.invalidateSize(), 150);
+  }).observe(document.getElementById('map'));
 }
 
 // Scraper control panel removed — run scrapers from terminal: python run_all.py
@@ -2118,22 +2161,7 @@ function generateProfileTitle(prefs) {
   else if (maxBudget <= 200000) tier = 'Premium';
   else tier = 'Luxury';
 
-  const roomTypes = prefs.roomType || BRIEF.roomType;
-  const topTypes = Object.entries(roomTypes)
-    .filter(([, v]) => v >= 0.7)
-    .map(([k]) => k)
-    .slice(0, 2);
-  const typePart = topTypes.length > 0 ? topTypes.join('/') : '';
-
-  const prefScores = prefs.prefScores || BRIEF.prefScores;
-  const topPref = Object.entries(prefScores)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 1)
-    .map(([k]) => k.charAt(0).toUpperCase() + k.slice(1));
-  const prefPart = topPref.length > 0 ? topPref[0] + ' focus' : '';
-
-  const parts = [tier, typePart, prefPart].filter(Boolean);
-  return parts.join(', ');
+  return tier;
 }
 
 function resetBriefToDefaults() {
@@ -2144,12 +2172,23 @@ function resetBriefToDefaults() {
   if (scoringConfigOverrides) deepMerge(BRIEF, scoringConfigOverrides);
 }
 
+function sanitiseBrief() {
+  delete BRIEF.prefScores;
+  delete BRIEF.roomType;
+  const validWeightKeys = ['area', 'budget', 'size', 'walkTime', 'buildAge'];
+  for (const k of Object.keys(BRIEF.weights)) {
+    if (!validWeightKeys.includes(k)) delete BRIEF.weights[k];
+  }
+  BRIEF.weights = normaliseWeights(BRIEF.weights);
+  if (!BRIEF.hazard) BRIEF.hazard = { high: -15, moderate: -5 };
+}
+
 function applyProfile(profile) {
   resetBriefToDefaults();
   if (profile && profile.preferences) {
     deepMerge(BRIEF, profile.preferences);
   }
-  buildRoomTypeSliders();
+  sanitiseBrief();
   buildWeightSliders();
   syncFormToBrief();
   rescoreAll();
@@ -2165,10 +2204,8 @@ function populatePrefsProfileDropdown() {
 
 // Map BRIEF fields to form inputs
 const PREFS_FIELDS = [
-  { id: 'prefBudgetIdealMin', path: ['budget', 'idealMin'] },
   { id: 'prefBudgetIdealMax', path: ['budget', 'idealMax'] },
   { id: 'prefBudgetHardMax', path: ['budget', 'hardMax'] },
-  { id: 'prefBudgetMoveInMax', path: ['budget', 'moveInMax'] },
   { id: 'prefSizeIdealMin', path: ['size', 'idealMin'] },
   { id: 'prefSizeIdealMax', path: ['size', 'idealMax'] },
   { id: 'prefSizeOkMin', path: ['size', 'okMin'] },
@@ -2180,16 +2217,16 @@ const PREFS_FIELDS = [
   { id: 'prefAgeIdeal', path: ['buildingAge', 'ideal'] },
   { id: 'prefAgeOk', path: ['buildingAge', 'ok'] },
   { id: 'prefAgeOld', path: ['buildingAge', 'old'] },
+  { id: 'prefHazardHigh', path: ['hazard', 'high'] },
+  { id: 'prefHazardModerate', path: ['hazard', 'moderate'] },
 ];
-
-function getPrefsRoomTypes() { return Object.keys(BRIEF.roomType); }
 
 function populateRoomTypeDropdown() {
   const sel = document.getElementById('filterType');
   if (!sel) return;
-  // Keep "All Types" option, remove the rest
   sel.innerHTML = '<option value="">All Types</option>';
-  for (const rt of getPrefsRoomTypes()) {
+  const types = [...new Set(allRooms.map(r => r.room_type || r.layout).filter(Boolean))].sort();
+  for (const rt of types) {
     const opt = document.createElement('option');
     opt.value = rt;
     opt.textContent = rt;
@@ -2197,33 +2234,8 @@ function populateRoomTypeDropdown() {
   }
 }
 
-function buildRoomTypeSliders() {
-  const container = document.getElementById('roomTypeSliders');
-  if (!container) return;
-  container.innerHTML = '';
-  for (const rt of getPrefsRoomTypes()) {
-    const val = BRIEF.roomType[rt] !== undefined ? BRIEF.roomType[rt] : 0;
-    const row = document.createElement('div');
-    row.className = 'prefs-slider-row';
-    row.innerHTML =
-      `<span class="prefs-slider-label">${rt}</span>` +
-      `<input type="range" id="prefRT_${rt.replace(/\s+/g, '_')}" min="0" max="1" step="0.05" class="prefs-slider" value="${val}">` +
-      `<span class="prefs-slider-val">${parseFloat(val).toFixed(2)}</span>`;
-    container.appendChild(row);
-    // Bind event
-    const slider = row.querySelector('input[type="range"]');
-    slider.addEventListener('input', () => {
-      const label = row.querySelector('.prefs-slider-val');
-      if (label) label.textContent = parseFloat(slider.value).toFixed(2);
-      readBriefFromForm();
-      debouncedRescore();
-    });
-  }
-}
-
-const PREFS_PREFECTURES = ['saitama', 'chiba', 'kanagawa', 'tokyo'];
-const PREFS_WEIGHT_KEYS = ['area', 'budget', 'size', 'roomType', 'walkTime', 'moveIn', 'buildAge', 'amenities'];
-const PREFS_WEIGHT_LABELS = { area: 'Area/Commute', budget: 'Budget', size: 'Size', roomType: 'Room Type', walkTime: 'Walk Time', moveIn: 'Move-in Cost', buildAge: 'Building Age', amenities: 'Convenience' };
+const PREFS_WEIGHT_KEYS = ['area', 'budget', 'size', 'walkTime', 'buildAge'];
+const PREFS_WEIGHT_LABELS = { area: 'Commute', budget: 'Budget', size: 'Size', walkTime: 'Walk Time', buildAge: 'Building Age' };
 
 function activeWeightKeys() { return PREFS_WEIGHT_KEYS; }
 function activeWeightLabels() { return PREFS_WEIGHT_LABELS; }
@@ -2257,22 +2269,6 @@ function syncFormToBrief() {
   for (const f of PREFS_FIELDS) {
     const el = document.getElementById(f.id);
     if (el) el.value = BRIEF[f.path[0]][f.path[1]];
-  }
-  for (const rt of getPrefsRoomTypes()) {
-    const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
-    if (el) {
-      el.value = BRIEF.roomType[rt] !== undefined ? BRIEF.roomType[rt] : 0;
-      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
-      if (label) label.textContent = parseFloat(el.value).toFixed(2);
-    }
-  }
-  for (const pref of PREFS_PREFECTURES) {
-    const el = document.getElementById('prefPS_' + pref);
-    if (el) {
-      el.value = BRIEF.prefScores[pref] !== undefined ? BRIEF.prefScores[pref] : 5;
-      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
-      if (label) label.textContent = parseFloat(el.value).toFixed(1);
-    }
   }
   for (const wk of activeWeightKeys()) {
     const el = document.getElementById('prefW_' + wk);
@@ -2308,14 +2304,6 @@ function readBriefFromForm() {
     const el = document.getElementById(f.id);
     if (el) BRIEF[f.path[0]][f.path[1]] = parseFloat(el.value) || 0;
   }
-  for (const rt of getPrefsRoomTypes()) {
-    const el = document.getElementById('prefRT_' + rt.replace(/\s+/g, '_'));
-    if (el) BRIEF.roomType[rt] = parseFloat(el.value) || 0;
-  }
-  for (const pref of PREFS_PREFECTURES) {
-    const el = document.getElementById('prefPS_' + pref);
-    if (el) BRIEF.prefScores[pref] = parseFloat(el.value) || 0;
-  }
   const keys = activeWeightKeys();
   const raw = {};
   for (const wk of keys) {
@@ -2330,30 +2318,20 @@ function initPrefsPanel() {
   const body = document.getElementById('prefsPanelBody');
   if (!toggle || !body) return;
 
-  toggle.addEventListener('click', () => {
+  const togglePrefs = () => {
     const visible = body.style.display !== 'none';
     body.style.display = visible ? 'none' : 'block';
     toggle.classList.toggle('active', !visible);
     toggle.textContent = visible ? 'Scoring Preferences' : 'Hide Preferences';
-  });
+  };
+  toggle.addEventListener('click', togglePrefs);
+  const gearBtn = document.getElementById('btnPrefsGear');
+  if (gearBtn) gearBtn.addEventListener('click', togglePrefs);
 
   // Bind all number inputs
   for (const f of PREFS_FIELDS) {
     const el = document.getElementById(f.id);
     if (el) el.addEventListener('input', () => { readBriefFromForm(); debouncedRescore(); });
-  }
-
-  // Room type sliders are built dynamically by buildRoomTypeSliders()
-
-  // Bind prefecture score sliders
-  for (const pref of PREFS_PREFECTURES) {
-    const el = document.getElementById('prefPS_' + pref);
-    if (el) el.addEventListener('input', () => {
-      const label = el.closest('.prefs-slider-row')?.querySelector('.prefs-slider-val');
-      if (label) label.textContent = parseFloat(el.value).toFixed(1);
-      readBriefFromForm();
-      debouncedRescore();
-    });
   }
 
   // Weight sliders are built dynamically by buildWeightSliders()
@@ -2364,7 +2342,6 @@ function initPrefsPanel() {
     const id = profileSel.value;
     if (!id) {
       resetBriefToDefaults();
-      buildRoomTypeSliders();
       buildWeightSliders();
       syncFormToBrief();
       rescoreAll();
@@ -2384,8 +2361,7 @@ function initPrefsPanel() {
       size: JSON.parse(JSON.stringify(BRIEF.size)),
       walk: JSON.parse(JSON.stringify(BRIEF.walk)),
       buildingAge: JSON.parse(JSON.stringify(BRIEF.buildingAge)),
-      roomType: JSON.parse(JSON.stringify(BRIEF.roomType)),
-      prefScores: JSON.parse(JSON.stringify(BRIEF.prefScores)),
+      hazard: JSON.parse(JSON.stringify(BRIEF.hazard)),
       weights: JSON.parse(JSON.stringify(BRIEF.weights)),
     };
     const titleInput = document.getElementById('prefsProfileTitle');
@@ -2415,7 +2391,6 @@ function initPrefsPanel() {
     saveProfiles(profiles.filter(p => p.id !== id));
     populatePrefsProfileDropdown();
     resetBriefToDefaults();
-    buildRoomTypeSliders();
     buildWeightSliders();
     syncFormToBrief();
     rescoreAll();
@@ -2425,7 +2400,6 @@ function initPrefsPanel() {
   const resetBtn = document.getElementById('btnPrefsReset');
   if (resetBtn) resetBtn.addEventListener('click', () => {
     resetBriefToDefaults();
-    buildRoomTypeSliders();
     buildWeightSliders();
     syncFormToBrief();
     rescoreAll();
@@ -2441,7 +2415,6 @@ function initPrefsPanel() {
       const cfg = await resp.json();
       scoringConfigOverrides = cfg;
       resetBriefToDefaults();
-      buildRoomTypeSliders();
       buildWeightSliders();
       syncFormToBrief();
       rescoreAll();
@@ -2466,95 +2439,20 @@ function initPrefsPanel() {
 }
 
 // =====================================================================
-// Column visibility toggle
-// =====================================================================
-const DEFAULT_HIDDEN_COLS = ['floor', 'yensqm', 'movein', 'deposit'];
-let colVisibility = {};
-
-function loadColVisibility() {
-  try {
-    const stored = localStorage.getItem('tokyoRental_colVis');
-    if (stored) return JSON.parse(stored);
-  } catch (e) { /* ignore */ }
-  // Default: hide secondary cols
-  const vis = {};
-  for (const col of COLUMNS) {
-    vis[col.key] = !DEFAULT_HIDDEN_COLS.includes(col.key);
-  }
-  return vis;
-}
-
-function saveColVisibility() {
-  localStorage.setItem('tokyoRental_colVis', JSON.stringify(colVisibility));
-}
-
-function applyColVisibility() {
-  // Apply to thead
-  const ths = document.querySelectorAll('#tableHead th[data-sort-key]');
-  ths.forEach(th => {
-    const key = th.dataset.sortKey;
-    th.classList.toggle('col-hidden', colVisibility[key] === false);
-  });
-  // Apply to tbody
-  const rows = document.querySelectorAll('#tableBody tr');
-  for (const row of rows) {
-    const cells = row.querySelectorAll('td');
-    cells.forEach((td, i) => {
-      if (i < COLUMNS.length) {
-        td.classList.toggle('col-hidden', colVisibility[COLUMNS[i].key] === false);
-      }
-    });
-  }
-}
-
-function initColToggle() {
-  colVisibility = loadColVisibility();
-  const btn = document.getElementById('btnColToggle');
-  const dropdown = document.getElementById('colToggleDropdown');
-  if (!btn || !dropdown) return;
-
-  // Build checkboxes (skip fav and link — always visible)
-  const toggleable = COLUMNS.filter(c => c.key !== 'fav' && c.key !== 'link');
-  dropdown.innerHTML = toggleable.map(col =>
-    `<label class="col-toggle-item"><input type="checkbox" data-col-key="${col.key}" ${colVisibility[col.key] !== false ? 'checked' : ''}> ${escHtml(col.label)}</label>`
-  ).join('');
-
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
-  });
-
-  dropdown.addEventListener('change', (e) => {
-    const cb = e.target.closest('input[data-col-key]');
-    if (!cb) return;
-    colVisibility[cb.dataset.colKey] = cb.checked;
-    saveColVisibility();
-    applyColVisibility();
-  });
-
-  // Close dropdown on click outside
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.col-toggle-wrap')) {
-      dropdown.style.display = 'none';
-    }
-  });
-}
-
-// =====================================================================
 // Draggable resize handle for split-pane
 // =====================================================================
 function initResizeHandle() {
   const handle = document.getElementById('resizeHandle');
-  const mainLeft = document.querySelector('.main-left');
-  if (!handle || !mainLeft) return;
+  const mapPanel = document.querySelector('.map-panel');
+  if (!handle || !mapPanel) return;
 
   // Restore saved width
   try {
-    const saved = localStorage.getItem('tokyoRental_mapWidth');
+    const saved = localStorage.getItem('tokyoRental_mapPanelWidth');
     if (saved) {
       const w = parseInt(saved);
-      if (w >= 280 && w <= window.innerWidth * 0.65) {
-        mainLeft.style.setProperty('--map-col-width', w + 'px');
+      if (w >= 280 && w <= window.innerWidth * 0.8) {
+        mapPanel.style.setProperty('--map-panel-width', w + 'px');
       }
     }
   } catch (e) { /* ignore */ }
@@ -2564,10 +2462,10 @@ function initResizeHandle() {
   let startWidth = 0;
 
   handle.addEventListener('mousedown', (e) => {
-    if (!window.matchMedia('(min-width: 1400px)').matches) return;
+    if (!window.matchMedia('(min-width: 1024px)').matches) return;
     isDragging = true;
     startX = e.clientX;
-    startWidth = mainLeft.getBoundingClientRect().width;
+    startWidth = mapPanel.getBoundingClientRect().width;
     handle.classList.add('dragging');
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
@@ -2577,8 +2475,8 @@ function initResizeHandle() {
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
     const delta = e.clientX - startX;
-    const newWidth = Math.max(280, Math.min(window.innerWidth * 0.65, startWidth + delta));
-    mainLeft.style.setProperty('--map-col-width', newWidth + 'px');
+    const newWidth = Math.max(280, Math.min(window.innerWidth * 0.8, startWidth + delta));
+    mapPanel.style.setProperty('--map-panel-width', newWidth + 'px');
     if (leafletMap) leafletMap.invalidateSize();
   });
 
@@ -2588,9 +2486,8 @@ function initResizeHandle() {
     handle.classList.remove('dragging');
     document.body.style.cursor = '';
     document.body.style.userSelect = '';
-    // Save width
-    const w = mainLeft.getBoundingClientRect().width;
-    try { localStorage.setItem('tokyoRental_mapWidth', String(Math.round(w))); } catch (e) { /* ignore */ }
+    const w = mapPanel.getBoundingClientRect().width;
+    try { localStorage.setItem('tokyoRental_mapPanelWidth', String(Math.round(w))); } catch (e) { /* ignore */ }
     if (leafletMap) leafletMap.invalidateSize();
   });
 }
@@ -2599,5 +2496,4 @@ loadData();
 initPrefsPanel();
 initQuickFilters();
 initCollapsibleFilters();
-initColToggle();
 initResizeHandle();

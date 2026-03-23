@@ -1,5 +1,6 @@
 {
   "commute": {
+    "station": "四ツ谷 (Yotsuya)",
     "known": {
       "Kawaguchi": { "min": 25, "transfers": 0, "line": "Namboku" },
       "Wako": { "min": 30, "transfers": 1, "line": "Tobu Tojo + Marunouchi" },
@@ -48,11 +49,10 @@
       "tokyo": { "min": 25, "transfers": 1 }
     }
   },
-  "budget": { "idealMin": 100000, "idealMax": 150000, "hardMax": 200000, "moveInMax": 600000 },
+  "budget": { "idealMax": 150000, "hardMax": 200000 },
   "size": { "idealMin": 38, "idealMax": 48, "okMin": 33, "okMax": 55 },
   "walk": { "great": 5, "good": 10, "ok": 15, "max": 20 },
-  "roomType": { "1LDK": 1.0, "2LDK": 0.7, "2SLDK": 0.65, "3LDK": 0.5, "3DK": 0.3, "3K": 0.2, "3SLDK": 0.2 },
-  "prefScores": { "saitama": 8.0, "chiba": 6.5, "kanagawa": 6.5, "tokyo": 6.5 },
   "buildingAge": { "ideal": 15, "ok": 25, "old": 35 },
-  "weights": { "area": 18, "budget": 18, "size": 11, "roomType": 32, "walkTime": 8, "moveIn": 7, "buildAge": 6, "amenities": 8 }
+  "hazard": { "high": -15, "moderate": -5 },
+  "weights": { "area": 30, "budget": 25, "size": 20, "walkTime": 15, "buildAge": 10 }
 }
